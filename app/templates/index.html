@@ -1,3 +1,30 @@
+<!DOCTYPE html> 
+
 <html>
-	<title>C-U Events</title>
+  <head>
+    <title>CU-EVENTS</title>
+    <link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/Style.css') }}"> 
+    <link href="https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
+  </head>
+
+  <body>
+    <div class = "navbar">
+      <ul>        
+        <li><a href = eventcreate.html> Create an Event</a></li>
+        <li><a href = signUp.html> Sign up</a></li>
+        <li><a href ="#"> browse communities</a></li >  
+        <li><a href ="#"> browse events</a></li>
+      </ul>
+    <div style = "position: absolute; top:5px;">
+      <h1> C-U EVENTS </h1> 
+    </div>     
+    </div>
+
+    <p id = "description"> Search for, discover, and create events in the Champaign-Urbana area</p>
+
+    <div id="wrapper">
+      <input id = "searchbar" type="text" name="search" placeholder="Search for.."> 
+    </div>
+  </body>
+
 </html>
