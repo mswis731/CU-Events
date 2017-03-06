@@ -1,3 +1,4 @@
 .cs411
 __pycache__
 *.log
+secret.py

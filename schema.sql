@@ -25,7 +25,7 @@ CREATE TABLE Event (
 	start			DATE,
 	end				DATE,
 	price			INTEGER,
-	nonUserViews	INTEGER,
+	nonUserViews	INTEGER DEFAULT 0,
 	typeName		VARCHAR(20),
 	PRIMARY KEY(name, start)
 );
