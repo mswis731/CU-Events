@@ -6,8 +6,10 @@ import re
 
 def crawl():
 	# connect to database
+	"""
 	connection = mysql.get_db()
 	cursor = connection.cursor()
+	"""
 
 	url = "http://eventful.com/champaign/events?q=*&ga_search=*&sort_order=Date&ga_type=events&within=5&units=mi"
 	#url = "http://eventful.com/champaign/events?q=*&ga_search=*&sort_order=Date&ga_type=events&within=5&units=mi&page_number=6"
@@ -105,7 +107,8 @@ def crawl():
 
 			organizer = None
 			
-
+			"""
+>>>>>>> e3302115d6ced21eee3bfd91b2c5fffcd7883935
 			cursor.callproc('CreateCrawledEvent', (title,
 												   description,
 												   building,
@@ -121,6 +124,7 @@ def crawl():
 												   url,
 												   organizer))
 			connection.commit()
+			"""
 	
 			print(index)
 			print("URL: {}".format(event_url))
