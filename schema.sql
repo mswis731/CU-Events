@@ -21,7 +21,7 @@ CREATE TABLE Category (
 CREATE TABLE Event (
 	name				VARCHAR(60),
 	description			VARCHAR(300),
-	buildingName		VARCHAR(30),
+	building			VARCHAR(30),
 	addrAndStreet		VARCHAR(30),
 	city				VARCHAR(30),
 	zipcode				INTEGER,
@@ -29,33 +29,30 @@ CREATE TABLE Event (
 	startTime			TIME,
 	endDate				DATE,
 	endTime				TIME,
-	price				VARCHAR(20),
+	prices				VARCHAR(20),
 	nonUserViews		INTEGER DEFAULT 0,
-	typeName			VARCHAR(40),
-	PRIMARY KEY(name, startDate, startTime)
+	eventType			VARCHAR(40),
+	PRIMARY KEY(name, startDate)
 );
 CREATE TABLE EventCrawled (
 	url					VARCHAR(150),
 	name				VARCHAR(60),
 	startDate			DATE,
-	startTime			TIME,
 	organizer			VARCHAR(30),
-	PRIMARY KEY(url, name, startDate, startTime)
+	PRIMARY KEY(url, name, startDate)
 );
 CREATE TABLE EventCreated (
 	name				VARCHAR(60),
 	startDate			DATE,
-	startTime			TIME,
 	username			VARCHAR(20),
 	communityName		VARCHAR(40),
-	PRIMARY KEY(name, startDate, startTime)
+	PRIMARY KEY(name, startDate)
 );
 CREATE TABLE HasCategory (
 	eventName			VARCHAR(60),
 	eventStartDate		DATE,
-	eventStartTime		TIME,
 	categoryName		VARCHAR(40),
-	PRIMARY KEY(eventName, eventStartDate, eventStartTime, categoryName)
+	PRIMARY KEY(eventName, eventStartDate, categoryName)
 );
 CREATE TABLE Interests (
 	username			VARCHAR(20),
@@ -65,9 +62,8 @@ CREATE TABLE Interests (
 CREATE TABLE RegisteredView (
 	eventName			VARCHAR(60),
 	eventStartDate		DATE,
-	eventStartTime		TIME,
 	username			VARCHAR(20),
-	PRIMARY KEY(eventName, eventStartDate, eventStartTime, username)
+	PRIMARY KEY(eventName, eventStartDate, username)
 );
 CREATE TABLE CommunityMember (
 	username			VARCHAR(20),
@@ -77,8 +73,7 @@ CREATE TABLE CommunityMember (
 CREATE TABLE SharedEvent (
 	eventName			VARCHAR(60),
 	eventStartDate		DATE,
-	eventStartTime		TIME,
 	eventUrl			VARCHAR(150),
 	communityName		VARCHAR(40),
-	PRIMARY KEY(eventName, eventStartDate, eventStartTime, eventUrl, communityName)
+	PRIMARY KEY(eventName, eventStartDate, eventUrl, communityName)
 );
