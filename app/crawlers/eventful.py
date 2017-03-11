@@ -10,8 +10,8 @@ def crawl():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
-	#url = "http://eventful.com/champaign/events?q=*&ga_search=*&sort_order=Date&ga_type=events&within=5&units=mi"
-	url = "http://eventful.com/champaign/events?q=*&ga_search=*&sort_order=Date&ga_type=events&within=5&units=mi&page_number=6"
+	url = "http://eventful.com/champaign/events?q=*&ga_search=*&sort_order=Date&ga_type=events&within=5&units=mi"
+	#url = "http://eventful.com/champaign/events?q=*&ga_search=*&sort_order=Date&ga_type=events&within=5&units=mi&page_number=6"
 	driver = webdriver.PhantomJS()
 	
 	index = 0
@@ -66,7 +66,7 @@ def crawl():
 						end_date = "{}-{}-{}".format(dates_list[6], map_months[dates_list[4]], dates_list[5])
 					elif size == 6:
 						times_list = dates_list[4].split(':')
-						if dates_list[5] == 'pm':
+						if dates_list[5] == 'pm' and times_list[0] != 12:
 							times_list[0] = str(int(times_list[0])+12)
 						times_list[0] = times_list[0].zfill(2) # add leading zero if necessary
 						start_time = "{}:{}:00".format(times_list[0], times_list[1])
@@ -74,6 +74,10 @@ def crawl():
 						end_date = start_date
 			except:
 				pass
+
+			# skip if starting time is not found
+			if not title or not start_date:
+				continue
 
 			start = None
 			end = None
@@ -115,18 +119,26 @@ def crawl():
 			for category in categories_list:
 				if map_categories.get(category) and map_categories[category] not in categories:
 					categories.append(map_categories[category])
+				"""
 				else:
 					print("Category not mapped: {}".format(category))
+				"""
 				if map_event_types.get(category) and map_event_types[category] not in event_types:
 					event_types.append(map_event_types[category])
+				"""
 				else:
 					print("Type not mapped: {}".format(category))
-			"""
+				"""
+			if len(categories) == 0:
+				categories.append("Other")
+			if len(event_types) == 0:
+				event_types.append("Other")
+
 			print()
 			print(categories)
 			print(event_types)
+			print(event_url)
 			print()
-			"""
 				
 
 			organizer = None
@@ -143,8 +155,17 @@ def crawl():
 												   high_price,
 												   url,
 												   organizer))
+
+			for category in categories:
+				cursor.callproc('LinkEventCategory', (title,
+													  start,
+													  category))
+			for e_type in event_types:
+				cursor.callproc('LinkEventType', (title,
+												  start,
+												  e_type))
 			connection.commit()
-	
+
 			"""
 			print(index)
 			print("URL: {}".format(event_url))
