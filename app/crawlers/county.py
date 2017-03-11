@@ -5,38 +5,35 @@ from selenium.webdriver.support.ui import WebDriverWait
 import re
 
 def crawl():
-  #connection = mysql.get_db()
-  #cursor = connection.cursor()
+  connection = mysql.get_db()
+  cursor = connection.cursor()
 
-  url = "http://eventful.com/champaign/events?q=*&ga_search=*&sort_order=Date&ga_type=events&within=5&units=mi"	
+  urls = ["http://www.visitchampaigncounty.org/events/category/14/arts-and-theater", "http://www.visitchampaigncounty.org/events/category/22/exhibits", "http://www.visitchampaigncounty.org/events/category/21/family---friendly", "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs", "http://www.visitchampaigncounty.org/events/category/71/food-and-drink"] 
   driver = webdriver.PhantomJS()
   
-  while 1:
+  for url in urls:
     driver.get(url)
-    WebDriverWait(driver, 10)
+    #WebDriverWait(driver, 10)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    events = soup.find_all("div", class_="col-sm-2")
-    print(len(events))
+    #events = soup.find_all("div", class_="col-sm-2")
+    #print(len(events))
 
-"""
-		events = soup.findAll("div", class_="event-box")
-		for event in events:
+    lists = soup.find_all("div", class_="event-detail-box")
+    for list_ in lists:
+      title = list_.find("a").contents[0]
+      print(title)
+      event_urls = list_.find("a")["href"]  
+      print("http://www.visitchampaigncounty.org/" + event_urls)
+      driver.get("http://www.visitchampaigncounty.org/" + event_urls)
+      event_soup = BeautifulSoup(driver.page_source, "html.parser")
+      #print(event_soup.find("h4"))
+      location_general = event_soup.find("li", class_="box place border-right").getText() 
+      print (location_general)
 
-			title = soup.find("div", class_ = "event-detail-box").find("h3").find("a")["href"].text.strip()
+      time_general = event_soup.find("li", class_="box date border-right").getText()
+      print(time_general)
 
-			event_url = event.find("div", class_="event-box").find("div", class_="event-detail-box").find("h3").find("a")["href"]
-			driver.get(event_url)
-			event_soup = BeautifulSoup(driver.page_source, 'html.parser')
-
-			location_general = event_soup.find("li", class_ = "box place border-right")
-
-			location_all = location_general.getText()
-
-			#stardate_general=event_soup
-
-			print("Title: {}".format(title))
-			print("Location {}".format(location_all))
-"""
-
+      price_general =  event_soup.find("li", class_="box tickte border-right").getText()
+      print (price_general)
 if __name__ == "__main__":
   crawl()
