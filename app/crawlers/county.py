@@ -3,22 +3,17 @@ import sys
 sys.path.append('../../')
 
 from app import app, mysql
-from app.crawlers.mappings import map_months
+from app.crawlers.mappings import map_months, map_times, map_categories, map_event_types
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait 
 import re
 
-
-map_times = { 
-    "7:00pm" : "19:00:00"
-    }
-
 def crawl():
   #connection = mysql.get_db()
   #cursor = connection.cursor()
 
-  urls = ["http://www.visitchampaigncounty.org/events/category/14/arts-and-theater", "http://www.visitchampaigncounty.org/events/category/22/exhibits", "http://www.visitchampaigncounty.org/events/category/21/family---friendly", "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs", "http://www.visitchampaigncounty.org/events/category/71/food-and-drink"] 
+  urls = ["http://www.visitchampaigncounty.org/events/category/14/arts-and-theater", "http://www.visitchampaigncounty.org/events/category/22/exhibits", "http://www.visitchampaigncounty.org/events/category/21/family---friendly", "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs", "http://www.visitchampaigncounty.org/events/category/71/food-and-drink", "http://www.visitchampaigncounty.org/events/category/19/history-and-education", "http://www.visitchampaigncounty.org/events/category/15/music", "http://www.visitchampaigncounty.org/events/category/17/nature-and-outdoors", "http://www.visitchampaigncounty.org/events/category/18/sports"] 
   driver = webdriver.PhantomJS()
   
   for url in urls:
@@ -50,34 +45,43 @@ def crawl():
       #print((time_general).split('\n'))
       year = time_general.split('\n')[2].split(" ")[3]
       month =time_general.split('\n')[2].split(" ")[1]
-      #eventually use map_months 
-      if month == 'March':
-        month = '03'
-      if month == 'April':
-        month = '04'
+      
+      month = map_months[month]
+      # if month == 'March':
+      #   month = '03'
+      # if month == 'April':
+      #   month = '04'
 
       date = time_general.split('\n')[2].split(" ")[2][:-1]
 
       full_date = "{}-{}-{}".format(year, month, date) 
-      print(full_date)
+      #print(full_date)
   
       start_time = "00:00:00"
       end_time = "00:00:00"
+      end_t = end_time
+      start_t = start_time
       if "Starts" in time_general.split('\n')[3]:
         start_time = time_general.split('\n')[3].split(" ")[2]
-        print("start_time" +start_time)
-
-        if start_time == "7:00pm":
-          start_t = map_times[start_time]
-          print("start_t:" + start_t)
+        #print("start_time" +start_time)
+  
+        start_t = map_times[start_time]
+        #print("start_t:" + start_t)
         
       else:
         start_time = time_general.split('\n')[3].split(" ")[0]
-        print("start_time: " + start_time)
+        start_t = map_times[start_time]
+        #print("start_t: " + start_t)
         end_time = time_general.split('\n')[3].split(" ")[2]
-        print("end_time: " + end_time)
+        end_t = map_times[end_time]
+        #print("end_t: " + end_t)
 
-    
+      #add a check to see if start date and end date are different
+      start_date = "{} {}".format(full_date, start_t)
+      end_date = "{} {}".format(full_date, end_t)
+      print(start_date)
+      print(end_date)
+
       low_price = 0;
       high_price = 0;
       price_general =  event_soup.find("li", class_="box tickte border-right").getText()
@@ -87,7 +91,14 @@ def crawl():
         ticket_url = event_soup.find("li", class_="box tickte border-right").find("span", class_="site-link").find("a")["href"]
         print(ticket_url)
          
+      if (url == "http://www.visitchampaigncounty.org/events/category/22/exhibits") or (url == "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs"):
+        event_type = map_event_types[url]
+        print (event_type)
+      else:
+        category = map_categories[url]
+        print (category)
 
+      #fix description to get rid of including unneccesary css properties 
       description =  event_soup.find("div", class_="panel-body").getText()
       print(description)
 

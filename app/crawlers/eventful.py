@@ -3,6 +3,7 @@ from app.crawlers.mappings import map_months, map_categories, map_event_types
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import re
+from decimal import Decimal
 
 def crawl():
 	# connect to database
@@ -18,7 +19,7 @@ def crawl():
 		driver.get(url)
 		soup = BeautifulSoup(driver.page_source, 'html.parser')
 	
-		event_trs = soup.find_all("tr")
+		event_trs = soup.findAll("tr")
 		for event in event_trs:
 			# open event page
 			event_url = event.find("td", class_="event-info").find("h3").find("a")["href"]
@@ -52,29 +53,40 @@ def crawl():
 				count = dates_list.count(term)
 				for i in range(count):
 					dates_list.remove(term)
-			# convert to YYYY-MM-DD and HH:MM:SS format
+			# convert to YYYY-MM-DD HH:MM:SS format
 			start_date = None
-			start_time = None
+			start_time = "00:00:00" # default all day
 			end_date = None
-			end_time = None
+			end_time = "23:59:00" # default all day
 			size = len(dates_list)
 			try:
 				if size == 7 or size == 6 or size == 3:
 					start_date = "{}-{}-{}".format(dates_list[2], map_months[dates_list[0]], dates_list[1].zfill(2))
 					if size == 7:
-						end_date = "{}-{}-{}".format(dates_list[6], dates_list[5], map_months[dates_list[4]])
-					if size == 6:
+						end_date = "{}-{}-{}".format(dates_list[6], map_months[dates_list[4]], dates_list[5])
+					elif size == 6:
 						times_list = dates_list[4].split(':')
 						if dates_list[5] == 'pm':
 							times_list[0] = str(int(times_list[0])+12)
 						times_list[0] = times_list[0].zfill(2) # add leading zero if necessary
 						start_time = "{}:{}:00".format(times_list[0], times_list[1])
+					elif size == 3:
+						end_date = start_date
 			except:
 				pass
+
+			start = None
+			end = None
+			if start_date:
+				start = "{} {}".format(start_date, start_time)
+			if end_date:
+				end = "{} {}".format(end_date, end_time)
 					
 			price_div = event_soup.find("div", {"id": "event-price"})
-			price_range = None
+			price_text = None
 			prices = []
+			low_price = None
+			high_price = None
 			if price_div:
 				price_text = price_div.find("p").text.strip()
 				price_list = price_text.lower().split(" ")
@@ -82,15 +94,15 @@ def crawl():
 					try:
 						if term == 'free':
 							prices.append(0)
-						elif term[0] == '$' and int(term[1:]):
-							prices.append(int(term[1:]))
-						# TODO: fix bug where decimal number is not recognized
-						elif int(term):
-							prices.append(int(term))
+						elif term[0] == '$' and Decimal(term[1:]):
+							prices.append(Decimal(term[1:]))
+						elif Decimal(term):
+							prices.append(Decimal(term))
 					except:
 						pass
-				#print(price_text)
-				#print(prices)
+				if len(prices):
+					low_price = min(prices)
+					high_price = max(prices)
 	
 			description_div = event_soup.find("div", class_="section-block description")
 			description = description_div.find("p", {"itemprop": "description"}).text.strip()
@@ -98,10 +110,24 @@ def crawl():
 				description = None
 			description_ps = description_div.findAll("p")
 			categories_list = [ link.text.strip().lower() for link in description_div.findAll(text=re.compile("Categories:"))[0].parent.findAll("a")]
-			#print(categories_list)
-
-			categories = None
-			event_type = None
+			categories = []
+			event_types = []
+			for category in categories_list:
+				if map_categories.get(category) and map_categories[category] not in categories:
+					categories.append(map_categories[category])
+				else:
+					print("Category not mapped: {}".format(category))
+				if map_event_types.get(category) and map_event_types[category] not in event_types:
+					event_types.append(map_event_types[category])
+				else:
+					print("Type not mapped: {}".format(category))
+			"""
+			print()
+			print(categories)
+			print(event_types)
+			print()
+			"""
+				
 
 			organizer = None
 			
@@ -111,16 +137,15 @@ def crawl():
 												   street,
 												   city,
 												   zipcode,
-												   start_date,
-												   start_time,
-												   end_date,
-												   end_time,
-												   price_range,
-												   event_type,
+												   start,
+												   end,
+												   low_price,
+												   high_price,
 												   url,
 												   organizer))
 			connection.commit()
 	
+			"""
 			print(index)
 			print("URL: {}".format(event_url))
 			print("Title: {}".format(title))
@@ -128,15 +153,17 @@ def crawl():
 			print("Street: {}".format(street))
 			print("City: {}".format(city))
 			print("Zipcode: {}".format(zipcode))
-			print("Start Date: {}".format(start_date))
-			print("Start Time: {}".format(start_time))
-			print("End Date: {}".format(end_date))
-			print("End Date: {}".format(end_time))
-			print("Prices: {}".format(price_range))
+			print("Start: {}".format(start))
+			print("End: {}".format(end))
+			print("Price text: {}".format(price_text))
+			print("Prices: {}".format(prices))
+			print("Low Price: {}".format(low_price))
+			print("High Price: {}".format(high_price))
 			print("Description: {}".format(description))
 			print("Categories: {}".format(categories_list))
 			print()
 			index += 1
+			"""
 	
 		next_link = soup.find("span", class_="nav next")
 		if next_link:
