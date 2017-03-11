@@ -47,7 +47,7 @@ def crawl():
       print(zipcode + '\n')
 
       time_general = event_soup.find("li", class_="box date border-right").getText()
-      print((time_general).split('\n'))
+      #print((time_general).split('\n'))
       year = time_general.split('\n')[2].split(" ")[3]
       month =time_general.split('\n')[2].split(" ")[1]
       #eventually use map_months 
