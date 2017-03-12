@@ -10,8 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 import re
 
 def crawl():
-  #connection = mysql.get_db()
-  #cursor = connection.cursor()
+  connection = mysql.get_db()
+  cursor = connection.cursor()
 
   urls = ["http://www.visitchampaigncounty.org/events/category/14/arts-and-theater", "http://www.visitchampaigncounty.org/events/category/22/exhibits", "http://www.visitchampaigncounty.org/events/category/21/family---friendly", "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs", "http://www.visitchampaigncounty.org/events/category/71/food-and-drink", "http://www.visitchampaigncounty.org/events/category/19/history-and-education", "http://www.visitchampaigncounty.org/events/category/15/music", "http://www.visitchampaigncounty.org/events/category/17/nature-and-outdoors", "http://www.visitchampaigncounty.org/events/category/18/sports"] 
   driver = webdriver.PhantomJS()
@@ -101,6 +101,22 @@ def crawl():
       #fix description to get rid of including unneccesary css properties 
       description =  event_soup.find("div", class_="panel-body").getText()
       print(description)
+
+      cursor.callproc('CreateCrawledEvent', (title,
+      										 description,
+      										 building,
+      										 addrAndStreet,
+      										 city,
+      										 zipcode,
+      										 start_date,
+      										 end_date,
+      										 low_price,
+      										 high_price,
+      										 url,
+      										 None))
+      connection.commit()
+	
+
 
 if __name__ == "__main__":
   crawl()
