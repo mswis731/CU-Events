@@ -82,6 +82,9 @@ def crawl():
       print(start_date)
       print(end_date)
 
+      event_type = None
+      category = None
+  
       low_price = 0;
       high_price = 0;
       price_general =  event_soup.find("li", class_="box tickte border-right").getText()
@@ -93,9 +96,11 @@ def crawl():
          
       if (url == "http://www.visitchampaigncounty.org/events/category/22/exhibits") or (url == "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs"):
         event_type = map_event_types[url]
+        category = "Other"
         print (event_type)
       else:
         category = map_categories[url]
+        event_type = "Other"
         print (category)
 
       #fix description to get rid of including unneccesary css properties 
@@ -114,8 +119,11 @@ def crawl():
       										 high_price,
       										 url,
       										 None))
-      connection.commit()
+
+      cursor.callproc('LinkEventCategory', (title, start_date, category))
+      cursor.callproc('LinkEventType',(title, start_date, event_type))
 	
+      connection.commit()
 
 
 if __name__ == "__main__":
