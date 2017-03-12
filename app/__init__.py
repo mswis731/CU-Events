@@ -1,6 +1,11 @@
 from flask import Flask
 from flaskext.mysql import MySQL
-import app.secret
+#import app.secret
+import os
+
+#SE_DIR = os.path.dirname(os.path.dirname(__file__))
+#PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+url = os.environ['DATABASE_URL']
 
 app = Flask(__name__)
 
