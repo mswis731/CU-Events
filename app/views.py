@@ -6,9 +6,13 @@ from app.crawlers.eventful import crawl as eventful_crawl
 @app.route('/index')
 def index():
 	return render_template('index.html')
-@app.route('eventcreate')
-    return render_template('eventcreate.html')
-@app.route('signUp')
+
+@app.route('/eventcreate')
+def event_create():
+	return render_template('eventcreate.html')
+
+@app.route('/signUp')
+def sign_up():
     return render_template('signUp.html')
 
 @app.route('/crawl')
