@@ -1,4 +1,6 @@
+gunicorn
 flask
 beautifulsoup4
 selenium
 flask-mysql
+flask-script

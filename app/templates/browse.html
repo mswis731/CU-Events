@@ -1,0 +1,90 @@
+<!DOCTYPE html> 
+<html>
+<head>
+	<title>browse</title>
+
+	<link rel = "stylesheet" type = "text/css" href = ../static/styles/Style.css> 
+	<link href="https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
+<script>
+document.getElementById("demo").innerHTML = "Hello JavaScript!";
+</script>
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+    <script type="text/javascript" src ="script.js"></script>
+
+    <p id="demo"></p>
+ 
+    <script>
+	function myFunction() {
+    document.getElementById("myDropdown").classList.toggle("show");
+}
+
+	window.onclick = function(event) {
+  if (!event.target.matches('.dropbtn')) {
+
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    var i;
+    for (i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+  }
+}
+
+	</script> 
+
+
+</head>
+<body>
+
+	<h3 style="color: grey"> Browse Events </h3>
+
+	<div id = "sidebar" style="width: 140px; height:100vmax; background-color: transparent; position: fixed; border-style: solid; border-left: thick #000000; border-top: none; top: -0px;">
+
+		<p> search by </p>
+
+		<div class="dropdown" style=>
+			<button onclick="myFunction()" class="dropbtn">Categories</button>
+			<div id="myDropdown" class="dropdown-content">
+				<a href="#">Music</a>
+				<a href="#">Sports</a>
+				<a href="#">Academic</a>
+				<a href="#">Technology</a>
+				<a href="#">Family</a>
+				<a href="#">Health and Wellness</a>
+				<a href="#">Outdoors</a>
+				<a href="#">University</a>
+				<a href="#">Arts and Theatre</a>
+				<a href="#">Holiday</a>	
+				<a href="#">Government</a>
+				<a href="#">Home and Lifestyle</a>
+				<a href="#">Other</a>
+			</div>
+		</div>
+
+		<div class="dropdown">
+			<button onclick="myFunction()" class="dropbtn">Event Type</button>	
+			<div id="myDropdown" class="dropdown-content">
+				<a href="#">Concerts</a>
+				<a href="#">Conferences</a>
+				<a href="#">Talks</a>
+				<a href="#">Networking and Career Fairs</a>
+				<a href="#">Galleries and Exhibits</a>
+				<a href="#">Charity</a>
+				<a href="#">Festivals and Fairs</a>
+				<a href="#">Classes and Workshops</a>
+				<a href="#">Other</a>
+			</div>
+		</div>	
+
+	</div>
+	<!--Browse by:
+		-category 
+		-event-type
+		-price
+		-date
+				-->
+</body>
+</html>

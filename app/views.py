@@ -7,6 +7,18 @@ from app.crawlers.eventful import crawl as eventful_crawl
 def index():
 	return render_template('index.html')
 
+@app.route('/eventcreate')
+def event_create():
+	return render_template('eventcreate.html')
+
+@app.route('/signUp')
+def sign_up():
+    return render_template('signUp.html')
+
+@app.route('/browse')
+def browse():
+    return render_template('browse.html')
+
 @app.route('/crawl')
 def crawl():
 	return eventful_crawl()
