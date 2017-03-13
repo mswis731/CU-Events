@@ -9,12 +9,12 @@ import urllib.request
 class eventData:
     title = ""
     eventType = ""
-    location = ""
+    location = "" #Number + Street Addr, City, Zip
     startDate = ""
     endDate = ""
-    startTime = "00:00:00"
-    endTime = "00:00:00"
-    cost = ""
+    startTime = "00:00:00" #YYYY-MM-DD YYYY-MM-DD 00:00:00
+    endTime = "00:00:00" #YYYY-MM-DD YY-MM-DD 00:00:00
+    cost = "" #max cost and min cost
 
     def __init__(self,title="", eventType="", location="", startDate="", startTime = "00:00:00", endTime = "00:00:00", endDate= "", cost=""):
         self.title = title
