@@ -20,7 +20,6 @@ p#description {
   height: 70px;
   background-color: #D3D3D3;
   margin:0px;
-  padding:0px;
 }
 ul li {
   display: inline;
@@ -36,9 +35,11 @@ ul li a{
 ul li a:hover{
 	color: #e65c00;
 }
+
+
 #wrapper{
-  position: absolute;
-  left: 320px;
+  margin: auto;
+  width: 50%;
   text-align: center;
 }
 input:focus {
@@ -62,4 +63,44 @@ h3{
 .event_describe{
   padding-left: 30px;
   padding-bottom: 20px;
+}
+
+/****************** BROWSE ************************/
+.dropbtn {
+    width: 100px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+.dropbtn:hover, .dropbtn:focus {
+    background-color: #3e8e41;
+}
+.dropdown {
+    /*position: relative;*/
+    display: inline-block;
+    width: 200px;
+}
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+.dropdown-content a:hover {
+    background-color: #f1f1f1
+}
+.show {display:block;}
+.dropdown:hover .dropdown-content {
+    display: block;
 }
