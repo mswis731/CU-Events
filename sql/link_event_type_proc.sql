@@ -13,8 +13,10 @@ BEGIN
 			FROM HasEventType
 			WHERE eventName = _event_name AND eventStartDate = _event_start_date AND eventStartTime = _event_start_time AND eventType = _event_type
 	) THEN
-		INSERT INTO HasEventType(eventName, eventStartDate, eventStartTime, eventType)
-		VALUES (_event_name, _event_start_date, _event_start_time, _event_type);
+		IF EXISTS (SELECT * FROM EventType WHERE name = _event_type) THEN
+			INSERT INTO HasEventType(eventName, eventStartDate, eventStartTime, eventType)
+			VALUES (_event_name, _event_start_date, _event_start_time, _event_type);
+		END IF;
 	END IF;
 END $$
 DELIMITER ;

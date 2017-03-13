@@ -28,15 +28,5 @@ BEGIN
 			city = _city, zipcode = _zipcode, endDate = _end_date, endTime = _end_time, lowPrice = _low_price, highPrice = _high_price
 		WHERE name = (SELECT name FROM EventCrawled WHERE url = _url);
 	END IF;
-
-	IF NOT EXISTS (
-				SELECT *
-				FROM EventCrawled
-				WHERE name = _name AND startDate = _start_date AND startTime = _start_time
-	) THEN
-		UPDATE EventCrawled
-		SET name = _name, startDate = _start_date, startTime = _start_time
-		WHERE url = _url;
-	END IF;
 END $$
 DELIMITER ;

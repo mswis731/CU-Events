@@ -8,13 +8,15 @@ BEGIN
 
 	SET sql_mode='';
 
-	IF NOT EXISTS(
+	IF NOT EXISTS (
 			SELECT *
 			FROM HasCategory
 			WHERE eventName = _event_name AND eventStartDate = _event_start_date AND eventStartTime = _event_start_time AND categoryName = _category_name
 	) THEN
-		INSERT INTO HasCategory(eventName, eventStartDate, eventStartTime, categoryName)
-		VALUES (_event_name, _event_start_date, _event_start_time, _category_name);
+		IF EXISTS (SELECT * FROM Category WHERE name = _category_name) THEN
+			INSERT INTO HasCategory(eventName, eventStartDate, eventStartTime, categoryName)
+			VALUES (_event_name, _event_start_date, _event_start_time, _category_name);
+		END IF;
 	END IF;
 END $$
 DELIMITER ;
