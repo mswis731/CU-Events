@@ -79,7 +79,7 @@ map_event_types = {
     "business & networking" : "Networking & Career Fairs",
     "art galleries & exhibits" : "Galleries & Exhibits",
     "fundraising & charity" : "Charity", 
-
+    
     "http://www.visitchampaigncounty.org/events/category/22/exhibits" : "Galleries & Exhibits",
     "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs" : "Festivals & Fairs"
 

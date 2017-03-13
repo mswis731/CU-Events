@@ -15,6 +15,10 @@ def event_create():
 def sign_up():
     return render_template('signUp.html')
 
+@app.route('/browse')
+def browse():
+    return render_template('browse.html')
+
 @app.route('/crawl')
 def crawl():
 	return eventful_crawl()
