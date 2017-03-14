@@ -45,7 +45,7 @@ input:focus {
     outline:none;
     border: 1px solid black;
 }
-#searchbar {
+#autocomplete {
   padding: 20px;
   width: 600px;
   font-size: 16px;
@@ -78,9 +78,12 @@ h3{
     background-color: #3e8e41;
 }
 .dropdown {
-    /*position: relative;*/
+    position: relative;
     display: inline-block;
-    width: 200px;
+    width: 100px;
+    left: 20px;
+    border-style: solid;
+    border-width: 1px;
 }
 .dropdown-content {
     display: none;

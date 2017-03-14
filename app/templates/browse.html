@@ -16,11 +16,10 @@
 	document.getElementById("demo").innerHTML = "Hello JavaScript!";
 	</script>
 
-	<h3 style="color: grey"> Browse Events </h3>
+	<h3> Browse Events </h3>
 
 	<div id = "sidebar" style="width: 140px; height:100vmax; background-color: transparent; position: fixed; border-style: solid; border-left: thick #000000; border-top: none; top: -0px;">
-
-		<p> search by </p>
+		<p style="padding-left: 30px;"> search by: </p>
 
 		<div class="dropdown">
 			<button class="dropbtn">Categories</button>
@@ -39,14 +38,35 @@
 					<!-- still need to figure out how to use relative paths -->
 					<a href ="browse/type/{{url}}"> {{type}} </a>
 				{% endfor %}
-				<a href ="javascript:get_cat_url('Charity);"></a>
-				<a href ="javascript:get_cat_url('Concerts');"></a>
-				<a href ="javascript:get_cat_url('Other');"></a>
-				<a href ="javascript:get_cat_url('Other');"></a>
-				<a href ="javascript:get_cat_url('Other');"></a>
-				<a href ="javascript:get_cat_url('Other');">Other</a>
 			</div>
 		</div>	
+
+		<div class="dropdown">
+			<button class="dropbtn">Price</button>	
+			<div id="myDropdown-type" class="dropdown-content">
+				<a href ="browse/free"> free </a>
+				<a href ="free"> $0-$10</a>
+				<a href ="free"> $11-$25</a>
+				<a href ="free"> $26-$50</a>
+				<a href ="free"> >$50</a>
+			</div>
+		</div>
+
 	</div>
+
+	<div class = "main"; style="width: 900px; height:100vmax; position: relative; left:200px; ">
+    	{% for event in all_events %}
+    	<div style = "width: 450px; height: 300px; background-color: #D3D3D3; position: relative; left: 20px; top: 30px; padding-left: 15px;">
+      		<h3 style="text-align: center">{{ event.name }} </h3>
+      		<p>Description: {{ event.description }} </p>
+      		<p>Building: {{ event.building }} </p>
+      		<p>Location: {{ event.streetAndAddr }} {{ event.city }}, IL {{ event.zipcode }} </p>
+      		<p>Start: {{ event.startDate }} {{ event.startTime }} </p>
+      		<p>End: {{ event.endDate }} {{ event.endTime }} </p>
+      		<p>Price: {{ event.lowPrice }} - {{ event.highPrice }} </p>
+    	{% endfor %}
+   		</div>              
+	</div>
+
 </body>
 </html>

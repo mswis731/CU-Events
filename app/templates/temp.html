@@ -2,11 +2,17 @@
   <head>
     <title>CU-EVENTS</title>
 
-    <link rel = "stylesheet" type = "text/css" href = ../static/styles/Style.css?q=1280549780"> 
-  <link href="https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
+    <link rel = "stylesheet" type = "text/css" href = "../static/styles/Style.css?q=1280549780"> 
+    <link href= "https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> 
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
 
   </head>
   <body style=" font-family: 'Amiko', sans-serif;">
+
+<div class = "main"; style="width: 900px; height:100vmax; position: relative; left:200px; ">
     {% for event in events %}
     <div style = "width: 450px; height: 300px; background-color: #D3D3D3; position: relative; left: 20px; top: 30px; padding-left: 15px;">
       <h3 style="text-align: center">{{ event.name }} </h3>
@@ -16,25 +22,35 @@
       <p>Start: {{ event.startDate }} {{ event.startTime }} </p>
       <p>End: {{ event.endDate }} {{ event.endTime }} </p>
       <p>Price: {{ event.lowPrice }} - {{ event.highPrice }} </p>
-    <!--   <p>Views: {{ event.nonUserViews }} </p> -->
-
     </div>                                                                              
     {% endfor %}
 
     {% for type in types %}
-    <div>
-      <h3>EVENT</h3>
-      <p>Title: {{ type.name }} </p>
+    <div style ="width: 450px; height: 300px; background-color: #D3D3D3; position: relative; left: 20px; top: 30px; padding-left: 15px;">
+      <h3 style="text-align: center">{{ type.name }} </h3>
       <p>Description: {{ type.description }} </p>
       <p>Building: {{ type.building }} </p>
-      <p>Location:: {{ type.streetAndAddr }} {{ type.city }}, IL {{ type.zipcode }} </p>
+      <p>Location: {{ type.streetAndAddr }} {{ type.city }}, IL {{ type.zipcode }} </p>
       <p>Start: {{ type.startDate }} {{ type.startTime }} </p>
       <p>End: {{ type.endDate }} {{ type.endTime }} </p>
       <p>Price: {{ type.lowPrice }} - {{ type.highPrice }} </p>
-    <!--   <p>Views: {{ type.nonUserViews }} </p>
- -->
+
     </div>                                                                              
     {% endfor %}
+
+    {% for free in frees %}
+    <div style ="width: 450px; height: 300px; background-color: #D3D3D3; position: relative; left: 20px; top: 30px; padding-left: 15px;">
+      <h3 style="text-align: center">{{ free.name }} </h3>
+      <p>Description: {{ free.description }} </p>
+      <p>Building: {{ free.building }} </p>
+      <p>Location: {{ free.streetAndAddr }} {{ free.city }}, IL {{ free.zipcode }} </p>
+      <p>Start: {{ free.startDate }} {{ free.startTime }} </p>
+      <p>End: {{ free.endDate }} {{ free.endTime }} </p>
+      <p>Price: {{ free.lowPrice }} - {{ free.highPrice }} </p>
+    </div>                                                                              
+    {% endfor %}
+
+  </div>
   </body>
 
 </html>
