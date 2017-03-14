@@ -30,7 +30,6 @@ class ReusableForm(Form):
 	category = SelectField(id ='category', choices = ['music', 'sports', 'theatre', 'tech', 'Health', 'Outdoors', 'Family', 'University', 'Food & Drink', 'Academic', 'Arts & Theatre', 'Other', 'Music', 'Sports','Technology', 'Government', 'Home/Lifestyle'])
 	eventtype = SelectField(id ='eventtype', choices = ['class', 'performance', 'concert', 'presentation', 'Concert', 'Conference', 'Networking & Career Fairs', 'Galleries & Exhibits','Charity'])
 
-	
 @app.route('/eventcreate', methods=['GET','POST'])
 def signup():
 	form = ReusableForm(request.form)
@@ -158,7 +157,6 @@ def event_type(e_type):
 
 	return render_template('temp.html', events=events)
 
-
 @app.route('/browse/free')
 def find_free():
 	connection = mysql.get_db()
@@ -179,7 +177,6 @@ def find_free():
                    nonUserViews=row[12]) for row in cursor.fetchall()]
 
 	return render_template('temp.html', frees=frees)
-
 
 @app.route('/browse/all')
 def all_events():
