@@ -145,6 +145,13 @@ def individual_event(driver, connection, cursor, event_url, update):
 	if len(event_types) == 0:
 		event_types.append("Other")
 	
+	"""
+	print()
+	print(categories)
+	print(event_types)
+	print()
+	"""
+
 	organizer = None
 	
 	if not update:
