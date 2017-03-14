@@ -8,9 +8,56 @@ import sys
 def index():
 	return render_template('index.html')
 
-@app.route('/eventcreate')
-def event_create():
-	return render_template('eventcreate.html')
+class ReusableForm(Form):
+      title = TextField('Event title', validators=[validators.required()])
+      description = TextAreaField('Event description')
+      venuename = TextField(id = 'venuename', validators=[validators.required()])
+      venueaddr = TextField(id ='venueaddr', validators=[validators.required()])
+      venuecity = TextField(id = 'venuecity', validators=[validators.required()])
+      venuestate = TextField(id = 'venuestate', validators=[validators.required()])
+      venuezip = TextField(id = 'venuezip', validators=[validators.required()])
+      eventsmonth = TextField(id = 'eventsmonth', validators=[validators.required()])
+      eventsdate = TextField(id = 'eventsdate', validators=[validators.required()])
+      eventsyear = TextField(id = 'eventsyear', validators=[validators.required()])
+      eventstime = TextField(id = 'eventstime', validators=[validators.required()])
+      eventemonth = TextField(id = 'eventemonth', validators=[validators.required()])
+      eventedate = TextField(id = 'eventedate', validators=[validators.required()])
+      eventeyear = TextField(id = 'eventeyear', validators=[validators.required()])
+      eventetime = TextField(id = 'eventetime', validators=[validators.required()])
+      price = TextField(id = 'price', validators=[validators.required()])
+      category = SelectField(id ='category', choices = ['music', 'sports', 'theatre', 'tech', 'Health', 'Outdoors', 'Family', 'University', 'Food & Drink', 'Academic', 'Arts & Theatre', 'Other', 'Music', 'Sports','Technology', 'Government', 'Home/Lifestyle'])
+      eventtype = SelectField(id ='eventtype', choices = ['class', 'performance', 'concert', 'presentation', 'Concert', 'Conference', 'Networking & Career Fairs', 'Galleries & Exhibits','Charity'])
+
+@app.route('/eventcreate', methods=['GET','POST'])
+def signup():
+      form = ReusableForm(request.form)
+      error = None
+      if request.method == 'POST':
+            title =  request.form['title']
+            description = request.form['description']
+            venuename = request.form['venuename']
+            address = request.form['venueaddr']
+            venuecity = request.form['venuecity']
+            venuestate = request.form['venuestate']
+            venuezip = request.form['venuezip']
+            eventsmonth = request.form['eventsmonth']
+            eventsdate = request.form['eventsdate']
+            eventsyear = request.form['eventsyear']
+            eventstime = request.form['eventstime']
+            eventemonth = request.form['eventemonth']
+            eventedate = request.form['eventedate']
+            eventeyear = request.form['eventeyear']
+            eventetime = request.form['eventetime']
+            price = request.form['price']
+            category = request.form['category']
+            eventType = request.form['eventtype']
+
+            if form.validate():
+                  error = 'Thanks for registering the event' 
+            else:
+                  error = 'Error: Missing Filling a form field'
+
+      return render_template('eventcreate.html', form = form, error=error)
 
 @app.route('/signUp')
 def sign_up():

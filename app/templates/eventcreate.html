@@ -6,41 +6,44 @@
     <link href="https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
 </head>
 <body>
+<form action = "/eventcreate" method = "POST">
 	<h3> Create an Event </h3>
 	<div class = "event_describe">
-		<p class = "required"> Event title </p>
+		<p class = "required"> <label for "title"> Event title </label> </p>
 		<input id = "title" type="text" name="title" placeholder="title">
 	</div>
 	<div class = "event_describe">
-		<p> Event description </p>
-		<textarea name="Text1" cols="40" rows="5"></textarea>
+		<p> <label for "description"> Event description </label></p>
+		<textarea name="description" cols="40" rows="5"></textarea>
 	</div>
 	<div class = "event_describe">
 		<p class = required> Location </p>
-		<input id = "venue_type" type="text" name="location" placeholder="venue name">	
-		<input id = "address" type="text" name="location" placeholder="address">	
-		<input id = "city" type="text" name="location" placeholder="city">
-		<input id = "state" type="text" name="location" placeholder="state">
-		<input id = "zip/postal" type="text" name="location" placeholder="zip/postal">
+		<label for "venuename"> <input id = "venuename" type="text" name="venuename" placeholder="venue name"></label>
+		<label for "venueaddr"><input id = "venueaddr" type="text" name="venueaddr" placeholder="address"></label>
+		<label for "venuecity"><input id = "venuecity" type="text" name="venuecity" placeholder="city"></label>
+		<label for "venuestate"><input id = "venuestate" type="text" name="venuestate" placeholder="state"></label>
+		<label for "venuezip"><input id = "venuezip" type="text" name="venuezip" placeholder="zip/postal"></label>
+
 	</div>
 	<div class = "event_describe">
 		<p class = "required"> Starts </p> 
-		<input id = "month" type="text" name="starttime" placeholder="mm"> /
-		<input id = "date" type="text" name="starttime" placeholder="dd"> /
-		<input id = "year" type="text" name="starttime" placeholder="yyyy">
-		<input id = "time" type="text" name="starttime" placeholder="00:00">
+		<label for "eventsmonth"><input id = "eventsmonth" type="text" name="eventsmonth" placeholder="mm">/</label> 
+		<label for "eventsdate"><input id = "eventsdate" type="text" name="eventsdate" placeholder="dd">/</label>
+		<label for "eventsyear"><input id = "eventsyear" type="text" name="eventsyear" placeholder="yyyy"></label>
+		<label for "eventstime"><input id = "eventstime" type="text" name="eventstime" placeholder="00:00"></label>
 	</div>
 	<div class = "event_describe">
 		<p class = "required"> Ends </p>
-		<input id = "month" type="text" name="endtime" placeholder="mm"> /
-		<input id = "date" type="text" name="endtime" placeholder="dd"> /
-		<input id = "year" type="text" name="endtime" placeholder="yyyy">
-		<input id = "time" type="text" name="endtime" placeholder="00:00">
+		<label for "eventemonth"><input id = "eventemonth" type="text" name="eventemonth" placeholder="mm">/</label>
+		<label for "eventedate"><input id = "eventedate" type="text" name="eventedate" placeholder="dd">/</label>
+		<label for "eventeyear"><input id = "eventeyear" type="text" name="eventeyear" placeholder="yyyy"></label>
+		<label for "eventetime"><input id = "eventetime" type="text" name="eventetime" placeholder="00:00"></label>
 	</div>
 	<div class = "event_describe">
 		<p class = "required"> Price </p>
-		<input id = "price" type="text" name="price" placeholder="price">
+		<label for "price"><input id = "price" type="text" name="price" placeholder="price"></label>
 	</div>
+	<!--
 	<div class = "event_describe">
 		<p> Upload a photo for your event </p>
 		<form action="/action_page.php">
@@ -48,12 +51,18 @@
  	    	<input type="submit">
 		</form>
 	</div>
+	-->
 	<div class = "event_describe">
 		<p> Select a category and type for your event </p>
 		<div>
 		<p> category </p>
-			<select id = "category">
-				<option value="Health & Wellness">Health & Wellness</option>
+			<label for "category">
+			<select id = "category" name = "category">
+				<option value="music">music</option>
+	  			<option value="sports">sports</option>
+	  			<option value="theatre">theatre</option>
+	  			<option value="tech">tech</option>
+				<option value="Health">Health & Wellness</option>
 				<option value="Outdoors">Outdoors</option>
 				<option value="Family">Family</option>
 				<option value="University">University</option>
@@ -67,22 +76,33 @@
 	  			<option value="Government">Government</option>
 	  			<option value="Home/Lifestyle"">Home/Lifestyle"</option>
 			</select>
+			</label>
 		</div>
 		<div style="float: left">
 		<p> event type </p>
-			<select id = "category">
+			<label for "eventtype">
+			<select id = "eventtype" name = "eventtype">
+				<option value="class">class</option>
+	  			<option value="performance">performance</option>
+	  			<option value="concert">concert</option>
+	  			<option value="presentation">presentation</option>
 				<option value="Concert">Concert</option>
 	  			<option value="Conference">Conference</option>
 	  			<option value="Networking & Career Fairs">Networking & Career Fairs</option>
 	  			<option value="Galleries & Exhibits">"Galleries & Exhibits"</option>
 	  			<option value="Charity">Charity</option>
 			</select>
+			</label>
 		</div>
 	</div>
 	<div style = "width: 70px; margin:0 auto; padding-bottom: 40px">
 		<input type="submit" value="create event">
 	</div>
-	
+</form>
+
+{% if error %}
+        <p class="error"><strong>Error:</strong> {{ error }}
+{% endif %}
 
 </body>
 </html>
