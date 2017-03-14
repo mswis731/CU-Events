@@ -122,4 +122,4 @@ def event_type(e_type):
                    highPrice=row[11],
                    nonUserViews=row[12]) for row in cursor.fetchall()]
 
-	return render_template('eventlist.html', events=events)
+	return render_template('temp.html', events=events)
