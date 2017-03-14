@@ -58,8 +58,30 @@ def find_cat(category):
                    lowPrice=row[10],
                    highPrice=row[11],
                    nonUserViews=row[12]) for row in cursor.fetchall()]
-
+	if (len(events) == 0):
+	 	empty = "there are no events to show"
 	return render_template('temp.html', events=events)
+
+@app.route('/<type>')
+def find_type(type):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT * FROM Event WHERE (name, startDate, startTime) IN (SELECT eventName, eventStartDate, eventStartTime FROM HasEventType WHERE eventType='{}')".format(type))
+	types = [dict(name=row[0],
+                   description=row[1],
+                   building=row[2],
+                   addrAndStreet=row[3],
+                   city=row[4],
+                   zipcode=row[5],
+                   startDate=row[6],
+                   startTime=row[7],
+                   endDate=row[8],
+                   endTime=row[9],
+                   lowPrice=row[10],
+                   highPrice=row[11],
+                   nonUserViews=row[12]) for row in cursor.fetchall()]
+
+	return render_template('temp.html', types=types)
 
 @app.route('/crawl')
 def crawl():
