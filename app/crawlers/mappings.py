@@ -66,24 +66,24 @@ map_times = {
 
 map_categories = {
     "sports" : "Sports",
-    "health & wellness" : "Health & Wellness",
+    "health & wellness" : "Health and Wellness",
     "outdoors & recreation" : "Outdoors",
     "kids & family" : "Family",
     "neighborhood" : "Family",
     "fundraising & charity" : "Family",
     "university & alumni" : "University",
     "other & miscellaneous" : "Other",
-    "art galleries & exhibits" : "Arts & Theatre",
-    "performing arts" : "Arts & Theatre",
+    "art galleries & exhibits" : "Arts and Theatre",
+    "performing arts" : "Arts and Theatre",
     "science" : "Academic",
     "education" : "Academic",
     "literary & books" : "Academic",
     "holiday" : "Holiday",
     "concerts & tour dates" : "Music", 
 
-    "http://www.visitchampaigncounty.org/events/category/14/arts-and-theater" : "Arts & Theatre",
+    "http://www.visitchampaigncounty.org/events/category/14/arts-and-theater" : "Arts and Theatre",
     "http://www.visitchampaigncounty.org/events/category/21/family---friendly" : "Family",
-    "http://www.visitchampaigncounty.org/events/category/71/food-and-drink" : "Food & Drink",
+    "http://www.visitchampaigncounty.org/events/category/71/food-and-drink" : "Food and Drink",
     "http://www.visitchampaigncounty.org/events/category/19/history-and-education" : "Academic",
     "http://www.visitchampaigncounty.org/events/category/15/music" : "Music",
     "http://www.visitchampaigncounty.org/events/category/17/nature-and-outdoors" : "Outdoors", 
@@ -91,28 +91,18 @@ map_categories = {
     #"" : "Technology",
     #"" : "Cultural",
     #"" : "Government",
-    #"" : "Home/Lifestyle",
-    }
+    #"" : "Home and Lifestyle",
+}
 
 map_event_types = {
-    "concerts & tour dates" : "Concert",
-    "conferences & tradeshows" : "Conference",
-    "business & networking" : "Networking & Career Fairs",
-    "art galleries & exhibits" : "Galleries & Exhibits",
+    "concerts & tour dates" : "Concerts",
+    "conferences & tradeshows" : "Conferences",
+    "business & networking" : "Networking and Career Fairs",
+    "art galleries & exhibits" : "Galleries and Exhibits",
     "fundraising & charity" : "Charity", 
     
-    "http://www.visitchampaigncounty.org/events/category/22/exhibits" : "Galleries & Exhibits",
-    "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs" : "Festivals & Fairs"
+    "http://www.visitchampaigncounty.org/events/category/22/exhibits" : "Galleries and Exhibits",
+    "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs" : "Festivals and Fairs"
 
-     #"" : "Talk",
-    }
-
-map_event_types = {
-		"concerts & tour dates" : "Concert",
-		"conferences & tradeshows" : "Conference",
-		"business & networking" : "Networking & Career Fairs",
-		"art galleries & exhibits" : "Galleries & Exhibits",
-		"fundraising & charity" : "Charity"
-		#"" : "Talk",
-		#"" : "Festivals & Fairs"
+     #"" : "Talks",
 }
