@@ -1,18 +1,17 @@
 <html>
   <head>
     <title>CU-EVENTS</title>
-
-    <link rel = "stylesheet" type = "text/css" href = "../static/styles/Style.css?q=1280549780"> 
+    <link rel = "stylesheet" type = "text/css" href = "../static/styles/Style.css"> 
     <link href= "https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> 
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-
-
   </head>
   <body style=" font-family: 'Amiko', sans-serif;">
 
-<div class = "main"; style="width: 900px; height:100vmax; position: relative; left:200px; ">
+<div class = "main_"; style="width: 900px; height:100vmax; position: relative; left:
+200px;margin: 30px; ">
+
     {% for event in events %}
     <div style = "width: 450px; height: 300px; background-color: #D3D3D3; position: relative; left: 20px; top: 30px; padding-left: 15px;">
       <h3 style="text-align: center">{{ event.name }} </h3>
@@ -22,6 +21,13 @@
       <p>Start: {{ event.startDate }} {{ event.startTime }} </p>
       <p>End: {{ event.endDate }} {{ event.endTime }} </p>
       <p>Price: {{ event.lowPrice }} - {{ event.highPrice }} </p>
+      <form action="/eventcreate">
+        <button type = "submit" style="float: right;">edit event</button>
+      </form>
+
+      <form action = "/browse/delete/{{event.name}}">
+        <button id = "deleteEvent" type = "submit" style ="float: right;">delete event</button>
+      </form>
     </div>                                                                              
     {% endfor %}
 
@@ -51,6 +57,7 @@
     {% endfor %}
 
   </div>
+
   </body>
 
 </html>
