@@ -25,30 +25,19 @@
 		<div class="dropdown">
 			<button class="dropbtn">Categories</button>
 			<div id="myDropdown" class="dropdown-content">
-				{% for category in categories%}
-				<a href="#"> {{category}} </a>
+				{% for category, url in categories%}
+					<!-- still need to figure out how to use relative paths -->
+					<a href="browse/category/{{url}}">{{category}}</a>
 				{% endfor %}
-				<a href ="javascript:get_cat_url('Academic');"> Academic  </a>
-				<a href ="javascript:get_cat_url('Arts and Theatre');"> Arts and Theatre  </a>
-				<a href ="javascript:get_cat_url('Family');"> Family  </a>
-				<a href ="javascript:get_cat_url('Government');"> Government</a>
-				<a href ="javascript:get_cat_url('Health and Wellness');"> Health and Wellness </a>
-				<a href ="javascript:get_cat_url('Holiday');"> Holiday </a>
-				<a href ="javascript:get_cat_url('Home and Lifestyle');"> Home and Lifestyle </a>
-				<a href ="javascript:get_cat_url('Music');"> Music </a>
-				<a href ="javascript:get_cat_url('Outdoors');"> Outdoors </a>
-				<a href ="javascript:get_cat_url('Sports');"> Sports </a>
-				<a href ="javascript:get_cat_url('Technology');"> Technology </a>
-				<a href ="javascript:get_cat_url('Unviversity');"> Unviversity</a>
-				<a href ="javascript:get_cat_url('Other');"> Other</a>
 			</div>
 		</div>
 
 		<div class="dropdown">
 			<button class="dropbtn">Event Type</button>	
 			<div id="myDropdown-type" class="dropdown-content">
-				{% for type in types%}
-				<a href =#> {{type}} </a>
+				{% for type, url in types%}
+					<!-- still need to figure out how to use relative paths -->
+					<a href ="browse/type/{{url}}"> {{type}} </a>
 				{% endfor %}
 				<a href ="javascript:get_cat_url('Charity);"></a>
 				<a href ="javascript:get_cat_url('Concerts');"></a>
@@ -59,18 +48,5 @@
 			</div>
 		</div>	
 	</div>
-
-	<script type="text/javascript">
-		function get_cat_url(input){
-			var getUrl = window.location;
-			var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
-			var theUrl = baseUrl.slice(0, -6);
-			// var url = window.location.href;
-			window.location = theUrl.concat(input);
-		}
-	</script>
-
-
-
 </body>
 </html>
