@@ -61,20 +61,20 @@ def event_(category):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
-	cursor.execute("SELECT * FROM Event WHERE (name, startDate, startTime) IN (SELECT eventName, eventStartDate, eventStartTime FROM HasCategory WHERE categoryName='{}')".format(category))
-	events = [dict(name=row[0],
-                   description=row[1],
-                   building=row[2],
-                   addrAndStreet=row[3],
-                   city=row[4],
-                   zipcode=row[5],
-                   startDate=row[6],
-                   startTime=row[7],
-                   endDate=row[8],
-                   endTime=row[9],
-                   lowPrice=row[10],
-                   highPrice=row[11],
-                   nonUserViews=row[12]) for row in cursor.fetchall()]
+	cursor.execute("SELECT * FROM Event WHERE (id) IN (SELECT eventID FROM HasCategory WHERE categoryName='{}')".format(category))
+	events = [dict(title=row[1],
+                   description=row[2],
+                   building=row[3],
+                   addrAndStreet=row[4],
+                   city=row[5],
+                   zipcode=row[6],
+                   startDate=row[7],
+                   startTime=row[8],
+                   endDate=row[9],
+                   endTime=row[10],
+                   lowPrice=row[11],
+                   highPrice=row[12],
+                   nonUserViews=row[13]) for row in cursor.fetchall()]
 	return render_template('temp.html', events=events)
 
 @app.route('/crawl')
@@ -88,20 +88,20 @@ def event_type(e_type):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	e_type = " ".join([ (word.capitalize() if word != 'and' else word) for word in e_type.split('-') ])
-	cursor.execute("SELECT * FROM Event WHERE (name, startDate, startTime) IN (SELECT eventName, eventStartDate, eventStartTime FROM HasEventType WHERE eventType='{}')".format(e_type))
-	events = [dict(name=row[0],
-                   description=row[1],
-                   building=row[2],
-                   addrAndStreet=row[3],
-                   city=row[4],
-                   zipcode=row[5],
-                   startDate=row[6],
-                   startTime=row[7],
-                   endDate=row[8],
-                   endTime=row[9],
-                   lowPrice=row[10],
-                   highPrice=row[11],
-                   nonUserViews=row[12]) for row in cursor.fetchall()]
+	cursor.execute("SELECT * FROM Event WHERE (id) IN (SELECT eventID FROM HasEventType WHERE eventType='{}')".format(e_type))
+	events = [dict(title=row[1],
+                   description=row[2],
+                   building=row[3],
+                   addrAndStreet=row[4],
+                   city=row[5],
+                   zipcode=row[6],
+                   startDate=row[7],
+                   startTime=row[8],
+                   endDate=row[9],
+                   endTime=row[10],
+                   lowPrice=row[11],
+                   highPrice=row[12],
+                   nonUserViews=row[13]) for row in cursor.fetchall()]
 
 	return render_template('temp.html', events=events)
 
@@ -111,19 +111,20 @@ def find_free():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	cursor.execute("SELECT * FROM Event WHERE lowPrice IS NULL AND highPrice IS NULL")
-	frees = [dict(name=row[0],
-                   description=row[1],
-                   building=row[2],
-                   addrAndStreet=row[3],
-                   city=row[4],
-                   zipcode=row[5],
-                   startDate=row[6],
-                   startTime=row[7],
-                   endDate=row[8],
-                   endTime=row[9],
-                   lowPrice=row[10],
-                   highPrice=row[11],
-                   nonUserViews=row[12]) for row in cursor.fetchall()]
+	frees = [dict(title=row[1],
+                   description=row[2],
+                   building=row[3],
+                   addrAndStreet=row[4],
+                   city=row[5],
+                   zipcode=row[6],
+                   startDate=row[7],
+                   startTime=row[8],
+                   endDate=row[9],
+                   endTime=row[10],
+                   lowPrice=row[11],
+                   highPrice=row[12],
+                   nonUserViews=row[13]) for row in cursor.fetchall()]
+
 
 	return render_template('temp.html', frees=frees)
 

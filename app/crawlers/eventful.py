@@ -168,7 +168,6 @@ def individual_event(driver, connection, cursor, event_url, update):
 												low_price,
 												high_price,
 												event_url,
-												organizer,
 												"Eventful"))
 		for category in categories:
 			cursor.callproc('LinkEventCategory', (title,

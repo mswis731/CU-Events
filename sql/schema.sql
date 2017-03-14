@@ -1,27 +1,34 @@
 CREATE TABLE User (
-	username			VARCHAR(20) PRIMARY KEY,
-	password			VARCHAR(30)
+	id					INTEGER NOT NULL AUTO_INCREMENT,
+	username			VARCHAR(20) NOT NULL UNIQUE,
+	password			VARCHAR(30),
+	PRIMARY KEY(id)
 );
 CREATE TABLE Message (
 	timestamp			DATETIME,
 	text				VARCHAR(300),
-	username			VARCHAR(20),
-	FOREIGN KEY(username) REFERENCES User(username) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(timestamp, username)
+	userID				INTEGER,
+	FOREIGN KEY(userID) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(timestamp, userID)
 );
 CREATE TABLE Community (
-	name				VARCHAR(40) PRIMARY KEY,
-	creator				VARCHAR(20),
-	FOREIGN KEY(creator) REFERENCES User(username) ON DELETE CASCADE ON UPDATE CASCADE
+	id					INTEGER NOT NULL AUTO_INCREMENT,
+	name				VARCHAR(40),
+	creatorID			INTEGER,
+	FOREIGN KEY(creatorID) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(id)
 );
 CREATE TABLE EventType (
-	name				VARCHAR(40) PRIMARY KEY
+	name				VARCHAR(40),
+	PRIMARY KEY(name)
 );
 CREATE TABLE Category (
-	name				VARCHAR(40) PRIMARY KEY
+	name				VARCHAR(40),
+	PRIMARY KEY(name)
 );
 CREATE TABLE Event (
-	name				VARCHAR(60),
+	id					INTEGER NOT NULL AUTO_INCREMENT,
+	title				VARCHAR(60),
 	description			VARCHAR(1000),
 	building			VARCHAR(60),
 	addrAndStreet		VARCHAR(30),
@@ -34,77 +41,63 @@ CREATE TABLE Event (
 	lowPrice			REAL,
 	highPrice			REAL,
 	nonUserViews		INTEGER DEFAULT 0,
-	PRIMARY KEY(name, startDate, startTime)
+	PRIMARY KEY(id)
 );
 CREATE TABLE EventCrawled (
-	url					VARCHAR(150),
-	name				VARCHAR(60),
-	startDate			DATE,
-	startTime			TIME,
-	organizer			VARCHAR(30),
+	eventID				INTEGER,
+	url					VARCHAR(150) UNIQUE,
 	site				VARCHAR(40),
-	FOREIGN KEY(name, startDate, startTime) REFERENCES Event(name, startDate, startTime) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(url, name, startDate, startTime)
+	FOREIGN KEY(eventID) REFERENCES Event(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(eventID)
 );
 CREATE TABLE EventCreated (
-	name				VARCHAR(60),
-	startDate			DATE,
-	startTime			TIME,
-	username			VARCHAR(20),
-	communityName		VARCHAR(40),
-	FOREIGN KEY(name, startDate, startTime) REFERENCES Event(name, startDate, startTime) ON DELETE CASCADE ON UPDATE CASCADE,
-	FOREIGN KEY(username) REFERENCES User(username) ON DELETE CASCADE ON UPDATE CASCADE,
-	FOREIGN KEY(communityName) REFERENCES Community(name) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(name, startDate, startTime)
+	eventID				INTEGER,
+	userID				INTEGER,
+	communityID			INTEGER,
+	FOREIGN KEY(eventID) REFERENCES Event(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(userID) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(communityID) REFERENCES Community(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(eventID)
 );
 CREATE TABLE HasCategory (
-	eventName			VARCHAR(60),
-	eventStartDate			DATE,
-	eventStartTime			TIME,
+	eventID				INTEGER,
 	categoryName		VARCHAR(40),
-	FOREIGN KEY(eventName, eventStartDate, eventStartTime) REFERENCES Event(name, startDate, startTime) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(eventID) REFERENCES Event(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY(categoryName) REFERENCES Category(name) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(eventName, eventStartDate, eventStartTime, categoryName)
+	PRIMARY KEY(eventID, categoryName)
 );
 CREATE TABLE HasEventType (
-	eventName			VARCHAR(60),
-	eventStartDate			DATE,
-	eventStartTime			TIME,
+	eventID				INTEGER,
 	eventType			VARCHAR(40),
-	FOREIGN KEY(eventName, eventStartDate, eventStartTime) REFERENCES Event(name, startDate, startTime) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(eventID) REFERENCES Event(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY(eventType) REFERENCES EventType(name) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(eventName, eventStartDate, eventStartTime, eventType)
+	PRIMARY KEY(eventID, eventType)
 );
 CREATE TABLE Interests (
-	username			VARCHAR(20),
+	userID				INTEGER,
 	categoryName		VARCHAR(40),
-	FOREIGN KEY(username) REFERENCES User(username) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(userID) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY(categoryName) REFERENCES Category(name) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(username, categoryName)
+	PRIMARY KEY(userID, categoryName)
 );
 CREATE TABLE RegisteredView (
-	eventName			VARCHAR(60),
-	eventStartDate			DATE,
-	eventStartTime			TIME,
-	username			VARCHAR(20),
-	FOREIGN KEY(eventName, eventStartDate, eventStartTime) REFERENCES Event(name, startDate, startTime) ON DELETE CASCADE ON UPDATE CASCADE,
-	FOREIGN KEY(username) REFERENCES User(username) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(eventName, eventStartDate, eventStartTime, username)
+	eventID				INTEGER,
+	userID				INTEGER,
+	FOREIGN KEY(eventID) REFERENCES Event(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(userID) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(eventID, userID)
 );
 CREATE TABLE CommunityMember (
-	username			VARCHAR(20),
-	communityName		VARCHAR(40),
-	FOREIGN KEY(username) REFERENCES User(username) ON DELETE CASCADE ON UPDATE CASCADE,
-	FOREIGN KEY(communityName) REFERENCES Community(name) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(username, communityName)
+	userID				INTEGER,
+	communityID			INTEGER,
+	FOREIGN KEY(userID) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(communityID) REFERENCES Community(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(userID, communityID)
 );
 CREATE TABLE SharedEvent (
-	eventName			VARCHAR(60),
-	eventStartDate			DATE,
-	eventStartTime			TIME,
-	eventUrl			VARCHAR(150),
-	communityName		VARCHAR(40),
-	FOREIGN KEY(eventName, eventStartDate, eventStartTime, eventUrl) REFERENCES EventCrawled(name, startDate, startTime, url) ON DELETE CASCADE ON UPDATE CASCADE,
-	FOREIGN KEY(communityName) REFERENCES Community(name) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(eventName, eventStartDate, eventStartTime, eventUrl, communityName)
+	eventID				INTEGER,
+	communityID			INTEGER,
+	FOREIGN KEY(eventID) REFERENCES EventCrawled(eventID) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(communityID) REFERENCES Community(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(eventID, communityID)
 );
