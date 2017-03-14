@@ -1,11 +1,7 @@
-<<<<<<< HEAD
+
 from flask import Flask, render_template, redirect, url_for, request
 from wtforms import Form, TextField, TextAreaField, validators, SelectField
-from app import app
-=======
-from flask import render_template
 from app import app, mysql
->>>>>>> 18b22e6522cdf773a951920bdde4c1ce733d3fb8
 from app.crawlers.eventful import crawl as eventful_crawl
 import sys
 
@@ -13,8 +9,6 @@ import sys
 @app.route('/index')
 def index():
 	return render_template('index.html')
-
-<<<<<<< HEAD
 
 class ReusableForm(Form):
 	title = TextField('Event title', validators=[validators.required()])
@@ -33,8 +27,8 @@ class ReusableForm(Form):
 	eventeyear = TextField(id = 'eventeyear', validators=[validators.required()])
 	eventetime = TextField(id = 'eventetime', validators=[validators.required()])
 	price = TextField(id = 'price', validators=[validators.required()])
-	category = SelectField(id ='category', choices = ['music', 'sports', 'theatre', 'tech'])
-	eventtype = SelectField(id ='eventtype', choices = ['class', 'performance', 'concert', 'presentation'])
+	category = SelectField(id ='category', choices = ['music', 'sports', 'theatre', 'tech', 'Health', 'Outdoors', 'Family', 'University', 'Food & Drink', 'Academic', 'Arts & Theatre', 'Other', 'Music', 'Sports','Technology', 'Government', 'Home/Lifestyle'])
+	eventtype = SelectField(id ='eventtype', choices = ['class', 'performance', 'concert', 'presentation', 'Concert', 'Conference', 'Networking & Career Fairs', 'Galleries & Exhibits','Charity'])
 
 	
 @app.route('/eventcreate', methods=['GET','POST'])
@@ -67,11 +61,7 @@ def signup():
 			error = 'Error: Missing Filling a form field'
 
 	return render_template('eventcreate.html', form = form, error=error)
-=======
-@app.route('/eventcreate')
-def event_create():
-	return render_template('eventcreate.html')
->>>>>>> 18b22e6522cdf773a951920bdde4c1ce733d3fb8
+
 
 @app.route('/signUp')
 def sign_up():
@@ -211,7 +201,3 @@ def all_events():
                    nonUserViews=row[12]) for row in cursor.fetchall()]
 
 	return render_template('browse.html', add_events=all_events)
-<<<<<<< HEAD
-=======
-
->>>>>>> 18b22e6522cdf773a951920bdde4c1ce733d3fb8
