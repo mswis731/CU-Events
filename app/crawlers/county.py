@@ -10,8 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 import re
 
 def crawl():
-  #connection = mysql.get_db()
-  #cursor = connection.cursor()
+  connection = mysql.get_db()
+  cursor = connection.cursor()
 
   urls = ["http://www.visitchampaigncounty.org/events/category/14/arts-and-theater", "http://www.visitchampaigncounty.org/events/category/22/exhibits", "http://www.visitchampaigncounty.org/events/category/21/family---friendly", "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs", "http://www.visitchampaigncounty.org/events/category/71/food-and-drink", "http://www.visitchampaigncounty.org/events/category/19/history-and-education", "http://www.visitchampaigncounty.org/events/category/15/music", "http://www.visitchampaigncounty.org/events/category/17/nature-and-outdoors", "http://www.visitchampaigncounty.org/events/category/18/sports"] 
   driver = webdriver.PhantomJS()
@@ -82,6 +82,9 @@ def crawl():
       print(start_date)
       print(end_date)
 
+      event_type = None
+      category = None
+  
       low_price = 0;
       high_price = 0;
       price_general =  event_soup.find("li", class_="box tickte border-right").getText()
@@ -93,14 +96,35 @@ def crawl():
          
       if (url == "http://www.visitchampaigncounty.org/events/category/22/exhibits") or (url == "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs"):
         event_type = map_event_types[url]
+        category = "Other"
         print (event_type)
       else:
         category = map_categories[url]
+        event_type = "Other"
         print (category)
 
       #fix description to get rid of including unneccesary css properties 
       description =  event_soup.find("div", class_="panel-body").getText()
       print(description)
+
+      cursor.callproc('CreateCrawledEvent', (title,
+      										 description,
+      										 building,
+      										 addrAndStreet,
+      										 city,
+      										 zipcode,
+      										 start_date,
+      										 end_date,
+      										 low_price,
+      										 high_price,
+      										 url,
+      										 None))
+
+      cursor.callproc('LinkEventCategory', (title, start_date, category))
+      cursor.callproc('LinkEventType',(title, start_date, event_type))
+	
+      connection.commit()
+
 
 if __name__ == "__main__":
   crawl()

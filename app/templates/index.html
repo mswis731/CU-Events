@@ -1,19 +1,30 @@
-<!DOCTYPE html> 
+
 
 <html>
   <head>
     <title>CU-EVENTS</title>
     <link rel = "stylesheet" type = "text/css" href = ../static/styles/Style.css> 
     <link href="https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> 
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    
   </head>
 
   <body>
     <div class = "navbar">
       <ul>        
         <li><a href = "eventcreate"> Create an Event</a></li>
+<<<<<<< HEAD
         <li><a href = signUp.html> Sign up</a></li>
         <li><a href ="#"> browse communities</a></li >  
         <li><a href ="#"> browse events</a></li>
+=======
+        <li><a href = "signUp"> Sign up</a></li>
+        <li><a href = "emptypage"> browse communities</a></li>  
+        <li><a href = "browse"> browse events</a></li>
+>>>>>>> 18b22e6522cdf773a951920bdde4c1ce733d3fb8
       </ul>
     <div style = "position: absolute; top:5px;">
       <h1> C-U EVENTS </h1> 
@@ -23,8 +34,27 @@
     <p id = "description"> Search for, discover, and create events in the Champaign-Urbana area</p>
 
     <div id="wrapper">
-      <input id = "searchbar" type="text" name="search" placeholder="Search for.."> 
+      <input id = "autocomplete" type="text" name="search" placeholder="Search for.."> 
     </div>
+
+<!-- 
+    <script type="text/javascript">
+      function addtolist(input){
+        var auto_event = [];
+        auto_event.push(input);
+      }
+    </script> -->
+
+    <script>
+      var auto_event = $( "#autocomplete" ).autocomplete({
+      source: [ "coming soon: search for events through this search-bar",],
+      messages: {
+        noResults: '',
+      }
+      });
+    </script>
+
   </body>
 
 </html>
+

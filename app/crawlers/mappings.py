@@ -15,51 +15,75 @@ map_months= {  "january" : "01", "jan" : "01", "January" : "01",
 
 map_times = {
     "12:00am" : "00:00:00",
+    "12:30am" : "00:30:00",
     "1:00am" : "01:00:00",
+    "1:30am" : "01:30:00",
     "2:00am" : "02:00:00",
+    "2:30am" : "02:30:00",
     "3:00am" : "03:00:00",
+    "3:30am" : "03:30:00",
     "4:00am" : "04:00:00",
+    "4:30am" : "04:30:00",
     "5:00am" : "05:00:00",
+    "5:30am" : "05:30:00",
     "6:00am" : "06:00:00",
+    "6:30am" : "06:30:00",
     "7:00am" : "07:00:00",
+    "7:30am" : "07:30:00",
     "8:00am" : "08:00:00",
+    "8:30am" : "08:30:00",
     "9:00am" : "09:00:00",
+    "9:30am" : "09:30:00",
     "10:00am" : "10:00:00",
+    "10:30am" : "10:30:00",
     "11:00am" : "11:00:00",
+    "11:30am" : "11:30:00",
     "12:00pm" : "12:00:00",
+    "12:30pm" : "12:30:00",
     "1:00pm" : "13:00:00",
+    "1:30pm" : "13:30:00",
     "2:00pm" : "14:00:00",
+    "2:30pm" : "14:30:00",
     "3:00pm" : "15:00:00",
+    "3:30pm" : "15:30:00",
     "4:00pm" : "16:00:00",
+    "4:30pm" : "16:30:00",
     "5:00pm" : "17:00:00",
+    "5:30pm" : "17:30:00",
     "6:00pm" : "18:00:00",
+    "6:30pm" : "18:30:00",
     "7:00pm" : "19:00:00",
+    "7:30pm" : "19:30:00",
     "8:00pm" : "20:00:00",
+    "8:30pm" : "20:30:00",
     "9:00pm" : "21:00:00",
+    "9:30pm" : "21:30:00",
     "10:00pm" : "22:00:00",
-    "11:00pm" : "23:00:00"
+    "10:30pm" : "22:30:00",
+    "11:00pm" : "23:00:00",
+    "11:30pm" : "23:30:00"
     }
 
 map_categories = {
     "sports" : "Sports",
-    "health & wellness" : "Health & Wellness",
+    "health & wellness" : "Health and Wellness",
     "outdoors & recreation" : "Outdoors",
     "kids & family" : "Family",
     "neighborhood" : "Family",
     "fundraising & charity" : "Family",
     "university & alumni" : "University",
     "other & miscellaneous" : "Other",
-    "art galleries & exhibits" : "Arts & Theatre",
-    "performing arts" : "Arts & Theatre",
+    "art galleries & exhibits" : "Arts and Theatre",
+    "performing arts" : "Arts and Theatre",
     "science" : "Academic",
     "education" : "Academic",
     "literary & books" : "Academic",
     "holiday" : "Holiday",
     "concerts & tour dates" : "Music", 
 
-    "http://www.visitchampaigncounty.org/events/category/14/arts-and-theater" : "Arts & Theatre",
+    "http://www.visitchampaigncounty.org/events/category/14/arts-and-theater" : "Arts and Theatre",
     "http://www.visitchampaigncounty.org/events/category/21/family---friendly" : "Family",
-    "http://www.visitchampaigncounty.org/events/category/71/food-and-drink" : "Food & Drink",
+    "http://www.visitchampaigncounty.org/events/category/71/food-and-drink" : "Food and Drink",
     "http://www.visitchampaigncounty.org/events/category/19/history-and-education" : "Academic",
     "http://www.visitchampaigncounty.org/events/category/15/music" : "Music",
     "http://www.visitchampaigncounty.org/events/category/17/nature-and-outdoors" : "Outdoors", 
@@ -67,28 +91,18 @@ map_categories = {
     #"" : "Technology",
     #"" : "Cultural",
     #"" : "Government",
-    #"" : "Home/Lifestyle",
-    }
+    #"" : "Home and Lifestyle",
+}
 
 map_event_types = {
-    "concerts & tour dates" : "Concert",
-    "conferences & tradeshows" : "Conference",
-    "business & networking" : "Networking & Career Fairs",
-    "art galleries & exhibits" : "Galleries & Exhibits",
+    "concerts & tour dates" : "Concerts",
+    "conferences & tradeshows" : "Conferences",
+    "business & networking" : "Networking and Career Fairs",
+    "art galleries & exhibits" : "Galleries and Exhibits",
     "fundraising & charity" : "Charity", 
+    
+    "http://www.visitchampaigncounty.org/events/category/22/exhibits" : "Galleries and Exhibits",
+    "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs" : "Festivals and Fairs"
 
-    "http://www.visitchampaigncounty.org/events/category/22/exhibits" : "Galleries & Exhibits",
-    "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs" : "Festivals & Fairs"
-
-     #"" : "Talk",
-    }
-
-map_event_types = {
-		"concerts & tour dates" : "Concert",
-		"conferences & tradeshows" : "Conference",
-		"business & networking" : "Networking & Career Fairs",
-		"art galleries & exhibits" : "Galleries & Exhibits",
-		"fundraising & charity" : "Charity"
-		#"" : "Talk",
-		#"" : "Festivals & Fairs"
+     #"" : "Talks",
 }

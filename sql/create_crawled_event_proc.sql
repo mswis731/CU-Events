@@ -6,12 +6,15 @@ CREATE PROCEDURE CreateCrawledEvent(
 	_street 		VARCHAR(30),
 	_city 			VARCHAR(30),
 	_zipcode 		INTEGER,
-	_start 			DATETIME,
-	_end 			DATETIME,
+	_start_date 	DATE,
+	_start_time 	TIME,
+	_end_date 		DATE,
+	_end_time 		TIME,
 	_low_price		REAL,
 	_high_price		REAL,
 	_url			VARCHAR(150),
-	_organizer		VARCHAR(30))
+	_organizer		VARCHAR(30),
+	_site			VARCHAR(40))
 BEGIN
 
 	SET sql_mode='';
@@ -19,21 +22,21 @@ BEGIN
 	IF NOT EXISTS (
 				SELECT *
 				FROM Event
-				WHERE name = _name AND startTime = _start
+				WHERE name = _name AND startDate = _start_date AND startTime = _start_time
 	) THEN
 		INSERT INTO Event(name, description, building, addrAndStreet, city, zipcode,
-							startTime, endTime, lowPrice, highPrice)
+							startDate, startTime, endDate, endTime, lowPrice, highPrice)
 		VALUES (_name, _description, _building, _street, _city, _zipcode,
-				_start, _end, _low_price, _high_price);
+				_start_date, _start_time, _end_date, _end_time, _low_price, _high_price);
 	END IF;
 
 	IF NOT EXISTS (
 				SELECT *
 				FROM EventCrawled
-				WHERE name = _name AND startTime = _start AND url = _url
+				WHERE name = _name AND startDate = _start_date AND startTime = _start_time AND url = _url
 	) THEN
-		INSERT INTO EventCrawled(url, name, startTime, organizer)
-		VALUES (_url, _name, _start, _organizer);
+		INSERT INTO EventCrawled(url, name, startDate, startTime, organizer, site)
+		VALUES (_url, _name, _start_date, _start_time, _organizer, _site);
 	END IF;
 END $$
 DELIMITER ;
