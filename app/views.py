@@ -59,7 +59,7 @@ def find_cat(category):
                    highPrice=row[11],
                    nonUserViews=row[12]) for row in cursor.fetchall()]
 
-	return render_template('temp.html', events=events)
+	return render_template('category.html', events=events)
 
 @app.route('/crawl')
 def crawl():
