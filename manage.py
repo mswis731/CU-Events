@@ -3,6 +3,7 @@ from flask_script import Manager
 from app import app
 from app.crawlers.eventful import crawl as eventful_crawl, update_crawled_events as eventful_update
 from app.crawlers.county import crawl as county_crawl
+from app.crawlers.clean_events import clean_events
 
 manager = Manager(app)
 
@@ -23,6 +24,9 @@ def update(site):
 	elif site == 'eventful':
 		eventful_update()
 
+@manager.command
+def clean():
+	clean_events()
 
 if __name__ == "__main__":
 	manager.run()

@@ -97,7 +97,7 @@ def individual_event(driver, connection, cursor, event_url, update):
 		pas
 	# skip if starting time is not found
 	if not title or not start_date:
-		continu
+		return
 	price_div = event_soup.find("div", {"id": "event-price"})
 	price_text = None
 	prices = []
