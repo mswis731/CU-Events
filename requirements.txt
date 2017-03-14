@@ -4,3 +4,4 @@ beautifulsoup4
 selenium
 flask-mysql
 flask-script
+wtforms

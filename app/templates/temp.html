@@ -14,7 +14,7 @@
 
     {% for event in events %}
     <div style = "width: 450px; height: 300px; background-color: #D3D3D3; position: relative; left: 20px; top: 30px; padding-left: 15px;">
-      <h3 style="text-align: center">{{ event.name }} </h3>
+      <h3 style="text-align: center">{{ event.title }} </h3>
       <p>Description: {{ event.description }} </p>
       <p>Building: {{ event.building }} </p>
       <p>Location: {{ event.streetAndAddr }} {{ event.city }}, IL {{ event.zipcode }} </p>
@@ -25,7 +25,7 @@
         <button type = "submit" style="float: right;">edit event</button>
       </form>
 
-      <form action = "/browse/delete/{{event.name}}">
+      <form action = "/browse/delete/{{event.title}}">
         <button id = "deleteEvent" type = "submit" style ="float: right;">delete event</button>
       </form>
     </div>                                                                              
