@@ -34,6 +34,10 @@ BEGIN
 		SET title = _title, startDate = _start_date, startTime = _start_time, description = _description, building = _building, addrAndStreet = _street,
 		city = _city, zipcode = _zipcode, endDate = _end_date, endTime = _end_time, lowPrice = _low_price, highPrice = _high_price
 		WHERE id=_id;
+		DELETE FROM HasCategory WHERE eventID=_id;
+		INSERT INTO HasCategory(eventID, categoryName) VALUES (_id, _category_name);
+		DELETE FROM HasEventType WHERE eventID=_id;
+		INSERT INTO HasEventType(eventID, eventType) VALUES (_id, _event_type);
 	END IF;
 END $$
 DELIMITER ;

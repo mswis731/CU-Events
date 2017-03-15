@@ -13,6 +13,9 @@
 
 <form action = "/eventcreate" method = "POST">
 	<h3> Create an Event </h3>
+	{% if error %}
+    <p class="error"><strong>Error:</strong> {{ error }}
+	{% endif %}
 	<div class = "event_describe">
 		<input id = 'id' type='text' name='id' value='{{prefill.id}}' style="visibility:hidden;position:absolute;">
 		<p class = "required"> <label for "title"> Event title </label> </p>
@@ -61,19 +64,13 @@
 		<p> category </p>
 			<label for "category">
 			<select id = "category" name = "category">
-				<option value="Academic">Academic</option>
-				<option value="Arts and Theatre">Arts and Theatre</option>
-				<option value="Family">Family</option>
-				<option value="Government">Government</option>
-				<option value="Health and Wellness">Health and Wellness</option>
-	  			<option value="Holiday">Holiday</option>
-	  			<option value="Home and Lifestyle">Home and Lifestyle</option>
-	  			<option value="Music">Music</option>
-	  			<option value="Outdoors">Outdoors</option>
-	  			<option value="Sports">Sports</option>
-				<option value="Technology">Technology</option>
-	  			<option value="University">University</option>
-	  			<option value="Other">Other</option>
+			{% for category in categories %}
+				{% if category == prefill_types.category %}
+				<option value="{{category}}" selected='selected'>{{category}}</option>
+				{% else %}
+				<option value="{{category}}">{{category}}</option>
+				{% endif %}
+			{% endfor %}
 			</select>
 			</label>
 		</div>
@@ -81,14 +78,13 @@
 		<p> event type </p>
 			<label for "eventtype">
 			<select id = "eventtype" name = "eventtype">
-				<option value="Charity">Charity</option>
-				<option value="Concerts">Concerts</option>
-				<option value="Conferences">Festivals and Fairs</option>
-				<option value="Festival and Fairs">Festivals and Fairs</option>
-	  			<option value="Networking and Career Fairs">Networking and Career Fairs</option>
-	  			<option value="Galleries and Exhibits">Galleries and Exhibits</option>
-	  			<option value="Talks">Talks</option>
-	  			<option value="Other">Other</option>
+			{% for event_type in event_types %}
+				{% if event_type == prefill_types.eventtype %}
+				<option value="{{event_type}}" selected='selected'>{{event_type}}</option>
+				{% else %}
+				<option value="{{event_type}}">{{event_type}}</option>
+				{% endif %}
+			{% endfor %}
 			</select>
 			</label>
 		</div>
@@ -97,10 +93,6 @@
 		<input type="submit" value="create event">
 	</div>
 </form>
-
-{% if error %}
-        <p class="error"><strong>Error:</strong> {{ error }}
-{% endif %}
 
 </body>
 </html>

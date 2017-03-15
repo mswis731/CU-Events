@@ -29,61 +29,59 @@ class ReusableForm(Form):
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def signup():
-	connection = mysql.get_db()
-	cursor = connection.cursor()
 	form = ReusableForm(request.form)
 	error = None
+
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT name FROM Category")
+	categories = [row[0] for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM EventType")
+	event_types = [row[0] for row in cursor.fetchall()]
+	prefill ={"id":"-1", "title":"", "description":"", "building":"", "addrAndStreet":"", "city":"", "zipcode":"",
+				"startDate":"", "startTime":"", "endDate":"", "endTime":"", "lowPrice":"", "highPrice":"" }
+	prefill_types = { "category":"", "eventtype":"" }
+
 	eventID = request.args.get('id')
-	print(eventID)
-	prefill ={"id":"-1", "title":"", "description":"", "building":"", "addrAndStreet":"", "city":"", "zipcode":"", "startDate":"", "startTime":"", "endDate":"", "endTime":"", "lowPrice":"", "highPrice":""}
 	if eventID:
 		cursor.execute("SELECT * FROM Event WHERE id={}".format(eventID))
 		data = cursor.fetchall()[0]
 		index = 0
 		for key in prefill:
-			prefill[key]=data[index] if data[index] else ""
+			prefill[key]=data[index] if data[index] != None else ""
 			index+=1
+		cursor.execute("SELECT categoryName FROM HasCategory WHERE eventID={}".format(eventID))
+		prefill_types['category'] = cursor.fetchall()[0][0]
+		cursor.execute("SELECT eventType FROM HasEventType WHERE eventID={}".format(eventID))
+		prefill_types['eventtype'] = cursor.fetchall()[0][0]
 
+	# TODO: fix button layout
+	# TODO: implement the ability to chose multiple categories and event types
 	if request.method == 'POST':
-		eventID = request.form['id']
-		title =  request.form['title'] if request.form['title'] != "" else None
-		description = request.form['description']
-		building = request.form['building']
-		addrAndStreet= request.form['addrAndStreet']
-		city = request.form['city']
-		zipcode = request.form['zipcode']
-		startDate = request.form['startDate']
-		startTime = request.form['startTime']
-		endDate = request.form['endDate']
-		endTime = request.form['endTime']
-		lowPrice = request.form['lowPrice']
-		highPrice = request.form['highPrice']
-		category = request.form['category']
-		eventType = request.form['eventtype']
+		for key in prefill:
+			prefill[key]=request.form[key] if request.form[key] != "" else None
+		prefill_types['category'] = request.form['category']
+		prefill_types['eventtype'] = request.form['eventtype']
 
+		if prefill['title'] and prefill['startDate'] and prefill['startTime']:
+			#cursor.execute("SELECT * FROM Event WHERE title='{}' AND startDate='{}' AND startTime='{}'".format(prefill['title'], prefill['startDate'], prefill['startTime']))
+			#conflicting_events = cursor.fetchall()
+			#print(len(conflicting_events))
+			#if len(conflicting_events) == 0:
+			attr = [prefill[key] for key in prefill]
+			attr.append(prefill_types['category'])
+			attr.append(prefill_types['eventtype'])
+			cursor.callproc('CreateUserEvent', tuple(attr))
+			connection.commit()
 
-		print(eventID)
-		print("reached")
-		#try:
-		cursor.callproc('CreateUserEvent', (eventID,
-												title,
-            								    description,
-            									building,
-            									addrAndStreet,
-            									city,
-            									zipcode,
-            									startDate,
-            									startTime,
-            									endDate,
-            									endTime,
-            									lowPrice,
-            									highPrice,
-            									category,
-            									eventType))
-
-		connection.commit()
-
-		return redirect('/browse/category/{}'.format(category))
+			return redirect('/browse/category/{}'.format(prefill_types['category']))
+		# invalid data
+		error = "Error: Missing fields"
+		# change Nones back to empty strings
+		for key in prefill:
+			if not prefill[key]:
+				prefill[key] = ""
 
 
 
@@ -95,7 +93,7 @@ def signup():
     	error = 'Error: Missing Filling a form field'
     """
 
-	return render_template('eventcreate.html', prefill=prefill, form = form, error=error)
+	return render_template('eventcreate.html', prefill=prefill, prefill_types=prefill_types, form = form, error=error, categories=categories, event_types=event_types)
 
 @app.route('/signUp')
 def sign_up():
