@@ -198,6 +198,9 @@ def event_type(e_type):
 			return redirect("/eventcreate")
 
 	e_type = " ".join([ (word.capitalize() if word != 'and' else word) for word in e_type.split('-') ])
+	if (e_type == 'user_created'):
+		cursor.execute("SELECT * FROM EventCreated");
+
 	cursor.execute("SELECT * FROM Event WHERE (id) IN (SELECT eventID FROM HasEventType WHERE eventType='{}')".format(e_type))
 	events = [dict(id=row[0],
 				   title=row[1],
@@ -236,3 +239,4 @@ def find_free():
                    nonUserViews=row[13]) for row in cursor.fetchall()]
 
 	return render_template('temp.html', frees=frees)
+
