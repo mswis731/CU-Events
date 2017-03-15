@@ -180,7 +180,7 @@ def crawl():
 
 	return render_template('eventlist.html', events=events)
 
-@app.route('/browse/type/<e_type>')
+@app.route('/browse/type/<e_type>', methods=['GET','POST'])
 def event_type(e_type):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -192,7 +192,7 @@ def event_type(e_type):
 			event_id = btn_id[1:]
 			cursor.execute("DELETE FROM Event WHERE id={}".format(event_id))
 			connection.commit()
-			return redirect("/browse/category/{}".format(category))
+			return redirect("/browse/type/{}".format(e_type))
 		# edit button was pressed
 		else:
 			return redirect("/eventcreate")
