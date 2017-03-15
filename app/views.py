@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, request
+from flask import Flask, render_template, flash, request, redirect
 from wtforms import Form, TextField, TextAreaField, validators, SelectField
 from app import app, mysql
 from app.crawlers.eventful import crawl as eventful_crawl
@@ -25,7 +25,6 @@ class ReusableForm(Form):
       eventedate = TextField(id = 'eventedate', validators=[validators.required()])
       eventeyear = TextField(id = 'eventeyear', validators=[validators.required()])
       eventetime = TextField(id = 'eventetime', validators=[validators.required()])
-      price = TextField(id = 'price', validators=[validators.required()])
       category = SelectField(id ='category', choices = ['music', 'sports', 'theatre', 'tech', 'Health', 'Outdoors', 'Family', 'University', 'Food & Drink', 'Academic', 'Arts & Theatre', 'Other', 'Music', 'Sports','Technology', 'Government', 'Home/Lifestyle'])
       eventtype = SelectField(id ='eventtype', choices = ['class', 'performance', 'concert', 'presentation', 'Concert', 'Conference', 'Networking & Career Fairs', 'Galleries & Exhibits','Charity'])
 
@@ -104,13 +103,27 @@ def browse():
 	cursor.close()
 	return render_template('browse.html', categories=categories, types=types, events=events)
 
-@app.route('/browse/category/<category>')
+@app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
+	
+	if request.method == 'POST':
+		btn_id = request.form['btn']
+		# delete button was pressed
+		if btn_id[0] == 'd':
+			event_id = btn_id[1:]
+			cursor.execute("DELETE FROM Event WHERE id={}".format(event_id))
+			connection.commit()
+			return redirect("/browse/category/{}".format(category))
+		# edit button was pressed
+		else:
+			return redirect("/eventcreate")
+
 	category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
 	cursor.execute("SELECT * FROM Event WHERE (id) IN (SELECT eventID FROM HasCategory WHERE categoryName='{}')".format(category))
-	events = [dict(title=row[1],
+	events = [dict(id=row[0],
+				   title=row[1],
                    description=row[2],
                    building=row[3],
                    addrAndStreet=row[4],
@@ -135,9 +148,23 @@ def crawl():
 def event_type(e_type):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
+	
+	if request.method == 'POST':
+		btn_id = request.form['btn']
+		# delete button was pressed
+		if btn_id[0] == 'd':
+			event_id = btn_id[1:]
+			cursor.execute("DELETE FROM Event WHERE id={}".format(event_id))
+			connection.commit()
+			return redirect("/browse/category/{}".format(category))
+		# edit button was pressed
+		else:
+			return redirect("/eventcreate")
+
 	e_type = " ".join([ (word.capitalize() if word != 'and' else word) for word in e_type.split('-') ])
 	cursor.execute("SELECT * FROM Event WHERE (id) IN (SELECT eventID FROM HasEventType WHERE eventType='{}')".format(e_type))
-	events = [dict(title=row[1],
+	events = [dict(id=row[0],
+				   title=row[1],
                    description=row[2],
                    building=row[3],
                    addrAndStreet=row[4],

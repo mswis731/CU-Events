@@ -21,12 +21,9 @@
       <p>Start: {{ event.startDate }} {{ event.startTime }} </p>
       <p>End: {{ event.endDate }} {{ event.endTime }} </p>
       <p>Price: {{ event.lowPrice }} - {{ event.highPrice }} </p>
-      <form action="/eventcreate">
-        <button type = "submit" style="float: right;">edit event</button>
-      </form>
-
-      <form action = "/browse/delete/{{event.title}}">
-        <button id = "deleteEvent" type = "submit" style ="float: right;">delete event</button>
+      <form action="/browse/category/sports", method="post" name="editdelete">
+      	<button id = "btn" name="btn" value = "e{{event.id}}" type = "submit" style ="float: right;">edit event</button>
+      	<button id = "btn" name="btn" value = "d{{event.id}}" type = "submit" style ="float: right;">delete event</button>
       </form>
     </div>                                                                              
     {% endfor %}
