@@ -9,39 +9,37 @@
 <form action = "/eventcreate" method = "POST">
 	<h3> Create an Event </h3>
 	<div class = "event_describe">
+		<input id = 'id' type='text' name='id' value='{{prefill.id}}' style="visibility:hidden;position:absolute;">
 		<p class = "required"> <label for "title"> Event title </label> </p>
-		<input id = "title" type="text" name="title" placeholder="title">
+		<input id = "title" type="text" name="title" value="{{prefill.title}}" placeholder="title">
 	</div>
 	<div class = "event_describe">
 		<p> <label for "description"> Event description </label></p>
-		<textarea name="description" cols="40" rows="5"></textarea>
+		<textarea name="description" cols="40" rows="5">{{prefill.description}}</textarea>
 	</div>
 	<div class = "event_describe">
 		<p class = required> Location </p>
-		<label for "venuename"> <input id = "venuename" type="text" name="venuename" placeholder="venue name"></label>
-		<label for "venueaddr"><input id = "venueaddr" type="text" name="venueaddr" placeholder="address"></label>
-		<label for "venuecity"><input id = "venuecity" type="text" name="venuecity" placeholder="city"></label>
-		<label for "venuestate"><input id = "venuestate" type="text" name="venuestate" placeholder="state"></label>
-		<label for "venuezip"><input id = "venuezip" type="text" name="venuezip" placeholder="zip/postal"></label>
+		<label for "building"> <input id = "building" type="text" name="building" value='{{prefill.building}}' placeholder="venue name"></label>
+		<label for "addrAndStreet"><input id = "addrAndStreet" type="text" name="addrAndStreet" value='{{prefill.addrAndStreet}}' placeholder="address"></label>
+		<label for "city"><input id = "city" type="text" name="city" value='{{prefill.city}}'placeholder="city"></label>
+		<label for "state"><input id = "state" type="text" name="state" value="Illinois" placeholder="state"></label>
+		<label for "zipcode"><input id = "zipcode" type="text" name="zipcode" value='{{prefill.zipcode}}' placeholder="zip/postal"></label>
 
 	</div>
 	<div class = "event_describe">
 		<p class = "required"> Starts </p> 
-		<label for "eventsmonth"><input id = "eventsmonth" type="text" name="eventsmonth" placeholder="mm">/</label> 
-		<label for "eventsdate"><input id = "eventsdate" type="text" name="eventsdate" placeholder="dd">/</label>
-		<label for "eventsyear"><input id = "eventsyear" type="text" name="eventsyear" placeholder="yyyy"></label>
-		<label for "eventstime"><input id = "eventstime" type="text" name="eventstime" placeholder="00:00"></label>
+		<label for "startDate"><input id = "startDate" type="text" name="startDate" value='{{prefill.startDate}}' placeholder="yyyy-mm-dd"> </label> 
+		<label for "startTime"><input id = "startTime" type="text" name="startTime" value='{{prefill.startTime}}' placeholder="hh:mm:ss"> </label> 
 	</div>
 	<div class = "event_describe">
 		<p class = "required"> Ends </p>
-		<label for "eventemonth"><input id = "eventemonth" type="text" name="eventemonth" placeholder="mm">/</label>
-		<label for "eventedate"><input id = "eventedate" type="text" name="eventedate" placeholder="dd">/</label>
-		<label for "eventeyear"><input id = "eventeyear" type="text" name="eventeyear" placeholder="yyyy"></label>
-		<label for "eventetime"><input id = "eventetime" type="text" name="eventetime" placeholder="00:00"></label>
+		<label for "endDate"><input id = "endDate" type="text" name="endDate" value='{{prefill.endDate}}' placeholder="yyyy-mm-dd"> </label> 
+		<label for "endTime"><input id = "endTime" type="text" name="endTime" value='{{prefill.endTime}}' placeholder="hh:mm:ss"> </label> 
 	</div>
 	<div class = "event_describe">
 		<p class = "required"> Price </p>
-		<label for "price"><input id = "price" type="text" name="price" placeholder="price"></label>
+		<label for "lowPrice"><input id = "lowPrice" type="text" name="lowPrice" value='{{prefill.lowPrice}}' placeholder="low price"></label>
+		<label for "highPrice"><input id = "highPrice" type="text" name="highPrice" value='{{prefill.highPrice}}' placeholder="high price"></label>
 	</div>
 	<!--
 	<div class = "event_describe">
@@ -57,24 +55,20 @@
 		<div>
 		<p> category </p>
 			<label for "category">
-			<select id = "category" name = "category">
-				<option value="music">music</option>
-	  			<option value="sports">sports</option>
-	  			<option value="theatre">theatre</option>
-	  			<option value="tech">tech</option>
-				<option value="Health">Health & Wellness</option>
-				<option value="Outdoors">Outdoors</option>
-				<option value="Family">Family</option>
-				<option value="University">University</option>
-				<option value="Food & Drink">"Food & Drink"</option>
+			<select id = "category" name = "category" value="Sports">
 				<option value="Academic">Academic</option>
-				<option value="Arts & Theatre">Arts & Theatre</option>
-				<option value="Other">Other</option>
-				<option value="Music">Music</option>
+				<option value="Arts and Theatre">Arts and Theatre</option>
+				<option value="Family">Family</option>
+				<option value="Government">Government</option>
+				<option value="Health and Wellness">Health and Wellness</option>
+	  			<option value="Holiday">Holiday</option>
+	  			<option value="Home and Lifestyle">Home and Lifestyle</option>
+	  			<option value="Music">Music</option>
+	  			<option value="Outdoors">Outdoors</option>
 	  			<option value="Sports">Sports</option>
-	  			<option value="Technology">Technology</option>
-	  			<option value="Government">Government</option>
-	  			<option value="Home/Lifestyle"">Home/Lifestyle"</option>
+				<option value="Technology">Technology</option>
+	  			<option value="University">University</option>
+	  			<option value="Other">Other</option>
 			</select>
 			</label>
 		</div>
@@ -82,15 +76,14 @@
 		<p> event type </p>
 			<label for "eventtype">
 			<select id = "eventtype" name = "eventtype">
-				<option value="class">class</option>
-	  			<option value="performance">performance</option>
-	  			<option value="concert">concert</option>
-	  			<option value="presentation">presentation</option>
-				<option value="Concert">Concert</option>
-	  			<option value="Conference">Conference</option>
-	  			<option value="Networking & Career Fairs">Networking & Career Fairs</option>
-	  			<option value="Galleries & Exhibits">"Galleries & Exhibits"</option>
-	  			<option value="Charity">Charity</option>
+				<option value="Charity">Charity</option>
+				<option value="Concerts">Concerts</option>
+				<option value="Conferences">Festivals and Fairs</option>
+				<option value="Festival and Fairs">Festivals and Fairs</option>
+	  			<option value="Networking and Career Fairs">Networking and Career Fairs</option>
+	  			<option value="Galleries and Exhibits">Galleries and Exhibits</option>
+	  			<option value="Talks">Talks</option>
+	  			<option value="Other">Other</option>
 			</select>
 			</label>
 		</div>
