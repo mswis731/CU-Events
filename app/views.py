@@ -7,7 +7,14 @@ import sys
 @app.route('/')
 @app.route('/index')
 def index():
-	return render_template('index.html')
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT name FROM EventType")
+	types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	return render_template('index.html', categories=categories, types=types)
 
 class ReusableForm(Form):
       id = TextField(id = 'id', validators=[validators.required()])
@@ -83,16 +90,6 @@ def signup():
 			if not prefill[key]:
 				prefill[key] = ""
 
-
-
-
-	"""
-    if form.validate():
-    	error = 'Thanks for registering the event' 
-    else:
-    	error = 'Error: Missing Filling a form field'
-    """
-
 	return render_template('eventcreate.html', prefill=prefill, prefill_types=prefill_types, form = form, error=error, categories=categories, event_types=event_types)
 
 @app.route('/signUp')
@@ -121,23 +118,20 @@ def browse():
 	types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	print(categories)
-	cursor.execute("SELECT * FROM Event")
-	events = [dict(name=row[0],
-                   description=row[1],
-                   building=row[2],
-                   addrAndStreet=row[3],
-                   city=row[4],
-                   zipcode=row[5],
-                   startDate=row[6],
-                   startTime=row[7],
-                   endDate=row[8],
-                   endTime=row[9],
-                   lowPrice=row[10],
-                   highPrice=row[11],
-                   nonUserViews=row[12]) for row in cursor.fetchall()]
+
+	cursor.execute("SELECT id, title, startDate, building, addrAndStreet, city, zipcode, lowPrice, highPrice FROM Event")
+	events = [dict(id=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   addrAndStreet=row[4],
+                   city=row[5],
+                   zipcode=row[6],
+                   lowPrice=row[7],
+                   highPrice=row[8]) for row in cursor.fetchall()]
 	cursor.close()
-	return render_template('browse.html', categories=categories, types=types, events=events)
+	#return render_template('browse.html', categories=categories, types=types, events=events)
+	return render_template('events.html', categories=categories, types=types, events=events)
 
 @app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
