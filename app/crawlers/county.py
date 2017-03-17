@@ -15,7 +15,7 @@ def crawl():
 
   urls = ["http://www.visitchampaigncounty.org/events/category/14/arts-and-theater", "http://www.visitchampaigncounty.org/events/category/22/exhibits", "http://www.visitchampaigncounty.org/events/category/21/family---friendly", "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs", "http://www.visitchampaigncounty.org/events/category/71/food-and-drink", "http://www.visitchampaigncounty.org/events/category/19/history-and-education", "http://www.visitchampaigncounty.org/events/category/15/music", "http://www.visitchampaigncounty.org/events/category/17/nature-and-outdoors", "http://www.visitchampaigncounty.org/events/category/18/sports"] 
   driver = webdriver.PhantomJS()
-  
+ 
   for url in urls:
     driver.get(url)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -113,15 +113,19 @@ def crawl():
       										 addrAndStreet,
       										 city,
       										 zipcode,
-      										 start_date,
-      										 end_date,
+      										 full_date,
+                           start_t,
+      										 full_date,
+                           end_t,
       										 low_price,
       										 high_price,
-      										 url,
+                           "http://www.visitchampaigncounty.org/" + event_urls,
       										 None))
 
-      cursor.callproc('LinkEventCategory', (title, start_date, category))
-      cursor.callproc('LinkEventType',(title, start_date, event_type))
+      if (category):
+        cursor.callproc('LinkEventCategory', (title, full_date, start_t, category))
+      if (event_type):
+        cursor.callproc('LinkEventType',(title, full_date, start_t, event_type))
 	
       connection.commit()
 
