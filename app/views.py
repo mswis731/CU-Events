@@ -110,6 +110,33 @@ def music():
 	cursor.close()
 	return render_template('browse.html', categories=categories, result=result)
 
+@app.template_filter('month')
+def year_filter(num):
+	abbrs = { 1 : "Jan",
+			  2 : "Feb",	
+			  3 : "Mar",	
+			  4 : "Apr",	
+			  5 : "May",	
+			  6 : "Jun",	
+			  7 : "Jul",	
+			  8 : "Aug",	
+			  9 : "Sep",	
+			  10 : "Oct",	
+			  11 : "Nov",	
+			  12 : "Dec" }
+	return abbrs[num]
+"""
+@app.template_filter('year')
+def year_filter(date):
+	return date[0:date.find('-')]
+@app.template_filter('day')
+def year_filter(date):
+	return date[0:date.find('-')]
+"""
+@app.template_filter('money')
+def money_filter(val):
+	return "${:,.2f}".format(val)
+
 @app.route('/browse')
 def browse():
 	connection = mysql.get_db()
