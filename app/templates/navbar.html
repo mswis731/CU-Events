@@ -34,7 +34,7 @@
 			<li class="dropdown">
           	<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Event Types <span class="caret"></span></a>
           	<ul class="dropdown-menu">
-            	{% for type,url in types %}
+            	{% for type,url in event_types %}
             	<li><a href="/browse/type/{{ url }}">{{ type }}</a></li>
             	{% endfor %}
           	</ul>
@@ -48,7 +48,7 @@
       	</form>
       	<ul class="nav navbar-nav navbar-right">
         	<li><a href="/browse">Browse Events</a></li>
-        	<li><a href="#">Browse Communities</a></li>
+        	<li><a href="/communities">Browse Communities</a></li>
         	<li><a href="/eventcreate">Create Event</a></li>
         	<li class="dropdown">
           	<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">(Username here)<span class="caret"></span></a>

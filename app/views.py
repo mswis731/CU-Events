@@ -10,11 +10,11 @@ def index():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	cursor.execute("SELECT name FROM EventType")
-	types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	return render_template('index.html', categories=categories, types=types)
+	return render_template('index.html', categories=categories, event_types=event_types)
 
 class ReusableForm(Form):
       id = TextField(id = 'id', validators=[validators.required()])
@@ -35,17 +35,18 @@ class ReusableForm(Form):
       eventtype = SelectField(id ='eventtype', choices = ['Charity', 'Concerts', 'Conferences', 'Networking and Career Fairs', 'Galleries and Exhibits', 'Other', 'Talks'])
 
 @app.route('/eventcreate', methods=['GET','POST'])
-def signup():
+def event_create():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT name FROM EventType")
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+
 	form = ReusableForm(request.form)
 	error = None
 
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-
-	cursor.execute("SELECT name FROM Category")
-	categories = [row[0] for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [row[0] for row in cursor.fetchall()]
 	prefill ={"id":"-1", "title":"", "description":"", "building":"", "addrAndStreet":"", "city":"", "zipcode":"",
 				"startDate":"", "startTime":"", "endDate":"", "endTime":"", "lowPrice":"", "highPrice":"" }
 	prefill_types = { "category":"", "eventtype":"" }
@@ -96,20 +97,7 @@ def signup():
 def sign_up():
     return render_template('signUp.html')
 
-@app.route('/emptypage')
-def empty():
-    return render_template('emptypage.html')
-
-@app.route('/music/')
-def music():
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM Category")
-	result = cursor.fetchall()
-	categories = [row[0] for row in result]
-	cursor.close()
-	return render_template('browse.html', categories=categories, result=result)
-
+# filters needed for listing events
 @app.template_filter('month')
 def year_filter(num):
 	abbrs = { 1 : "Jan",
@@ -124,15 +112,9 @@ def year_filter(num):
 			  10 : "Oct",	
 			  11 : "Nov",	
 			  12 : "Dec" }
-	return abbrs[num]
-"""
-@app.template_filter('year')
-def year_filter(date):
-	return date[0:date.find('-')]
-@app.template_filter('day')
-def year_filter(date):
-	return date[0:date.find('-')]
-"""
+	abbr = abbrs[num] if abbrs.get(num) else ""
+	return abbr
+
 @app.template_filter('money')
 def money_filter(val):
 	return "${:,.2f}".format(val)
@@ -142,29 +124,30 @@ def browse():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	cursor.execute("SELECT name FROM EventType")
-	types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	cursor.execute("SELECT id, title, startDate, building, addrAndStreet, city, zipcode, lowPrice, highPrice FROM Event")
+	cursor.execute("SELECT id, title, startDate, building, lowPrice, highPrice FROM Event")
 	events = [dict(id=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],
-                   addrAndStreet=row[4],
-                   city=row[5],
-                   zipcode=row[6],
-                   lowPrice=row[7],
-                   highPrice=row[8]) for row in cursor.fetchall()]
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
 	cursor.close()
-	#return render_template('browse.html', categories=categories, types=types, events=events)
-	return render_template('events.html', categories=categories, types=types, events=events)
+	return render_template('events.html', categories=categories, event_types=event_types, events=events)
 
 @app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	
+	cursor.execute("SELECT name FROM EventType")
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	"""
 	if request.method == 'POST':
 		btn_id = request.form['btn']
 		# delete button was pressed
@@ -176,36 +159,30 @@ def event_(category):
 		# edit button was pressed
 		else:
 			return redirect("/eventcreate")
+	"""
 
 	category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
-	cursor.execute("SELECT * FROM Event WHERE (id) IN (SELECT eventID FROM HasCategory WHERE categoryName='{}')".format(category))
+	cursor.execute("SELECT id, title, startDate, building, lowPrice, highPrice FROM Event WHERE (id) IN (SELECT eventID FROM HasCategory WHERE categoryName='{}')".format(category))
 	events = [dict(id=row[0],
-				   title=row[1],
-                   description=row[2],
+                   title=row[1],
+                   startDate=row[2],
                    building=row[3],
-                   addrAndStreet=row[4],
-                   city=row[5],
-                   zipcode=row[6],
-                   startDate=row[7],
-                   startTime=row[8],
-                   endDate=row[9],
-                   endTime=row[10],
-                   lowPrice=row[11],
-                   highPrice=row[12],
-                   nonUserViews=row[13]) for row in cursor.fetchall()]
-	return render_template('temp.html', events=events)
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
+	cursor.close()
 
-@app.route('/crawl')
-def crawl():
-	return eventful_crawl()
-
-	return render_template('eventlist.html', events=events)
+	return render_template('events.html', categories=categories, event_types=event_types, events=events)
 
 @app.route('/browse/type/<e_type>', methods=['GET','POST'])
 def event_type(e_type):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	
+	cursor.execute("SELECT name FROM EventType")
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	"""
 	if request.method == 'POST':
 		btn_id = request.form['btn']
 		# delete button was pressed
@@ -217,28 +194,31 @@ def event_type(e_type):
 		# edit button was pressed
 		else:
 			return redirect("/eventcreate")
+	"""
 
 	e_type = " ".join([ (word.capitalize() if word != 'and' else word) for word in e_type.split('-') ])
-	if (e_type == 'user_created'):
-		cursor.execute("SELECT * FROM EventCreated");
 
-	cursor.execute("SELECT * FROM Event WHERE (id) IN (SELECT eventID FROM HasEventType WHERE eventType='{}')".format(e_type))
+	cursor.execute("SELECT id, title, startDate, building, lowPrice, highPrice FROM Event WHERE (id) IN (SELECT eventID FROM HasEventType WHERE eventType='{}')".format(e_type))
 	events = [dict(id=row[0],
-				   title=row[1],
-                   description=row[2],
+                   title=row[1],
+                   startDate=row[2],
                    building=row[3],
-                   addrAndStreet=row[4],
-                   city=row[5],
-                   zipcode=row[6],
-                   startDate=row[7],
-                   startTime=row[8],
-                   endDate=row[9],
-                   endTime=row[10],
-                   lowPrice=row[11],
-                   highPrice=row[12],
-                   nonUserViews=row[13]) for row in cursor.fetchall()]
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
+	cursor.close()
 
-	return render_template('temp.html', events=events)
+	return render_template('events.html', categories=categories, event_types=event_types, events=events)
+	
+@app.route('/communities')
+def communities():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT name FROM EventType")
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	return render_template('communities.html', categories=categories, event_types=event_types)
 
 @app.route('/browse/free')
 def find_free():

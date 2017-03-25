@@ -1,8 +1,9 @@
 {% extends 'navbar.html' %}
 
 {% block content %}
-<link rel = "stylesheet" type = "text/css" href = "../static/styles/events.css"> 
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
 <div class="container">
+	{% if events|length > 0 %}
 	<div class="row">
 		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
 			<ul class="event-list">
@@ -16,7 +17,7 @@
 					</time>
 					<div class="info">
 						<h2 class="title">{{ event.title }}</h2>
-						<p class="desc">{{ event.building }}</p>
+						<p class="desc">{% if event.building %}{{ event.building }}{% endif %}</p>
 						{% if event.lowPrice and event.highPrice %}
 						<ul>
 							{% if event.lowPrice < event.highPrice %}
@@ -33,5 +34,8 @@
 			</ul>
 		</div>
 	</div>
+	{% else %}
+	<p style="text-align: center; font-family: 'Lato', sans-serif; font-size: 200%; font-weight: bold;"> No Events Found</p>
+	{% endif %}
 </div>
 {% endblock %}

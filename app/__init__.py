@@ -24,6 +24,7 @@ except ImportError:
 	db_host = url_2[1]
 	
 app = Flask(__name__)
+app.config['STATIC_FOLDER'] = 'static'
 
 app.config['MYSQL_DATABASE_USER'] = db_user
 app.config['MYSQL_DATABASE_PASSWORD'] = db_password
