@@ -24,6 +24,7 @@ except ImportError:
 	db_host = url_2[1]
 	
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'randomkey12309034212348'
 
 app.config['MYSQL_DATABASE_USER'] = db_user
 app.config['MYSQL_DATABASE_PASSWORD'] = db_password

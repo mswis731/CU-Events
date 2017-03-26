@@ -1,5 +1,5 @@
-from flask import Flask, render_template, flash, request, redirect
-from wtforms import Form, TextField, TextAreaField, validators, SelectField
+from flask import Flask, render_template, flash, request, redirect, session, url_for
+from wtforms import Form, TextField, TextAreaField, validators, SelectField, SubmitField, PasswordField
 from app import app, mysql
 from app.crawlers.eventful import crawl as eventful_crawl
 import sys
@@ -26,6 +26,45 @@ class ReusableForm(Form):
       highPrice = TextField(id = 'highPrice', validators=[validators.required()])
       category = SelectField(id ='category', choices = ['Academic', 'Arts and Theatre', 'Family', 'Government', 'Health and Wellness', 'Holiday', 'Home and Lifestyle', 'Music', 'Other', 'Outdoors', 'Sports', 'Technology', 'University'])
       eventtype = SelectField(id ='eventtype', choices = ['Charity', 'Concerts', 'Conferences', 'Networking and Career Fairs', 'Galleries and Exhibits', 'Other', 'Talks'])
+
+class signupForm(Form):
+	firstname = TextField("First name", [validators.Required(), validators.Length(min = 2, max = 25)])#"Please enter your first name.")])
+	lastname = TextField("Last name", [validators.Required()])#"Please enter your last name.")])
+	username = TextField("username", [validators.Required()])#"Please enter a username.")])
+	password = PasswordField('Password', [validators.Required()])#"Please enter a password.")])
+	submit = SubmitField("Create account") 
+
+	def __init__(self, *args, **kwargs):
+		Form.__init__(self, *args, **kwargs)
+
+	def validate(self):
+		if not Form.validate(self):
+			return False
+
+		user = User.query.filter_by(username=self.username.data).first()
+
+		("SELECT username FROM User WHERE username = self.username.data")
+		if user:
+			self.username.errors.append("That username is already taken")
+			return False
+		else:
+			return True
+
+@app.route('/signUp', methods = ['GET', 'POST'])
+def sign_up():
+	form = signupForm()
+	if request.method == "POST":
+		if form.validate() == False:
+			flash('Fill in required fields')
+			return render_template('signUp.html', form=form)
+		else:
+			newuser = User(form.firstname.data, form.lastname.data, form.username.data, form.password.data)
+			db.session.add(newuser)
+			db.session.commit()
+
+	elif request.method == 'GET':
+		return render_template('signup.html', form=form)
+    	
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def signup():
@@ -83,9 +122,6 @@ def signup():
 			if not prefill[key]:
 				prefill[key] = ""
 
-
-
-
 	"""
     if form.validate():
     	error = 'Thanks for registering the event' 
@@ -94,10 +130,6 @@ def signup():
     """
 
 	return render_template('eventcreate.html', prefill=prefill, prefill_types=prefill_types, form = form, error=error, categories=categories, event_types=event_types)
-
-@app.route('/signUp')
-def sign_up():
-    return render_template('signUp.html')
 
 @app.route('/emptypage')
 def empty():
