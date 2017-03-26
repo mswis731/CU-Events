@@ -1,7 +1,10 @@
 {% extends 'navbar.html' %}
 
-{% block content %}
+{% block stylesheets %}
 <link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+{% endblock %}
+
+{% block content %}
 <div class="container">
 	{% if events|length > 0 %}
 	<div class="row">
