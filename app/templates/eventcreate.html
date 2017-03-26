@@ -1,98 +1,125 @@
-<!DOCTYPE html> 
-<html>
-<head>
-	<title>eventcreate</title>
-	<link rel = "stylesheet" type = "text/css" href = "../static/styles/Style.css"> 
-    <link href="https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
-</head>
-<body>
- <form action="/index">
-      <input style ="float: right; padding-right: 15px; padding-bottom: 15px" type="submit" value="home"/>
- </form>
+{% extends 'navbar.html' %}
 
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css"/>
+{% endblock %}
 
-<form action = "/eventcreate" method = "POST">
-	<h3> Create an Event </h3>
-	{% if error %}
-    <p class="error"><strong>Error:</strong> {{ error }}
-	{% endif %}
-	<div class = "event_describe">
-		<input id = 'id' type='text' name='id' value='{{prefill.id}}' style="visibility:hidden;position:absolute;">
-		<p class = "required"> <label for "title"> Event title </label> </p>
-		<input id = "title" type="text" name="title" value="{{prefill.title}}" placeholder="title">
-	</div>
-	<div class = "event_describe">
-		<p> <label for "description"> Event description </label></p>
-		<textarea name="description" cols="40" rows="5">{{prefill.description}}</textarea>
-	</div>
-	<div class = "event_describe">
-		<p class = required> Location </p>
-		<label for "building"> <input id = "building" type="text" name="building" value='{{prefill.building}}' placeholder="venue name"></label>
-		<label for "addrAndStreet"><input id = "addrAndStreet" type="text" name="addrAndStreet" value='{{prefill.addrAndStreet}}' placeholder="address"></label>
-		<label for "city"><input id = "city" type="text" name="city" value='{{prefill.city}}'placeholder="city"></label>
-		<label for "state"><input id = "state" type="text" name="state" value="Illinois" placeholder="state"></label>
-		<label for "zipcode"><input id = "zipcode" type="text" name="zipcode" value='{{prefill.zipcode}}' placeholder="zip/postal"></label>
-
-	</div>
-	<div class = "event_describe">
-		<p class = "required"> Starts </p> 
-		<label for "startDate"><input id = "startDate" type="text" name="startDate" value='{{prefill.startDate}}' placeholder="yyyy-mm-dd"> </label> 
-		<label for "startTime"><input id = "startTime" type="text" name="startTime" value='{{prefill.startTime}}' placeholder="hh:mm:ss"> </label> 
-	</div>
-	<div class = "event_describe">
-		<p class = "required"> Ends </p>
-		<label for "endDate"><input id = "endDate" type="text" name="endDate" value='{{prefill.endDate}}' placeholder="yyyy-mm-dd"> </label> 
-		<label for "endTime"><input id = "endTime" type="text" name="endTime" value='{{prefill.endTime}}' placeholder="hh:mm:ss"> </label> 
-	</div>
-	<div class = "event_describe">
-		<p class = "required"> Price </p>
-		<label for "lowPrice"><input id = "lowPrice" type="text" name="lowPrice" value='{{prefill.lowPrice}}' placeholder="low price"></label>
-		<label for "highPrice"><input id = "highPrice" type="text" name="highPrice" value='{{prefill.highPrice}}' placeholder="high price"></label>
-	</div>
-	<!--
-	<div class = "event_describe">
-		<p> Upload a photo for your event </p>
-		<form action="/action_page.php">
-			<input type="file" name="pic" accept="image/*">
- 	    	<input type="submit">
-		</form>
-	</div>
-	-->
-	<div class = "event_describe">
-		<p> Select a category and type for your event </p>
-		<div>
-		<p> category </p>
-			<label for "category">
-			<select id = "category" name = "category">
-			{% for category in categories %}
-				{% if category == prefill_types.category %}
-				<option value="{{category}}" selected='selected'>{{category}}</option>
-				{% else %}
-				<option value="{{category}}">{{category}}</option>
-				{% endif %}
-			{% endfor %}
-			</select>
-			</label>
+{% block content %}
+<div class="container">
+    <div id="legend">
+      	<legend class="">Create an Event</legend>
+    </div>
+	<form action='', method='POST'>
+		<input id = "id" name="id" type="number" value="{% if form.id.data != -1 %}{{form.id.data}}{% endif %}" style="visibility:hidden;position:absolute;">
+		<div class="form-group row">
+			<label for="title" class="col-sm-2 col-form-label">Title</label>
+			<div class="col-sm-6">
+				<input type="text" class="form-control" id="title" name="title" value="{% if form.title.data %}{{form.title.data}}{% endif %}" placeholder="">
+			</div>
 		</div>
-		<div style="float: left">
-		<p> event type </p>
-			<label for "eventtype">
-			<select id = "eventtype" name = "eventtype">
-			{% for event_type in event_types %}
-				{% if event_type == prefill_types.eventtype %}
-				<option value="{{event_type}}" selected='selected'>{{event_type}}</option>
-				{% else %}
-				<option value="{{event_type}}">{{event_type}}</option>
-				{% endif %}
-			{% endfor %}
-			</select>
-			</label>
+		<div class="form-group row">
+			<label for="description" class="col-sm-2 col-form-label">Description</label>
+			<div class="col-sm-6">
+  		        <textarea class="form-control" id="description"  name="description" rows="5">{% if form.description.data %}{{form.description.data}}{% endif %}</textarea>
+			</div>
 		</div>
-	</div>
-	<div style = "width: 70px; margin:0 auto; padding-bottom: 40px">
-		<input type="submit" value="create event">
-	</div>
-</form>
-
-</body>
-</html>
+		<div class="form-group row">
+			<label for="location" class="col-sm-2 col-form-label">Location</label>
+			<div class="col-sm-2">
+				<input type="text" class="form-control" id="building" name="building" value="{% if form.building.data %}{{form.building.data}}{% endif %}" placeholder="Building/Venue">
+			</div>
+			<div class="col-sm-2">
+				<input type="text" class="form-control" id="addrAndStreet" name="addrAndStreet" value="{% if form.addrAndStreet.data %}{{form.addrAndStreet.data}}{% endif %}" placeholder="Address">
+			</div>
+			<div class="col-sm-2">
+				<input type="text" class="form-control" id="city" name="city" value="{% if form.city.data %}{{form.city.data}}{% endif %}" placeholder="City">
+			</div>
+			<div class="col-sm-1">
+				<p class="form-control-static">Illinois</p>
+			</div>
+			<div class="col-sm-2">
+				<input type="text" class="form-control" id="zipcode" name="zipcode" value="{% if form.zipcode.data %}{{form.zipcode.data}}{% endif %}" placeholder="Zipcode">
+			</div>
+		</div>
+		<div class="form-group row">
+			<label for="title" class="col-sm-2 col-form-label">Start Date</label>
+    		<div class='col-sm-6'>
+        		<div class='input-group date' id='datetimepicker1'>
+            		<input type='text' class="form-control" id="startDate" name="startDate" value="{%if form.startDate.data %}{{form.startDate.data}}{% endif %}" placeholder="Date and Time" />
+            		<span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+            		</span>
+        		</div>
+    		</div>
+		</div>
+		<div class="form-group row">
+			<label for="title" class="col-sm-2 col-form-label">End Date</label>
+			<div class='col-sm-6'>
+        		<div class='input-group date' id='datetimepicker2'>
+            		<input type='text' class="form-control" id="endDate" name="endDate" value="{% if form.endDate.data %}{{form.endDate.data}}{% endif %}" placeholder="Date and Time" />
+            		<span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+            		</span>
+        		</div>
+    		</div>
+		</div>
+		<div class="form-group row">
+			<label for="title" class="col-sm-2 col-form-label">Price Range</label>
+			<div class="col-sm-2">
+				<input type="price" class="form-control" id="lowPrice" name="lowPrice" value="{% if form.lowPrice.data %}{{form.lowPrice.data}}{% endif %}" placeholder="Low Price">
+			</div>
+			<div class="col-sm-2">
+				<input type="price" class="form-control" id="highPrice" name="highPrice" value="{% if form.highPrice.data %}{{form.highPrice.data}}{% endif %}" placeholder="High Price">
+			</div>
+		</div>
+		<div class="form-group row">
+			<label for="categories" class="col-sm-2 col-form-label">Categories</label>
+			<div class="col-sm-4">
+				<select class="selectpicker" multiple id="categories" name="categories">
+					{% for category,url in categories %}
+					{% if category in form.categories.data %}
+					<option value="{{category}}" selected="selected">{{category}}</option>
+					{% else %}
+					<option value="{{category}}">{{category}}</option>
+					{% endif %}
+					{% endfor %}
+				</select>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label for="eventTypes" class="col-sm-2 col-form-label">Event Types</label>
+			<div class="col-sm-4">
+				<select class="selectpicker" multiple id="eventTypes" name="eventTypes">
+					{% for event_type,url in event_types %}
+					{% if event_type in form.eventTypes.data %}
+					<option value="{{event_type}}" selected="selected">{{event_type}}</option>
+					{% else %}
+					<option value="{{event_type}}">{{event_type}}</option>
+					{% endif %}
+					{% endfor %}
+				</select>
+			</div>
+		</div>
+		<div class="form-group row">
+			<div class="offset-sm-2 col-sm-10">
+				<button type="submit" class="btn btn-primary">Create Event</button>
+			</div>
+		</div>
+  </form>
+</div>
+{% endblock %}
+	
+{% block scripts %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript">
+	$(function() {
+        $('#datetimepicker1').datetimepicker();
+    });
+</script>
+<script type="text/javascript">
+	$(function() {
+        $('#datetimepicker2').datetimepicker();
+    });
+</script>
+{% endblock %}

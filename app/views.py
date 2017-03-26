@@ -1,5 +1,5 @@
 from flask import Flask, render_template, flash, request, redirect
-from wtforms import Form, TextField, TextAreaField, validators, SelectField
+from wtforms import Form, IntegerField, TextField, TextAreaField, DecimalField, validators, SelectMultipleField
 from app import app, mysql
 from app.crawlers.eventful import crawl as eventful_crawl
 import sys
@@ -16,23 +16,96 @@ def index():
 
 	return render_template('index.html', categories=categories, event_types=event_types)
 
-class ReusableForm(Form):
-      id = TextField(id = 'id', validators=[validators.required()])
-      title = TextField(id='title', validators=[validators.required()])
-      description = TextAreaField('description')
-      building = TextField(id = 'building', validators=[validators.required()])
-      addrAndStreet = TextField(id ='addrAndStreet', validators=[validators.required()])
-      state = TextField(id = 'state', validators=[validators.required()])
-      city = TextField(id = 'city', validators=[validators.required()])
-      zipcode = TextField(id = 'zipcode', validators=[validators.required()])
-      startDate = TextField(id = 'startDate', validators=[validators.required()])
-      startTime = TextField(id = 'startTime', validators=[validators.required()])
-      endDate = TextField(id = 'endDate', validators=[validators.required()])
-      endTime = TextField(id = 'endTime', validators=[validators.required()])
-      lowPrice = TextField(id = 'lowPrice', validators=[validators.required()])
-      highPrice = TextField(id = 'highPrice', validators=[validators.required()])
-      category = SelectField(id ='category', choices = ['Academic', 'Arts and Theatre', 'Family', 'Government', 'Health and Wellness', 'Holiday', 'Home and Lifestyle', 'Music', 'Other', 'Outdoors', 'Sports', 'Technology', 'University'])
-      eventtype = SelectField(id ='eventtype', choices = ['Charity', 'Concerts', 'Conferences', 'Networking and Career Fairs', 'Galleries and Exhibits', 'Other', 'Talks'])
+class CreateEventForm(Form):
+	id = IntegerField(id = 'id', validators=[validators.required()])
+	title = TextField(id='title', validators=[validators.required()])
+	description = TextAreaField('description')
+	building = TextField(id = 'building', validators=[validators.required()])
+	addrAndStreet = TextField(id ='addrAndStreet', validators=[validators.required()])
+	state = TextField(id = 'state', validators=[validators.required()])
+	city = TextField(id = 'city', validators=[validators.required()])
+	zipcode = IntegerField(id = 'zipcode', validators=[validators.required()])
+	startDate = TextField(id = 'startDate', validators=[validators.required()])
+	endDate = TextField(id = 'endDate', validators=[validators.required()])
+	lowPrice = DecimalField(id = 'lowPrice', places=2, validators=[validators.required()])
+	highPrice = DecimalField(id = 'highPrice', places=2, validators=[validators.required()])
+	categories = SelectMultipleField(id ='category', choices = ['Academic', 'Arts and Theatre', 'Family', 'Government', 'Health and Wellness', 'Holiday', 'Home and Lifestyle', 'Music', 'Other', 'Outdoors', 'Sports', 'Technology', 'University'])
+	eventTypes = SelectMultipleField(id ='eventtype', choices = ['Charity', 'Concerts', 'Conferences', 'Networking and Career Fairs', 'Galleries and Exhibits', 'Other', 'Talks'])
+
+	def dict(self):
+		dict = { 'id' : self.id.data,
+				 'title' : self.title.data,
+				 'description': self.description.data,
+				 'building': self.building.data,
+				 'addrAndStreet': self.addrAndStreet.data,
+				 'city': self.city.data,
+				 'zipcode': self.zipcode.data,
+				 'startDate': self.startDate.data,
+				 'endDate': self.endDate.data,
+				 'lowPrice': self.lowPrice.data,
+				 'highPrice': self.highPrice.data,
+				 'categories': self.categories.data,
+				 'eventTypes': self.eventTypes.data
+			   }
+		return dict
+
+	def convert_datetime(self, dt):
+		d_list = dt.split(' ')[0].split('/')
+		t_list = dt.split(' ')[1].split(':')
+		am_pm = dt.split(' ')[2].lower()
+		if am_pm == 'am':
+			if t_list[0] == '12':
+				t_list[0] = '00'
+		else:
+			if t_list[0] != '12':
+				t_list[0] = str(int(t_list[0]) + 12)
+		
+		date = "{}-{}-{}".format(d_list[2], d_list[0], d_list[1])
+		time = "{}:{}:00".format(t_list[0], t_list[1])
+		return (date,time)
+			
+	def event_dict(self):
+		start_date, start_time = self.convert_datetime(self.startDate.data) 
+		end_date, end_time = self.convert_datetime(self.endDate.data) 
+		categories = ','.join(map(str, self.categories.data)) 
+		eventTypes = ','.join(map(str, self.eventTypes.data)) 
+
+		if self.id.data:
+			dict = { 'id' : self.id.data,
+				 	'title' : self.title.data,
+				 	'description': self.description.data,
+				 	'building': self.building.data,
+				 	'addrAndStreet': self.addrAndStreet.data,
+				 	'city': self.city.data,
+				 	'zipcode': self.zipcode.data,
+				 	'startDate': start_date,
+				 	'startTime': start_time,
+				 	'endDate': end_date,
+				 	'endTime': end_time,
+				 	'lowPrice': self.lowPrice.data,
+				 	'highPrice': self.highPrice.data,
+				 	'categories': categories,
+				 	'eventTypes': eventTypes
+			   	   }
+		else:
+			dict = { 'title' : self.title.data,
+				 	'description': self.description.data,
+				 	'building': self.building.data,
+				 	'addrAndStreet': self.addrAndStreet.data,
+				 	'city': self.city.data,
+				 	'zipcode': self.zipcode.data,
+				 	'startDate': start_date,
+				 	'startTime': start_time,
+				 	'endDate': end_date,
+				 	'endTime': end_time,
+				 	'lowPrice': self.lowPrice.data,
+				 	'highPrice': self.highPrice.data,
+				 	'categories': categories,
+				 	'eventTypes': eventTypes
+			   	   }
+			
+		return dict
+      	
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
@@ -43,55 +116,79 @@ def event_create():
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-
-	form = ReusableForm(request.form)
+	form = CreateEventForm(request.form)
 	error = None
 
-	prefill ={"id":"-1", "title":"", "description":"", "building":"", "addrAndStreet":"", "city":"", "zipcode":"",
-				"startDate":"", "startTime":"", "endDate":"", "endTime":"", "lowPrice":"", "highPrice":"" }
-	prefill_types = { "category":"", "eventtype":"" }
+	form.categories.data = []
+	form.eventTypes.data = []
 
 	eventID = request.args.get('id')
 	if eventID:
 		cursor.execute("SELECT * FROM Event WHERE id={}".format(eventID))
 		data = cursor.fetchall()[0]
-		index = 0
-		for key in prefill:
-			prefill[key]=data[index] if data[index] != None else ""
-			index+=1
+		form.id.data = data[0]
+		form.title.data = data[1]
+		form.description.data = data[2]
+		form.building.data = data[3]
+		form.addrAndStreet.data = data[4]
+		form.city.data = data[5]
+		form.zipcode.data = data[6]
+		form.lowPrice.data = data[11]
+		form.highPrice.data = data[12]
+
+		start_hours = data[8].seconds//3600
+		start_minutes = (data[8].seconds//60)%60
+		start_am_pm = ""
+		if start_hours >= 12:
+			start_am_pm = "PM"
+			if start_hours > 12:
+				start_hours -= 12
+		else:
+			if start_hours == 0:
+				start_hours = 12
+			start_am_pm = "AM"
+		end_hours = data[10].seconds//3600
+		end_minutes = (data[10].seconds//60)%60
+		end_am_pm = ""
+		if end_hours >= 12:
+			end_am_pm = "PM"
+			if end_hours > 12:
+				end_hours -= 12
+		else:
+			if end_hours == 0:
+				end_hours = 12
+			end_am_pm = "AM"
+		form.startDate.data = "{}/{}/{} {}:{} {}".format(data[7].month, data[7].day, data[7].year, start_hours, start_minutes, start_am_pm)
+		form.endDate.data = "{}/{}/{} {}:{} {}".format(data[9].month, data[9].day, data[9].year, end_hours, end_minutes, end_am_pm)
+
 		cursor.execute("SELECT categoryName FROM HasCategory WHERE eventID={}".format(eventID))
-		prefill_types['category'] = cursor.fetchall()[0][0]
+		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
 		cursor.execute("SELECT eventType FROM HasEventType WHERE eventID={}".format(eventID))
-		prefill_types['eventtype'] = cursor.fetchall()[0][0]
+		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
 
-	# TODO: fix button layout
-	# TODO: implement the ability to chose multiple categories and event types
 	if request.method == 'POST':
-		for key in prefill:
-			prefill[key]=request.form[key] if request.form[key] != "" else None
-		prefill_types['category'] = request.form['category']
-		prefill_types['eventtype'] = request.form['eventtype']
+		for key,val in form.dict().items():
+			if key != 'categories' and key != 'eventTypes':
+				getattr(form, key).data = request.form.get(key)
+			else:
+				getattr(form, key).data = request.form.getlist(key)
 
-		if prefill['title'] and prefill['startDate'] and prefill['startTime']:
-			#cursor.execute("SELECT * FROM Event WHERE title='{}' AND startDate='{}' AND startTime='{}'".format(prefill['title'], prefill['startDate'], prefill['startTime']))
-			#conflicting_events = cursor.fetchall()
-			#print(len(conflicting_events))
-			#if len(conflicting_events) == 0:
-			attr = [prefill[key] for key in prefill]
-			attr.append(prefill_types['category'])
-			attr.append(prefill_types['eventtype'])
-			cursor.callproc('CreateUserEvent', tuple(attr))
+		#TODO: add more validation for form
+		if form.title.data != "" and form.startDate.data != "" and form.endDate.data != "" and form.lowPrice.data and form.highPrice.data:
+			form_dict = form.event_dict()
+			attr = tuple([ form_dict[key] for key in form_dict ])
+			# new event
+			if not form.id.data:
+				cursor.callproc('CreateUserEvent', attr)
+			# update event
+			else:
+				cursor.callproc('UpdateEvent', attr)
+				
 			connection.commit()
 
-			return redirect('/browse/category/{}'.format(prefill_types['category']))
-		# invalid data
-		error = "Error: Missing fields"
-		# change Nones back to empty strings
-		for key in prefill:
-			if not prefill[key]:
-				prefill[key] = ""
+			return redirect('/browse')
 
-	return render_template('eventcreate.html', prefill=prefill, prefill_types=prefill_types, form = form, error=error, categories=categories, event_types=event_types)
+	return render_template('eventcreate.html', form = form, error=error, categories=categories, event_types=event_types)
 
 @app.route('/signUp')
 def sign_up():

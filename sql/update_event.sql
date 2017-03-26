@@ -1,6 +1,7 @@
-DROP PROCEDURE IF EXISTS CreateUserEvent;
+DROP PROCEDURE IF EXISTS UpdateEvent;
 DELIMITER $$
-CREATE PROCEDURE CreateUserEvent(
+CREATE PROCEDURE UpdateEvent(
+	_id				INTEGER,
 	_title 			VARCHAR(60),
 	_description 	VARCHAR(1000),
 	_building 		VARCHAR(60),
@@ -19,12 +20,13 @@ BEGIN
 
 	SET sql_mode='';
 
-	INSERT INTO Event(title, description, building, addrAndStreet, city, zipcode,
-						startDate, startTime, endDate, endTime, lowPrice, highPrice)
-	VALUES (_title, _description, _building, _street, _city, _zipcode,
-			_start_date, _start_time, _end_date, _end_time, _low_price, _high_price);
+	UPDATE Event
+	SET title = _title, startDate = _start_date, startTime = _start_time, description = _description, building = _building, addrAndStreet = _street,
+	city = _city, zipcode = _zipcode, endDate = _end_date, endTime = _end_time, lowPrice = _low_price, highPrice = _high_price
+	WHERE id=_id;
 
-	SET @eid = (SELECT id FROM Event WHERE title = _title AND startDate = _start_date AND startTime = _start_time);
+	DELETE FROM HasCategory WHERE eventID = _id;
+	DELETE FROM HasEventType WHERE eventID = _id;
 
 	SET @next = '';
 	SET @nextlen = 0;
@@ -40,7 +42,7 @@ BEGIN
 		SET @nextlen = LENGTH(@next);
 		SET @value = TRIM(@next);
 
-		INSERT INTO HasCategory(eventID, categoryName) VALUES (@eid, @value);
+		INSERT INTO HasCategory(eventID, categoryName) VALUES (_id, @value);
 
 		SET _categories_str = INSERT(_categories_str, 1, @nextlen + 1, '');
 	END LOOP;
@@ -59,7 +61,7 @@ BEGIN
 		SET @nextlen = LENGTH(@next);
 		SET @value = TRIM(@next);
 
-		INSERT INTO HasEventType(eventID, eventType) VALUES (@eid, @value);
+		INSERT INTO HasEventType(eventID, eventType) VALUES (_id, @value);
 
 		SET _event_types_str = INSERT(_event_types_str, 1, @nextlen + 1, '');
 	END LOOP;
