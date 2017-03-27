@@ -1,7 +1,10 @@
 CREATE TABLE User (
-	id					INTEGER NOT NULL AUTO_INCREMENT,
+	id					INTEGER  NOT NULL AUTO_INCREMENT,
 	username			VARCHAR(20) NOT NULL UNIQUE,
 	password			VARCHAR(30),
+	firstname			VARCHAR(30),
+	lastname			VARCHAR(30),
+	email 				VARCHAR(50),
 	PRIMARY KEY(id)
 );
 CREATE TABLE Message (

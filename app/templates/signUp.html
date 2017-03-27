@@ -7,7 +7,49 @@
 </head>
 <body>
 
-   <form action="/index">
+
+{% block content %}
+  <h2>Sign up</h2>
+     
+    {% for message in form.firstname.errors %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+
+    {% for message in form.lastname.errors %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+
+    {% for message in form.username.errors %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+
+    {% for message in form.password.errors %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+
+  <form action="{{ url_for('sign_up') }}" method=post>
+
+    {{ form.firstname.label }}
+    {{ form.firstname }}
+     
+    {{ form.lastname.label }}
+    {{ form.lastname }}
+
+    {{ form.username.label }}
+    {{ form.username }}
+
+    {{ form.email.label }}
+    {{ form.email }}
+     
+    {{ form.password.label }}
+    {{ form.password }}
+     
+    {{ form.submit }}
+  </form>
+     
+{% endblock %}
+
+<!--    <form action="/index">
       <input style ="float: right; padding-right: 15px; padding-bottom: 15px" type="submit" value="home"/>
     </form>
 
@@ -128,7 +170,7 @@
 <form>
     <button formaction="file:///home/dev/411project/CU-Events/app/templates/signUpSuccess.html">Sign up</button>
 </form>
-
+ -->
 	
 	<!--<input type="submit" value="sign up">-->
 
