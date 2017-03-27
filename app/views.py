@@ -28,10 +28,11 @@ class ReusableForm(Form):
       eventtype = SelectField(id ='eventtype', choices = ['Charity', 'Concerts', 'Conferences', 'Networking and Career Fairs', 'Galleries and Exhibits', 'Other', 'Talks'])
 
 class signupForm(Form):
-	firstname = TextField("First name", [validators.Required(), validators.Length(min = 2, max = 25)])#"Please enter your first name.")])
-	lastname = TextField("Last name", [validators.Required()])#"Please enter your last name.")])
-	username = TextField("username", [validators.Required()])#"Please enter a username.")])
-	password = PasswordField('Password', [validators.Required()])#"Please enter a password.")])
+	firstname = TextField("First name") #, [validators.Required(), validators.Length(min = 2, max = 25)])#"Please enter your first name.")])
+	lastname = TextField("Last name") #, [validators.Required()])#"Please enter your last name.")])
+	username = TextField("username") #, [validators.Required()])#"Please enter a username.")])
+	password = PasswordField('Password') #, [validators.Required()])#"Please enter a password.")])
+	email = TextField('email')
 	submit = SubmitField("Create account") 
 
 	def __init__(self, *args, **kwargs):
@@ -40,31 +41,36 @@ class signupForm(Form):
 	def validate(self):
 		if not Form.validate(self):
 			return False
+		return True
 
-		user = User.query.filter_by(username=self.username.data).first()
+		# user = ("SELECT username FROM User WHERE username = self.username.data LIMIT 1")
 
-		("SELECT username FROM User WHERE username = self.username.data")
-		if user:
-			self.username.errors.append("That username is already taken")
-			return False
-		else:
-			return True
+		# if user:
+		# 	self.username.errors.append("That username is already taken")
+		# 	return False
+		# else:
+			# return True
 
 @app.route('/signUp', methods = ['GET', 'POST'])
 def sign_up():
-	form = signupForm()
+
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	form = signupForm(request.form)
 	if request.method == "POST":
 		if form.validate() == False:
 			flash('Fill in required fields')
 			return render_template('signUp.html', form=form)
 		else:
-			newuser = User(form.firstname.data, form.lastname.data, form.username.data, form.password.data)
-			db.session.add(newuser)
-			db.session.commit()
+			# return (form.password.data)
+			 attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, form.password.data)
+			 cursor.callproc('CreateUser', (attr[0], attr[1], attr[2], attr[3], attr[4]))
+			 connection.commit()
+			 return("thank you for signing up!")
 
 	elif request.method == 'GET':
 		return render_template('signup.html', form=form)
-    	
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def signup():
