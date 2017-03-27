@@ -1,4 +1,5 @@
 DROP PROCEDURE IF EXISTS CreateUserEvent;
+
 DELIMITER $$
 CREATE PROCEDURE CreateUserEvent(
 	_title 			VARCHAR(60),
@@ -24,7 +25,7 @@ BEGIN
 	VALUES (_title, _description, _building, _street, _city, _zipcode,
 			_start_date, _start_time, _end_date, _end_time, _low_price, _high_price);
 
-	SET @eid = (SELECT id FROM Event WHERE title = _title AND startDate = _start_date AND startTime = _start_time);
+	SET @eid = (SELECT eid FROM Event WHERE title = _title AND startDate = _start_date AND startTime = _start_time);
 
 	SET @next = '';
 	SET @nextlen = 0;
@@ -40,7 +41,7 @@ BEGIN
 		SET @nextlen = LENGTH(@next);
 		SET @value = TRIM(@next);
 
-		INSERT INTO HasCategory(eventID, categoryName) VALUES (@eid, @value);
+		INSERT INTO HasCategory(eid, categoryName) VALUES (@eid, @value);
 
 		SET _categories_str = INSERT(_categories_str, 1, @nextlen + 1, '');
 	END LOOP;
@@ -59,7 +60,7 @@ BEGIN
 		SET @nextlen = LENGTH(@next);
 		SET @value = TRIM(@next);
 
-		INSERT INTO HasEventType(eventID, eventType) VALUES (@eid, @value);
+		INSERT INTO HasEventType(eid, eventType) VALUES (@eid, @value);
 
 		SET _event_types_str = INSERT(_event_types_str, 1, @nextlen + 1, '');
 	END LOOP;

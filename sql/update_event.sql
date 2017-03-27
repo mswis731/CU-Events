@@ -1,7 +1,8 @@
 DROP PROCEDURE IF EXISTS UpdateEvent;
+
 DELIMITER $$
 CREATE PROCEDURE UpdateEvent(
-	_id				INTEGER,
+	_eid			INTEGER,
 	_title 			VARCHAR(60),
 	_description 	VARCHAR(1000),
 	_building 		VARCHAR(60),
@@ -23,10 +24,10 @@ BEGIN
 	UPDATE Event
 	SET title = _title, startDate = _start_date, startTime = _start_time, description = _description, building = _building, addrAndStreet = _street,
 	city = _city, zipcode = _zipcode, endDate = _end_date, endTime = _end_time, lowPrice = _low_price, highPrice = _high_price
-	WHERE id=_id;
+	WHERE eid=_eid;
 
-	DELETE FROM HasCategory WHERE eventID = _id;
-	DELETE FROM HasEventType WHERE eventID = _id;
+	DELETE FROM HasCategory WHERE eid = _eid;
+	DELETE FROM HasEventType WHERE eid = _eid;
 
 	SET @next = '';
 	SET @nextlen = 0;
@@ -42,7 +43,7 @@ BEGIN
 		SET @nextlen = LENGTH(@next);
 		SET @value = TRIM(@next);
 
-		INSERT INTO HasCategory(eventID, categoryName) VALUES (_id, @value);
+		INSERT INTO HasCategory(eid, categoryName) VALUES (_eid, @value);
 
 		SET _categories_str = INSERT(_categories_str, 1, @nextlen + 1, '');
 	END LOOP;
@@ -61,7 +62,7 @@ BEGIN
 		SET @nextlen = LENGTH(@next);
 		SET @value = TRIM(@next);
 
-		INSERT INTO HasEventType(eventID, eventType) VALUES (_id, @value);
+		INSERT INTO HasEventType(eid, eventType) VALUES (_eid, @value);
 
 		SET _event_types_str = INSERT(_event_types_str, 1, @nextlen + 1, '');
 	END LOOP;

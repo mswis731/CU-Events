@@ -1,3 +1,5 @@
+DROP PROCEDURE IF EXISTS UpdateCrawledEvent;
+
 DELIMITER $$
 CREATE PROCEDURE UpdateCrawledEvent(
 	_name 			VARCHAR(60),

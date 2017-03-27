@@ -17,7 +17,7 @@ def index():
 	return render_template('index.html', categories=categories, event_types=event_types)
 
 class CreateEventForm(Form):
-	id = IntegerField(id = 'id', validators=[validators.required()])
+	eid = IntegerField(id = 'eid', validators=[validators.required()])
 	title = TextField(id='title', validators=[validators.required()])
 	description = TextAreaField('description')
 	building = TextField(id = 'building', validators=[validators.required()])
@@ -33,7 +33,7 @@ class CreateEventForm(Form):
 	eventTypes = SelectMultipleField(id ='eventtype', choices = ['Charity', 'Concerts', 'Conferences', 'Networking and Career Fairs', 'Galleries and Exhibits', 'Other', 'Talks'])
 
 	def dict(self):
-		dict = { 'id' : self.id.data,
+		dict = { 'eid' : self.eid.data,
 				 'title' : self.title.data,
 				 'description': self.description.data,
 				 'building': self.building.data,
@@ -70,8 +70,8 @@ class CreateEventForm(Form):
 		categories = ','.join(map(str, self.categories.data)) 
 		eventTypes = ','.join(map(str, self.eventTypes.data)) 
 
-		if self.id.data:
-			dict = { 'id' : self.id.data,
+		if self.eid.data:
+			dict = { 'eid' : self.eid.data,
 				 	'title' : self.title.data,
 				 	'description': self.description.data,
 				 	'building': self.building.data,
@@ -150,42 +150,6 @@ def sign_up():
 	elif request.method == 'GET':
 		return render_template('signup.html', form=form)
 
-		if self.id.data:
-			dict = { 'id' : self.id.data,
-				 	'title' : self.title.data,
-				 	'description': self.description.data,
-				 	'building': self.building.data,
-				 	'addrAndStreet': self.addrAndStreet.data,
-				 	'city': self.city.data,
-				 	'zipcode': self.zipcode.data,
-				 	'startDate': start_date,
-				 	'startTime': start_time,
-				 	'endDate': end_date,
-				 	'endTime': end_time,
-				 	'lowPrice': self.lowPrice.data,
-				 	'highPrice': self.highPrice.data,
-				 	'categories': categories,
-				 	'eventTypes': eventTypes
-			   	   }
-		else:
-			dict = { 'title' : self.title.data,
-				 	'description': self.description.data,
-				 	'building': self.building.data,
-				 	'addrAndStreet': self.addrAndStreet.data,
-				 	'city': self.city.data,
-				 	'zipcode': self.zipcode.data,
-				 	'startDate': start_date,
-				 	'startTime': start_time,
-				 	'endDate': end_date,
-				 	'endTime': end_time,
-				 	'lowPrice': self.lowPrice.data,
-				 	'highPrice': self.highPrice.data,
-				 	'categories': categories,
-				 	'eventTypes': eventTypes
-			   	   }
-			
-		return dict
-
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
 	connection = mysql.get_db()
@@ -201,11 +165,11 @@ def event_create():
 	form.categories.data = []
 	form.eventTypes.data = []
 
-	eventID = request.args.get('id')
-	if eventID:
-		cursor.execute("SELECT * FROM Event WHERE id={}".format(eventID))
+	eid = request.args.get('eid')
+	if eid:
+		cursor.execute("SELECT * FROM Event WHERE eid={}".format(eid))
 		data = cursor.fetchall()[0]
-		form.id.data = data[0]
+		form.eid.data = data[0]
 		form.title.data = data[1]
 		form.description.data = data[2]
 		form.building.data = data[3]
@@ -240,14 +204,14 @@ def event_create():
 		form.startDate.data = "{}/{}/{} {}:{} {}".format(data[7].month, data[7].day, data[7].year, start_hours, start_minutes, start_am_pm)
 		form.endDate.data = "{}/{}/{} {}:{} {}".format(data[9].month, data[9].day, data[9].year, end_hours, end_minutes, end_am_pm)
 
-		cursor.execute("SELECT categoryName FROM HasCategory WHERE eventID={}".format(eventID))
+		cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(eid))
 		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
-		cursor.execute("SELECT eventType FROM HasEventType WHERE eventID={}".format(eventID))
+		cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(eid))
 		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
 
-		cursor.execute("SELECT categoryName FROM HasCategory WHERE eventID={}".format(eventID))
+		cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(eid))
 		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
-		cursor.execute("SELECT eventType FROM HasEventType WHERE eventID={}".format(eventID))
+		cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(eid))
 		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
 
 	if request.method == 'POST':
@@ -262,7 +226,7 @@ def event_create():
 			form_dict = form.event_dict()
 			attr = tuple([ form_dict[key] for key in form_dict ])
 			# new event
-			if not form.id.data:
+			if not form.eid.data:
 				cursor.callproc('CreateUserEvent', attr)
 			# update event
 			else:
@@ -305,8 +269,8 @@ def browse():
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	cursor.execute("SELECT id, title, startDate, building, lowPrice, highPrice FROM Event")
-	events = [dict(id=row[0],
+	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event")
+	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],
@@ -330,7 +294,7 @@ def event_(category):
 		# delete button was pressed
 		if btn_id[0] == 'd':
 			event_id = btn_id[1:]
-			cursor.execute("DELETE FROM Event WHERE id={}".format(event_id))
+			cursor.execute("DELETE FROM Event WHERE eid={}".format(event_id))
 			connection.commit()
 			return redirect("/browse/category/{}".format(category))
 		# edit button was pressed
@@ -339,8 +303,8 @@ def event_(category):
 	"""
 
 	category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
-	cursor.execute("SELECT id, title, startDate, building, lowPrice, highPrice FROM Event WHERE (id) IN (SELECT eventID FROM HasCategory WHERE categoryName='{}')".format(category))
-	events = [dict(id=row[0],
+	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category))
+	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],
@@ -365,7 +329,7 @@ def event_type(e_type):
 		# delete button was pressed
 		if btn_id[0] == 'd':
 			event_id = btn_id[1:]
-			cursor.execute("DELETE FROM Event WHERE id={}".format(event_id))
+			cursor.execute("DELETE FROM Event WHERE eid={}".format(event_id))
 			connection.commit()
 			return redirect("/browse/type/{}".format(e_type))
 		# edit button was pressed
@@ -375,8 +339,8 @@ def event_type(e_type):
 
 	e_type = " ".join([ (word.capitalize() if word != 'and' else word) for word in e_type.split('-') ])
 
-	cursor.execute("SELECT id, title, startDate, building, lowPrice, highPrice FROM Event WHERE (id) IN (SELECT eventID FROM HasEventType WHERE eventType='{}')".format(e_type))
-	events = [dict(id=row[0],
+	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(e_type))
+	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],

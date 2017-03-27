@@ -1,4 +1,5 @@
 DROP PROCEDURE IF EXISTS CreateUser;
+
 DELIMITER $$
 CREATE PROCEDURE CreateUser(
 	_firstname		VARCHAR(30),
