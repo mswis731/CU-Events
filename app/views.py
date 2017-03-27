@@ -70,6 +70,42 @@ class CreateEventForm(Form):
 		categories = ','.join(map(str, self.categories.data)) 
 		eventTypes = ','.join(map(str, self.eventTypes.data)) 
 
+		if self.id.data:
+			dict = { 'id' : self.id.data,
+				 	'title' : self.title.data,
+				 	'description': self.description.data,
+				 	'building': self.building.data,
+				 	'addrAndStreet': self.addrAndStreet.data,
+				 	'city': self.city.data,
+				 	'zipcode': self.zipcode.data,
+				 	'startDate': start_date,
+				 	'startTime': start_time,
+				 	'endDate': end_date,
+				 	'endTime': end_time,
+				 	'lowPrice': self.lowPrice.data,
+				 	'highPrice': self.highPrice.data,
+				 	'categories': categories,
+				 	'eventTypes': eventTypes
+			   	   }
+		else:
+			dict = { 'title' : self.title.data,
+				 	'description': self.description.data,
+				 	'building': self.building.data,
+				 	'addrAndStreet': self.addrAndStreet.data,
+				 	'city': self.city.data,
+				 	'zipcode': self.zipcode.data,
+				 	'startDate': start_date,
+				 	'startTime': start_time,
+				 	'endDate': end_date,
+				 	'endTime': end_time,
+				 	'lowPrice': self.lowPrice.data,
+					'highPrice': self.highPrice.data,
+				 	'categories': categories,
+				 	'eventTypes': eventTypes
+			   	   }
+			
+		return dict
+
 class signupForm(Form):
 	firstname = TextField("First name") #, [validators.Required(), validators.Length(min = 2, max = 25)])#"Please enter your first name.")])
 	lastname = TextField("Last name") #, [validators.Required()])#"Please enter your last name.")])
@@ -96,7 +132,6 @@ class signupForm(Form):
 
 @app.route('/signUp', methods = ['GET', 'POST'])
 def sign_up():
-
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
@@ -150,7 +185,6 @@ def sign_up():
 			   	   }
 			
 		return dict
-      	
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
@@ -211,6 +245,11 @@ def event_create():
 		cursor.execute("SELECT eventType FROM HasEventType WHERE eventID={}".format(eventID))
 		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
 
+		cursor.execute("SELECT categoryName FROM HasCategory WHERE eventID={}".format(eventID))
+		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
+		cursor.execute("SELECT eventType FROM HasEventType WHERE eventID={}".format(eventID))
+		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
+
 	if request.method == 'POST':
 		for key,val in form.dict().items():
 			if key != 'categories' and key != 'eventTypes':
@@ -234,10 +273,6 @@ def event_create():
 			return redirect('/browse')
 
 	return render_template('eventcreate.html', form = form, error=error, categories=categories, event_types=event_types)
-
-@app.route('/signUp')
-def sign_up():
-    return render_template('signUp.html')
 
 # filters needed for listing events
 @app.template_filter('month')
