@@ -17,7 +17,3 @@ BEGIN
 	INSERT INTO User(firstname, lastname, username, email, password) VALUES (_firstname, _lastname, _username, _email, _password);
 END $$
 DELIMITER ;
-
--- (firstname, lastname, username, password)
-
--- _firstname, _lastname, _username, _password);
