@@ -10,7 +10,7 @@
       	<legend class="">Create an Event</legend>
     </div>
 	<form action='', method='POST'>
-		<input id = "id" name="id" type="number" value="{% if form.id.data != -1 %}{{form.id.data}}{% endif %}" style="visibility:hidden;position:absolute;">
+		<input id = "eid" name="eid" type="number" value="{{form.eid.data}}" style="visibility:hidden;position:absolute;">
 		<div class="form-group row">
 			<label for="title" class="col-sm-2 col-form-label">Title</label>
 			<div class="col-sm-6">

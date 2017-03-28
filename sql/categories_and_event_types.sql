@@ -13,6 +13,7 @@ VALUES ('Music'),
 	   ('Holiday'),
 	   ('Government'),
 	   ('Home and Lifestyle'),
+	   ('Food and Drink'),
 	   ('Other');
 
 DELETE FROM EventType;

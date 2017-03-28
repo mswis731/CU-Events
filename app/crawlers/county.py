@@ -114,18 +114,23 @@ def crawl():
       										 city,
       										 zipcode,
       										 full_date,
-                           start_t,
+                           					start_t,
       										 full_date,
-                           end_t,
+                           					end_t,
       										 low_price,
       										 high_price,
                            "http://www.visitchampaigncounty.org/" + event_urls,
-      										 None))
+      										 "visitchampaigncounty",
+      										 cateogry,
+      										 event_type
+      										 ))
 
+      """
       if (category):
         cursor.callproc('LinkEventCategory', (title, full_date, start_t, category))
       if (event_type):
         cursor.callproc('LinkEventType',(title, full_date, start_t, event_type))
+      """
 	
       connection.commit()
 

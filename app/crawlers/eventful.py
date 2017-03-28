@@ -145,15 +145,9 @@ def individual_event(driver, connection, cursor, event_url, update):
 	if len(event_types) == 0:
 		event_types.append("Other")
 	
-	"""
-	print()
-	print(categories)
-	print(event_types)
-	print()
-	"""
+	categories_str =  ','.join(map(str, categories)) 
+	event_types_str =  ','.join(map(str, event_types)) 
 
-	organizer = None
-	
 	if not update:
 		cursor.callproc('CreateCrawledEvent', (title,
 												description,
@@ -168,17 +162,9 @@ def individual_event(driver, connection, cursor, event_url, update):
 												low_price,
 												high_price,
 												event_url,
-												"Eventful"))
-		for category in categories:
-			cursor.callproc('LinkEventCategory', (title,
-													start_date,
-													start_time,
-													category))
-		for e_type in event_types:
-			cursor.callproc('LinkEventType', (title,
-												start_date,
-												start_time,
-												e_type))
+												"Eventful",
+												categories_str,
+												event_types_str))
 	else:
 		cursor.callproc('UpdateCrawledEvent', (title,
 												description,
@@ -192,7 +178,9 @@ def individual_event(driver, connection, cursor, event_url, update):
 												end_time,
 												low_price,
 												high_price,
-												event_url))
+												event_url,
+												categories_str,
+												event_types_str))
 		
 	connection.commit()
 	print(event_url)
