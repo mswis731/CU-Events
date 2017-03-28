@@ -1,15 +1,21 @@
-<!DOCTYPE html> 
+
+{% extends 'navbar.html' %}
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css"/>
+{% endblock %}
+
+<!-- <!DOCTYPE html> 
 <html>
 <head>
 	<title>SignUp</title>
 	<link rel = "stylesheet" type = "text/css" href = "../static/styles/Style.css"> 
     <link href="https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
 </head>
-<body>
+<body> -->
 
 
 {% block content %}
-  <h2>Sign up</h2>
+  <!-- <h2 style="">Sign up</h2> -->
      
     {% for message in form.firstname.errors %}
       <div class="flash">{{ message }}</div>
@@ -23,19 +29,82 @@
       <div class="flash">{{ message }}</div>
     {% endfor %}
 
+    {% for message in form.email.errors %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+
     {% for message in form.password.errors %}
       <div class="flash">{{ message }}</div>
     {% endfor %}
 
+
+    {% for message in form.confirm_password.errors %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+
+<div class="container">
+    <div id="legend">
+        <legend class="" style="text-align: center; padding-bottom: 40px; ">Sign Up</legend>
+    </div>
   <form action="{{ url_for('sign_up') }}" method=post>
 
-    {{ form.firstname.label }}
-    {{ form.firstname }}
-     
-    {{ form.lastname.label }}
-    {{ form.lastname }}
+    <div class="form-group row">
+      <label for="firstname" class="col-sm-2 col-form-label">firstname</label>
+      <div class="col-sm-6">
+        <input type="text" class="form-control" id="firstname" name="firstname" value="{% if form.firstname.data%}{{form.firstname.data}}{% endif %}" placeholder="">
+      </div>
+    </div>
 
-    {{ form.username.label }}
+    <div class="form-group row">
+      <label for="lastname" class="col-sm-2 col-form-label">lastname</label>
+      <div class="col-sm-6">
+        <input type="text" class="form-control" id="lastname" name="lastname" value="{% if form.lastname.data%}{{form.lastname.data}}{% endif %}" placeholder="">
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label for="lastname" class="col-sm-2 col-form-label">username</label>
+      <div class="col-sm-6">
+        <input type="text" class="form-control" id="username" name="username" value="{% if form.username.data%}{{form.username.data}}{% endif %}" placeholder="">
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label for="lastname" class="col-sm-2 col-form-label">email</label>
+      <div class="col-sm-6">
+        <input type="text" class="form-control" id="email" name="email" value="{% if form.email.data%}{{form.email.data}}{% endif %}" placeholder="">
+      </div>
+    </div> 
+
+    <div class="form-group row">
+      <label for="password" class="col-sm-2 col-form-label">password</label>
+      <div class="col-sm-3">
+        <input type="password" class="form-control" id="password" name="password" value="{% if form.password.data%}{{form.password.data}}{% endif %}" placeholder="">
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label for="confirm_password" class="col-sm-2 col-form-label">confirm password</label>
+      <div class="col-sm-3">
+        <input type="password" class="form-control" id="confirm_password" name="confirm_password" value="{% if form.confirm_password.data%}{{form.confirm_password.data}}{% endif %}" placeholder="">
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <div class="offset-sm-2 col-sm-10">
+        <button type="submit" class="btn btn-primary">Sign up</button>
+      </div>
+    </div>
+
+
+<!--     
+    {{ form.firstname.label }}
+    {{ form.firstname }} -->
+     
+<!--     {{ form.lastname.label }}
+    {{ form.lastname }} -->
+
+<!--     {{ form.username.label }}
     {{ form.username }}
 
     {{ form.email.label }}
@@ -43,10 +112,28 @@
      
     {{ form.password.label }}
     {{ form.password }}
-     
-    {{ form.submit }}
+
+    {{ form.confirm_password.label }}
+    {{ form.confirm_password }}
+      --><!-- 
+    {{ form.submit }} -->
   </form>
-     
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript">
+  $(function() {
+        $('#datetimepicker1').datetimepicker();
+    });
+</script>
+<script type="text/javascript">
+  $(function() {
+        $('#datetimepicker2').datetimepicker();
+    });
+</script>
 {% endblock %}
 
 <!--    <form action="/index">
@@ -174,5 +261,6 @@
 	
 	<!--<input type="submit" value="sign up">-->
 
-</body>
+<!-- </body>
 </html>
+ -->
