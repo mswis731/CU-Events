@@ -144,6 +144,27 @@ class signupForm(Form):
         else:
           return True
 
+@app.route('/signUp', methods = ['GET', 'POST'])
+def sign_up():
+
+  connection = mysql.get_db()
+  cursor = connection.cursor()
+
+  form = signupForm(request.form)
+  if request.method == "POST":
+    if form.validate() == False:
+      flash('Fill in required fields')
+      return render_template('signUp.html', form=form)
+    else:
+      # return (form.password.data)
+      attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, form.password.data)
+      cursor.callproc('CreateUser', (attr[0], attr[1], attr[2], attr[3], attr[4]))
+      connection.commit()
+      return("thank you for signing up!")
+ 
+  elif request.method == 'GET':
+    return render_template('signup.html', form=form)
+
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
