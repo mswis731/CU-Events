@@ -317,6 +317,15 @@ def communities():
 
 	return render_template('communities.html', categories=categories, event_types=event_types)
 
+@app.route('/communitycreate')
+def create_community():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	return render_template('community_create.html')
+
 @app.route('/browse/free')
 def find_free():
 	connection = mysql.get_db()

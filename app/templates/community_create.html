@@ -1,0 +1,42 @@
+{% extends 'navbar.html' %}
+
+
+{% block content %}
+<div class="container">
+ <div id="legend">
+      	<legend class="">Create a group</legend>
+    </div>
+	
+<form action='', method='POST'>
+	<div class="form-group row">
+        <label for="group name" class="col-2 col-form-label">Group Name</label>
+        <div class="col-10">
+          <input class="form-control" type="text" name="groupname" id="groupname">
+        </div>
+    </div>
+    
+	<div class="form-group row">
+			<label for="categories" class="col-2 col-form-label">Categories</label>
+			<div class="col-10">
+				<select class="selectpicker" multiple id="categories" name="categories">
+					{% for category,url in categories %}
+					{% if category in form.categories.data %}
+					<option value="{{category}}" selected="selected">{{category}}</option>
+					{% else %}
+					<option value="{{category}}">{{category}}</option>
+					{% endif %}
+					{% endfor %}
+				</select>
+			</div>
+	</div>
+		
+	
+
+				<button type="submit" class="btn btn-primary">Create Group!</button>
+			
+	</form>
+</div>
+{% endblock %}
+	
+
+		
