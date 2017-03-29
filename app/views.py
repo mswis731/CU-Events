@@ -1,5 +1,5 @@
 from flask import Flask, render_template, flash, request, redirect, session, url_for
-from wtforms import Form, TextField, TextAreaField, validators, SelectMultipleField, SubmitField, PasswordField, IntegerField, DecimalField
+from app.forms import CreateEventForm, signupForm
 from app import app, mysql
 from app.crawlers.eventful import crawl as eventful_crawl
 import sys
@@ -15,120 +15,6 @@ def index():
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
 	return render_template('index.html', categories=categories, event_types=event_types)
-
-class CreateEventForm(Form):
-	eid = IntegerField(id = 'eid', validators=[validators.required()])
-	title = TextField(id='title', validators=[validators.required()])
-	description = TextAreaField('description')
-	building = TextField(id = 'building', validators=[validators.required()])
-	addrAndStreet = TextField(id ='addrAndStreet', validators=[validators.required()])
-	state = TextField(id = 'state', validators=[validators.required()])
-	city = TextField(id = 'city', validators=[validators.required()])
-	zipcode = IntegerField(id = 'zipcode', validators=[validators.required()])
-	startDate = TextField(id = 'startDate', validators=[validators.required()])
-	endDate = TextField(id = 'endDate', validators=[validators.required()])
-	lowPrice = DecimalField(id = 'lowPrice', places=2, validators=[validators.required()])
-	highPrice = DecimalField(id = 'highPrice', places=2, validators=[validators.required()])
-	categories = SelectMultipleField(id ='category', choices = ['Academic', 'Arts and Theatre', 'Family', 'Government', 'Health and Wellness', 'Holiday', 'Home and Lifestyle', 'Music', 'Other', 'Outdoors', 'Sports', 'Technology', 'University'])
-	eventTypes = SelectMultipleField(id ='eventtype', choices = ['Charity', 'Concerts', 'Conferences', 'Networking and Career Fairs', 'Galleries and Exhibits', 'Other', 'Talks'])
-
-	def dict(self):
-		dict = { 'eid' : self.eid.data,
-				 'title' : self.title.data,
-				 'description': self.description.data,
-				 'building': self.building.data,
-				 'addrAndStreet': self.addrAndStreet.data,
-				 'city': self.city.data,
-				 'zipcode': self.zipcode.data,
-				 'startDate': self.startDate.data,
-				 'endDate': self.endDate.data,
-				 'lowPrice': self.lowPrice.data,
-				 'highPrice': self.highPrice.data,
-				 'categories': self.categories.data,
-				 'eventTypes': self.eventTypes.data
-			   }
-		return dict
-
-	def convert_datetime(self, dt):
-		d_list = dt.split(' ')[0].split('/')
-		t_list = dt.split(' ')[1].split(':')
-		am_pm = dt.split(' ')[2].lower()
-		if am_pm == 'am':
-			if t_list[0] == '12':
-				t_list[0] = '00'
-		else:
-			if t_list[0] != '12':
-				t_list[0] = str(int(t_list[0]) + 12)
-		
-		date = "{}-{}-{}".format(d_list[2], d_list[0], d_list[1])
-		time = "{}:{}:00".format(t_list[0], t_list[1])
-		return (date,time)
-			
-	def event_dict(self):
-		start_date, start_time = self.convert_datetime(self.startDate.data) 
-		end_date, end_time = self.convert_datetime(self.endDate.data) 
-		categories = ','.join(map(str, self.categories.data)) 
-		eventTypes = ','.join(map(str, self.eventTypes.data)) 
-
-		if self.eid.data:
-			dict = { 'eid' : self.eid.data,
-				 	'title' : self.title.data,
-				 	'description': self.description.data,
-				 	'building': self.building.data,
-				 	'addrAndStreet': self.addrAndStreet.data,
-				 	'city': self.city.data,
-				 	'zipcode': self.zipcode.data,
-				 	'startDate': start_date,
-				 	'startTime': start_time,
-				 	'endDate': end_date,
-				 	'endTime': end_time,
-				 	'lowPrice': self.lowPrice.data,
-				 	'highPrice': self.highPrice.data,
-				 	'categories': categories,
-				 	'eventTypes': eventTypes
-			   	   }
-		else:
-			dict = { 'title' : self.title.data,
-				 	'description': self.description.data,
-				 	'building': self.building.data,
-				 	'addrAndStreet': self.addrAndStreet.data,
-				 	'city': self.city.data,
-				 	'zipcode': self.zipcode.data,
-				 	'startDate': start_date,
-				 	'startTime': start_time,
-				 	'endDate': end_date,
-				 	'endTime': end_time,
-				 	'lowPrice': self.lowPrice.data,
-					'highPrice': self.highPrice.data,
-				 	'categories': categories,
-				 	'eventTypes': eventTypes
-			   	   }
-			
-		return dict
-
-class signupForm(Form):
-	firstname = TextField("First name") #, [validators.Required(), validators.Length(min = 2, max = 25)])#"Please enter your first name.")])
-	lastname = TextField("Last name") #, [validators.Required()])#"Please enter your last name.")])
-	username = TextField("username") #, [validators.Required()])#"Please enter a username.")])
-	password = PasswordField('Password') #, [validators.Required()])#"Please enter a password.")])
-	email = TextField('email')
-	submit = SubmitField("Create account") 
-
-	def __init__(self, *args, **kwargs):
-		Form.__init__(self, *args, **kwargs)
-
-	def validate(self):
-		if not Form.validate(self):
-			return False
-		return True
-
-		# user = ("SELECT username FROM User WHERE username = self.username.data LIMIT 1")
-
-		# if user:
-		# 	self.username.errors.append("That username is already taken")
-		# 	return False
-		# else:
-			# return True
 
 @app.route('/signUp', methods = ['GET', 'POST'])
 def sign_up():
@@ -162,11 +48,8 @@ def event_create():
 	form = CreateEventForm(request.form)
 	error = None
 
-	form.categories.data = []
-	form.eventTypes.data = []
-
 	eid = request.args.get('eid')
-	if eid:
+	if request.method == "GET" and eid:
 		cursor.execute("SELECT * FROM Event WHERE eid={}".format(eid))
 		data = cursor.fetchall()[0]
 		form.eid.data = data[0]
@@ -214,19 +97,25 @@ def event_create():
 		cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(eid))
 		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
 
-	if request.method == 'POST':
-		for key,val in form.dict().items():
-			if key != 'categories' and key != 'eventTypes':
-				getattr(form, key).data = request.form.get(key)
-			else:
-				getattr(form, key).data = request.form.getlist(key)
+		form.submit.value = "Update Event"
 
-		#TODO: add more validation for form
-		if form.title.data != "" and form.startDate.data != "" and form.endDate.data != "" and form.lowPrice.data and form.highPrice.data:
-			form_dict = form.event_dict()
-			attr = tuple([ form_dict[key] for key in form_dict ])
+	if request.method == 'POST':
+		if form.validate():
+			attr_list = []
+			for field in form:
+				if (field.name == 'eid' and field.data == -1) or field.name=='submit':
+					continue
+				if field.name == 'startDate':
+					attr_list.append(form.start[0])
+					attr_list.append(form.start[1])
+				elif field.name == 'endDate':
+					attr_list.append(form.end[0])
+					attr_list.append(form.end[1])
+				else:
+					attr_list.append(field.data)
+			attr = tuple(attr_list)
 			# new event
-			if not form.eid.data:
+			if form.eid.data == -1:
 				cursor.callproc('CreateUserEvent', attr)
 			# update event
 			else:

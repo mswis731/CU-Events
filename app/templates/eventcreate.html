@@ -7,45 +7,59 @@
 {% block content %}
 <div class="container">
     <div id="legend">
-      	<legend class="">Create an Event</legend>
+      	<legend class="">{% if form.eid.data == -1 %}Create an Event{% else %}Update an Event{% endif %}</legend>
     </div>
 	<form action='', method='POST'>
-		<input id = "eid" name="eid" type="number" value="{{form.eid.data}}" style="visibility:hidden;position:absolute;">
+		{% for field in form %}
+		{% for error in field.errors %}
+		<div class="row">
+			<div class="col-sm-5">
+				<div class="alert alert-danger alert-dismissible" role="alert">
+  					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  					<strong>Error:</strong> {{ error }}
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+		{% endfor %}
+		<div style="visibility:hidden;position:absolute;">
+			{{ form.eid }}
+		</div>
 		<div class="form-group row">
-			<label for="title" class="col-sm-2 col-form-label">Title</label>
+			{{ form.title.label(class="col-sm-2 col-form-label") }}
 			<div class="col-sm-6">
-				<input type="text" class="form-control" id="title" name="title" value="{% if form.title.data %}{{form.title.data}}{% endif %}" placeholder="">
+				{{ form.title(class="form-control") }}
 			</div>
 		</div>
 		<div class="form-group row">
-			<label for="description" class="col-sm-2 col-form-label">Description</label>
+			{{ form.description.label(class="col-sm-2 col-form-label") }}
 			<div class="col-sm-6">
-  		        <textarea class="form-control" id="description"  name="description" rows="5">{% if form.description.data %}{{form.description.data}}{% endif %}</textarea>
+				{{ form.description(class="form-control", rows="5") }}
 			</div>
 		</div>
 		<div class="form-group row">
 			<label for="location" class="col-sm-2 col-form-label">Location</label>
 			<div class="col-sm-2">
-				<input type="text" class="form-control" id="building" name="building" value="{% if form.building.data %}{{form.building.data}}{% endif %}" placeholder="Building/Venue">
+				{{ form.building(class="form-control", placeholder="Building/Venue") }}
 			</div>
 			<div class="col-sm-2">
-				<input type="text" class="form-control" id="addrAndStreet" name="addrAndStreet" value="{% if form.addrAndStreet.data %}{{form.addrAndStreet.data}}{% endif %}" placeholder="Address">
+				{{ form.addrAndStreet(class="form-control", placeholder="Address") }}
 			</div>
 			<div class="col-sm-2">
-				<input type="text" class="form-control" id="city" name="city" value="{% if form.city.data %}{{form.city.data}}{% endif %}" placeholder="City">
+				{{ form.city(class="form-control", placeholder="City") }}
 			</div>
 			<div class="col-sm-1">
 				<p class="form-control-static">Illinois</p>
 			</div>
 			<div class="col-sm-2">
-				<input type="text" class="form-control" id="zipcode" name="zipcode" value="{% if form.zipcode.data %}{{form.zipcode.data}}{% endif %}" placeholder="Zipcode">
+				{{ form.zipcode(class="form-control", placeholder="Zipcode") }}
 			</div>
 		</div>
 		<div class="form-group row">
-			<label for="title" class="col-sm-2 col-form-label">Start Date</label>
+			{{ form.startDate.label(class="col-sm-2 col-form-label") }}
     		<div class='col-sm-6'>
         		<div class='input-group date' id='datetimepicker1'>
-            		<input type='text' class="form-control" id="startDate" name="startDate" value="{%if form.startDate.data %}{{form.startDate.data}}{% endif %}" placeholder="Date and Time" />
+            		{{ form.startDate(class="form-control", placeholder="Date and Time") }}
             		<span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
             		</span>
@@ -53,10 +67,10 @@
     		</div>
 		</div>
 		<div class="form-group row">
-			<label for="title" class="col-sm-2 col-form-label">End Date</label>
+			{{ form.endDate.label(class="col-sm-2 col-form-label") }}
 			<div class='col-sm-6'>
         		<div class='input-group date' id='datetimepicker2'>
-            		<input type='text' class="form-control" id="endDate" name="endDate" value="{% if form.endDate.data %}{{form.endDate.data}}{% endif %}" placeholder="Date and Time" />
+            		{{ form.endDate(class="form-control", placeholder="Date and Time") }}
             		<span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
             		</span>
@@ -66,43 +80,27 @@
 		<div class="form-group row">
 			<label for="title" class="col-sm-2 col-form-label">Price Range</label>
 			<div class="col-sm-2">
-				<input type="price" class="form-control" id="lowPrice" name="lowPrice" value="{% if form.lowPrice.data %}{{form.lowPrice.data}}{% endif %}" placeholder="Low Price">
+            	{{ form.lowPrice(class="form-control", placeholder="Low Price") }}
 			</div>
 			<div class="col-sm-2">
-				<input type="price" class="form-control" id="highPrice" name="highPrice" value="{% if form.highPrice.data %}{{form.highPrice.data}}{% endif %}" placeholder="High Price">
+            	{{ form.highPrice(class="form-control", placeholder="High Price") }}
 			</div>
 		</div>
 		<div class="form-group row">
-			<label for="categories" class="col-sm-2 col-form-label">Categories</label>
+			{{ form.categories.label(class="col-sm-2 col-form-label") }}
 			<div class="col-sm-4">
-				<select class="selectpicker" multiple id="categories" name="categories">
-					{% for category,url in categories %}
-					{% if category in form.categories.data %}
-					<option value="{{category}}" selected="selected">{{category}}</option>
-					{% else %}
-					<option value="{{category}}">{{category}}</option>
-					{% endif %}
-					{% endfor %}
-				</select>
+				{{ form.categories(class="selectpicker") }}
 			</div>
 		</div>
 		<div class="form-group row">
-			<label for="eventTypes" class="col-sm-2 col-form-label">Event Types</label>
+			{{ form.eventTypes.label(class="col-sm-2 col-form-label") }}
 			<div class="col-sm-4">
-				<select class="selectpicker" multiple id="eventTypes" name="eventTypes">
-					{% for event_type,url in event_types %}
-					{% if event_type in form.eventTypes.data %}
-					<option value="{{event_type}}" selected="selected">{{event_type}}</option>
-					{% else %}
-					<option value="{{event_type}}">{{event_type}}</option>
-					{% endif %}
-					{% endfor %}
-				</select>
+				{{ form.eventTypes(class="selectpicker") }}
 			</div>
 		</div>
 		<div class="form-group row">
 			<div class="offset-sm-2 col-sm-10">
-				<button type="submit" class="btn btn-primary">Create Event</button>
+				{{ form.submit(class="btn btn-primary") }}
 			</div>
 		</div>
   </form>
