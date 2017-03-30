@@ -1,8 +1,8 @@
 from flask import Flask, render_template, flash, request, redirect, session, url_for
-from app.forms import CreateEventForm, signupForm
+from app.forms import CreateEventForm, SignupForm, SigninForm
 from app import app, mysql
-from app.crawlers.eventful import crawl as eventful_crawl
-import sys
+from datetime import datetime
+from werkzeug import generate_password_hash, check_password_hash
 
 @app.route('/')
 @app.route('/index')
@@ -14,27 +14,65 @@ def index():
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	return render_template('index.html', categories=categories, event_types=event_types)
+	return render_template('index.html', session=session, categories=categories, event_types=event_types)
 
-@app.route('/signUp', methods = ['GET', 'POST'])
+@app.route('/signin', methods = ['GET', 'POST'])
+def signin():
+	form = SigninForm(request.form)
+
+	if request.method == 'POST':
+		if form.validate() == False:
+			return render_template('signin.html', session=session, form = form)
+		else:
+			session['username'] = form.my_username.data
+			return redirect(url_for('profile'))
+
+	elif request.method == 'GET':
+		return render_template('signin.html', session=session, form = form)
+
+@app.route('/signup', methods = ['GET', 'POST'])
 def sign_up():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
-	form = signupForm(request.form)
+	form = SignupForm(request.form)
 	if request.method == "POST":
 		if form.validate() == False:
 			flash('Fill in required fields')
-			return render_template('signUp.html', form=form)
+			return render_template('signup.html', session=session, form=form)
 		else:
-			# return (form.password.data)
-			 attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, form.password.data)
-			 cursor.callproc('CreateUser', (attr[0], attr[1], attr[2], attr[3], attr[4]))
-			 connection.commit()
-			 return("thank you for signing up!")
+			password_hash = generate_password_hash(form.password.data)
+			attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, password_hash)
+			cursor.callproc('CreateUser', (attr[0], attr[1], attr[2], attr[3], attr[4]))
+			connection.commit()
 
+			session['username'] = form.username.data
+			return redirect(url_for('profile'))
+
+			return("thank you for signing up!")
 	elif request.method == 'GET':
-		return render_template('signup.html', form=form)
+		return render_template('signup.html', session=session, form=form)
+
+@app.route('/signout')
+def signout():
+	if not session['username']:
+		return redirect(url_for('signin'))
+	session.pop('username', None)
+	return redirect(url_for('index'))
+
+@app.route('/profile')
+def profile():
+	if not session['username']:
+		return redirect(url_for('signin'))
+
+	connection = mysql.get_db()
+	cursor = connection.cursor() 
+
+	user = cursor.execute("SELECT * From User Where email = '{}'".format(session['username']))
+	if user is None:
+		return redirect(url_for('signin'))
+	else:
+		return render_template('profile.html', session=session)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
@@ -44,6 +82,12 @@ def event_create():
 	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	# get uid
+	if not session.get('username'):
+		return redirect("/signup")
+	cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
+	uid = cursor.fetchall()[0][0]
 
 	form = CreateEventForm(request.form)
 	error = None
@@ -62,30 +106,10 @@ def event_create():
 		form.lowPrice.data = data[11]
 		form.highPrice.data = data[12]
 
-		start_hours = data[8].seconds//3600
-		start_minutes = (data[8].seconds//60)%60
-		start_am_pm = ""
-		if start_hours >= 12:
-			start_am_pm = "PM"
-			if start_hours > 12:
-				start_hours -= 12
-		else:
-			if start_hours == 0:
-				start_hours = 12
-			start_am_pm = "AM"
-		end_hours = data[10].seconds//3600
-		end_minutes = (data[10].seconds//60)%60
-		end_am_pm = ""
-		if end_hours >= 12:
-			end_am_pm = "PM"
-			if end_hours > 12:
-				end_hours -= 12
-		else:
-			if end_hours == 0:
-				end_hours = 12
-			end_am_pm = "AM"
-		form.startDate.data = "{}/{}/{} {}:{} {}".format(data[7].month, data[7].day, data[7].year, start_hours, start_minutes, start_am_pm)
-		form.endDate.data = "{}/{}/{} {}:{} {}".format(data[9].month, data[9].day, data[9].year, end_hours, end_minutes, end_am_pm)
+		startTime = "{}:{}".format(data[8].seconds//3600, (data[8].seconds//60)%60)
+		endTime = "{}:{}".format(data[10].seconds//3600, (data[10].seconds//60)%60)
+		form.startDate.data = "{}/{}/{} {}".format(data[7].month, data[7].day, data[7].year, datetime.strptime(startTime, "%H:%M").strftime("%I:%M %p"))
+		form.endDate.data = "{}/{}/{} {}".format(data[9].month, data[9].day, data[9].year, datetime.strptime(endTime, "%H:%M").strftime("%I:%M %p"))
 
 		cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(eid))
 		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
@@ -96,11 +120,10 @@ def event_create():
 		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
 		cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(eid))
 		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
-
-		form.submit.value = "Update Event"
 
 	if request.method == 'POST':
 		if form.validate():
+
 			attr_list = []
 			for field in form:
 				if (field.name == 'eid' and field.data == -1) or field.name=='submit':
@@ -113,6 +136,9 @@ def event_create():
 					attr_list.append(form.end[1])
 				else:
 					attr_list.append(field.data)
+			# only need uid for new events
+			if form.eid.data == -1:
+				attr_list.append(uid)
 			attr = tuple(attr_list)
 			# new event
 			if form.eid.data == -1:
@@ -125,7 +151,7 @@ def event_create():
 
 			return redirect('/browse')
 
-	return render_template('eventcreate.html', form = form, error=error, categories=categories, event_types=event_types)
+	return render_template('eventcreate.html', session=session, form = form, error=error, categories=categories, event_types=event_types)
 
 # filters needed for listing events
 @app.template_filter('month')
@@ -166,7 +192,7 @@ def browse():
                    lowPrice=row[4],
                    highPrice=row[5]) for row in cursor.fetchall()]
 	cursor.close()
-	return render_template('events.html', categories=categories, event_types=event_types, events=events)
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
 
 @app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
@@ -201,7 +227,7 @@ def event_(category):
                    highPrice=row[5]) for row in cursor.fetchall()]
 	cursor.close()
 
-	return render_template('events.html', categories=categories, event_types=event_types, events=events)
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
 
 @app.route('/browse/type/<e_type>', methods=['GET','POST'])
 def event_type(e_type):
@@ -237,7 +263,7 @@ def event_type(e_type):
                    highPrice=row[5]) for row in cursor.fetchall()]
 	cursor.close()
 
-	return render_template('events.html', categories=categories, event_types=event_types, events=events)
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
 	
 @app.route('/communities')
 def communities():
@@ -248,14 +274,18 @@ def communities():
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	return render_template('communities.html', categories=categories, event_types=event_types)
+	return render_template('communities.html', session=session, categories=categories, event_types=event_types)
 
-@app.route('/browse/free')
-def find_free():
+@app.route('/browse/eventid/<id>', methods=['GET','POST'])
+def get_event(id):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT * FROM Event WHERE lowPrice IS NULL AND highPrice IS NULL")
-	frees = [dict(title=row[1],
+	cursor.execute("SELECT name FROM EventType")
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT * FROM Event WHERE eid='{}'".format(id))
+	events = [dict(title=row[1],
                    description=row[2],
                    building=row[3],
                    addrAndStreet=row[4],
@@ -268,6 +298,7 @@ def find_free():
                    lowPrice=row[11],
                    highPrice=row[12],
                    nonUserViews=row[13]) for row in cursor.fetchall()]
-
-	return render_template('temp.html', frees=frees)
-
+	cursor.close()
+	print(len(events))
+	print(events[0])
+	return render_template('event.html', event = events)
