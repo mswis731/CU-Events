@@ -94,14 +94,14 @@ class CreateEventForm(Form):
 		return valid
 		
 class SignupForm(Form):
-	firstname = TextField("First name", [validators.Required("Please enter your first name.")])
-	lastname = TextField("Last name", [validators.Required("Please enter your last name")])
-	username = TextField("username", [validators.Required("Please enter a username.")])
+	firstname = TextField("First Name", [validators.Required("Please enter your first name.")])
+	lastname = TextField("Last Name", [validators.Required("Please enter your last name")])
+	username = TextField("Username", [validators.Required("Please enter a username.")])
 	password = PasswordField('Password', [validators.Required("Please enter a password.")])
 	confirm_password = PasswordField('Confirm Password', [validators.Required("Please confirm password.")])
 
-	email = TextField('email')
-	submit = SubmitField("Create account") 
+	email = TextField('Email')
+	submit = SubmitField("Create Account") 
 
 	def __init__(self, *args, **kwargs):
 		Form.__init__(self, *args, **kwargs)
@@ -130,9 +130,9 @@ class SignupForm(Form):
 					return True
 
 class SigninForm(Form):
-	my_username = TextField("username", [validators.Required("Please enter your email address")])
+	my_username = TextField("Username", [validators.Required("Please enter your email address")])
 	my_password = PasswordField("Password", [validators.Required("please enter your password")])
-	sign_in_submit = SubmitField("sign in")
+	sign_in_submit = SubmitField("Sign In")
 
 	def __init__(self, *args, **kwargs):
 		Form.__init__(self, *args, **kwargs)
