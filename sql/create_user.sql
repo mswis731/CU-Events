@@ -6,7 +6,7 @@ CREATE PROCEDURE CreateUser(
 	_lastname		VARCHAR(30),
 	_email 			VARCHAR(50),
 	_username		VARCHAR(20),
-	_password		VARCHAR(30))
+	_password		VARCHAR(100))
 BEGIN 
 
 	SET sql_mode='';

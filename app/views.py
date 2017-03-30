@@ -15,7 +15,7 @@ def index():
   cursor.execute("SELECT name FROM Category")
   categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-  return render_template('index.html', categories=categories, event_types=event_types)
+  return render_template('index.html', session=session, categories=categories, event_types=event_types)
 
 class CreateEventForm(Form):
 
@@ -110,8 +110,8 @@ class CreateEventForm(Form):
 
 
 class SigninForm(Form):
-  my_username = TextField("username") #, [validators.Required("Please enter your email address")])
-  my_password = PasswordField("Password") #, [validators.Required("please enter your password")])
+  my_username = TextField("username", [validators.Required("Please enter your email address")])
+  my_password = PasswordField("Password", [validators.Required("please enter your password")])
   sign_in_submit = SubmitField("sign in")
 
   def __init__(self, *args, **kwargs):
@@ -125,8 +125,9 @@ class SigninForm(Form):
     connection = mysql.get_db()
     cursor = connection.cursor()
 
-    user = cursor.execute("SELECT password FROM User Where username = '{}'" .format(self.my_username.data))
-    if user and check_password_hash(user, self.my_password.data):
+    cursor.execute("SELECT password FROM User WHERE username = '{}'" .format(self.my_username.data))
+    password = cursor.fetchall()[0][0]
+    if password and check_password_hash(password, self.my_password.data):
     #if self.my_username.data == 'bob' and self.my_password == 'bob':
       return True
     else:
@@ -135,17 +136,17 @@ class SigninForm(Form):
 
 @app.route('/signin', methods = ['GET', 'POST'])
 def signin():
-  form = SigninForm()
+  form = SigninForm(request.form)
 
   if request.method == 'POST':
     if form.validate() == False:
-      return render_template('signin.html', form = form)
+      return render_template('signin.html', session=session, form = form)
     else:
       session['username'] = form.my_username.data
       return redirect(url_for('profile'))
 
   elif request.method == 'GET':
-    return render_template('signin.html', form = form)
+    return render_template('signin.html', session=session, form = form)
 
 class signupForm(Form):
   firstname = TextField("First name", [validators.Required("Please enter your first name.")])
@@ -184,7 +185,7 @@ class signupForm(Form):
         else:
           return True
 
-@app.route('/signUp', methods = ['GET', 'POST'])
+@app.route('/signup', methods = ['GET', 'POST'])
 def sign_up():
 
   connection = mysql.get_db()
@@ -194,10 +195,12 @@ def sign_up():
   if request.method == "POST":
     if form.validate() == False:
       flash('Fill in required fields')
-      return render_template('signUp.html', form=form)
+      return render_template('signup.html', session=session, form=form)
     else:
       # return (form.password.data)
       password_hash = generate_password_hash(form.password.data)
+      print(password_hash)
+      print(len(password_hash))
       attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, password_hash)
       cursor.callproc('CreateUser', (attr[0], attr[1], attr[2], attr[3], attr[4]))
       connection.commit()
@@ -208,19 +211,18 @@ def sign_up():
       return("thank you for signing up!")
  
   elif request.method == 'GET':
-    return render_template('signup.html', form=form)
+    return render_template('signup.html', session=session, form=form)
 
 @app.route('/signout')
 def signout():
-
-  if 'username' not in session:
+  if not session['username']:
     return redirect(url_for('signin'))
   session.pop('username', None)
   return redirect(url_for('index'))
 
 @app.route('/profile')
 def profile():
-  if 'email' not in session:
+  if 'username' not in session:
     return redirect(url_for('signin'))
 
   connection = mysql.get_db()
@@ -230,7 +232,7 @@ def profile():
   if user is None:
     return redirect(url_for('signin'))
   else:
-    return render_template('profile.html')
+    return render_template('profile.html', session=session)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
@@ -318,7 +320,7 @@ def event_create():
 
       return redirect('/browse')
 
-  return render_template('eventcreate.html', form = form, error=error, categories=categories, event_types=event_types)
+  return render_template('eventcreate.html', session=session, form = form, error=error, categories=categories, event_types=event_types)
 
 # filters needed for listing events
 @app.template_filter('month')
@@ -359,7 +361,7 @@ def browse():
     lowPrice=row[4],
     highPrice=row[5]) for row in cursor.fetchall()]
   cursor.close()
-  return render_template('events.html', categories=categories, event_types=event_types, events=events)
+  return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
 
 @app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
@@ -394,7 +396,7 @@ def event_(category):
                    highPrice=row[5]) for row in cursor.fetchall()]
   cursor.close()
 
-  return render_template('events.html', categories=categories, event_types=event_types, events=events)
+  return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
 
 
 @app.route('/browse/type/<e_type>', methods=['GET','POST'])
@@ -432,7 +434,7 @@ def event_type(e_type):
     highPrice=row[5]) for row in cursor.fetchall()]
   cursor.close()
 
-  return render_template('events.html', categories=categories, event_types=event_types, events=events)
+  return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
 
 @app.route('/communities')
 def communities():
@@ -443,7 +445,7 @@ def communities():
   cursor.execute("SELECT name FROM Category")
   categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-  return render_template('communities.html', categories=categories, event_types=event_types)
+  return render_template('communities.html', session=session, categories=categories, event_types=event_types)
 
 @app.route('/browse/free')
 def find_free():
