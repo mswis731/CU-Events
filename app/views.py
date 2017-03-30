@@ -2,7 +2,7 @@ from flask import Flask, render_template, flash, request, redirect, session, url
 from app.forms import CreateEventForm, signupForm
 from app import app, mysql
 from app.crawlers.eventful import crawl as eventful_crawl
-import sys
+from datetime import datetime
 
 @app.route('/')
 @app.route('/index')
@@ -34,7 +34,7 @@ def sign_up():
 			 return("thank you for signing up!")
 
 	elif request.method == 'GET':
-		return render_template('signup.html', form=form)
+		return render_template('signUp.html', form=form)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
@@ -44,6 +44,12 @@ def event_create():
 	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	# get uid
+	if not session.get('username'):
+		return redirect("/signUp")
+	cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
+	uid = cursor.fetchall()[0][0]
 
 	form = CreateEventForm(request.form)
 	error = None
@@ -62,30 +68,10 @@ def event_create():
 		form.lowPrice.data = data[11]
 		form.highPrice.data = data[12]
 
-		start_hours = data[8].seconds//3600
-		start_minutes = (data[8].seconds//60)%60
-		start_am_pm = ""
-		if start_hours >= 12:
-			start_am_pm = "PM"
-			if start_hours > 12:
-				start_hours -= 12
-		else:
-			if start_hours == 0:
-				start_hours = 12
-			start_am_pm = "AM"
-		end_hours = data[10].seconds//3600
-		end_minutes = (data[10].seconds//60)%60
-		end_am_pm = ""
-		if end_hours >= 12:
-			end_am_pm = "PM"
-			if end_hours > 12:
-				end_hours -= 12
-		else:
-			if end_hours == 0:
-				end_hours = 12
-			end_am_pm = "AM"
-		form.startDate.data = "{}/{}/{} {}:{} {}".format(data[7].month, data[7].day, data[7].year, start_hours, start_minutes, start_am_pm)
-		form.endDate.data = "{}/{}/{} {}:{} {}".format(data[9].month, data[9].day, data[9].year, end_hours, end_minutes, end_am_pm)
+		startTime = "{}:{}".format(data[8].seconds//3600, (data[8].seconds//60)%60)
+		endTime = "{}:{}".format(data[10].seconds//3600, (data[10].seconds//60)%60)
+		form.startDate.data = "{}/{}/{} {}".format(data[7].month, data[7].day, data[7].year, datetime.strptime(startTime, "%H:%M").strftime("%I:%M %p"))
+		form.endDate.data = "{}/{}/{} {}".format(data[9].month, data[9].day, data[9].year, datetime.strptime(endTime, "%H:%M").strftime("%I:%M %p"))
 
 		cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(eid))
 		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
@@ -96,11 +82,10 @@ def event_create():
 		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
 		cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(eid))
 		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
-
-		form.submit.value = "Update Event"
 
 	if request.method == 'POST':
 		if form.validate():
+
 			attr_list = []
 			for field in form:
 				if (field.name == 'eid' and field.data == -1) or field.name=='submit':
@@ -113,6 +98,9 @@ def event_create():
 					attr_list.append(form.end[1])
 				else:
 					attr_list.append(field.data)
+			# only need uid for new events
+			if form.eid.data == -1:
+				attr_list.append(uid)
 			attr = tuple(attr_list)
 			# new event
 			if form.eid.data == -1:
