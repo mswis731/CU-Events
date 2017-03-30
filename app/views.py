@@ -110,29 +110,31 @@ class CreateEventForm(Form):
 
 
 class SigninForm(Form):
-  my_username = TextField("username", [validators.Required("Please enter your email address")])
-  my_password = PasswordField("Password", [validators.Required("please enter your password")])
-  sign_in_submit = SubmitField("sign in")
+	my_username = TextField("username", [validators.Required("Please enter your email address")])
+	my_password = PasswordField("Password", [validators.Required("please enter your password")])
+	sign_in_submit = SubmitField("sign in")
 
-  def __init__(self, *args, **kwargs):
-    Form.__init__(self, *args, **kwargs)
+	def __init__(self, *args, **kwargs):
+		Form.__init__(self, *args, **kwargs)
 
-  def validate(self):
-    if not Form.validate(self):
-      return False
-     #return True
+	def validate(self):
+		if not Form.validate(self):
+			return False
 
-    connection = mysql.get_db()
-    cursor = connection.cursor()
+		connection = mysql.get_db()
+		cursor = connection.cursor()
 
-    cursor.execute("SELECT password FROM User WHERE username = '{}'" .format(self.my_username.data))
-    password = cursor.fetchall()[0][0]
-    if password and check_password_hash(password, self.my_password.data):
-    #if self.my_username.data == 'bob' and self.my_password == 'bob':
-      return True
-    else:
-      self.my_username.errors.append("Invalid username or password")
-      return False
+		res_len = cursor.execute("SELECT password FROM User WHERE username = '{}'" .format(self.my_username.data))
+		if res_len == 0:
+			self.my_username.errors.append("Invalid username")
+			return False
+		else:
+			password = cursor.fetchall()[0][0]
+			if check_password_hash(password, self.my_password.data):
+				return True
+			else:
+				self.my_password.errors.append("Invalid password")
+				return False
 
 @app.route('/signin', methods = ['GET', 'POST'])
 def signin():
