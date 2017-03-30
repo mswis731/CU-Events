@@ -1,6 +1,7 @@
 from app import mysql
 from wtforms import Form, TextField, TextAreaField, validators, SelectMultipleField, SubmitField, PasswordField, IntegerField, DecimalField
 from datetime import datetime
+from werkzeug import generate_password_hash, check_password_hash
 
 class CreateEventForm(Form):
 	eid = IntegerField(id = 'eid', default=-1)
@@ -91,14 +92,16 @@ class CreateEventForm(Form):
 
 		
 		return valid
+		
+class SignupForm(Form):
+	firstname = TextField("First Name", [validators.Required("Please enter your first name.")])
+	lastname = TextField("Last Name", [validators.Required("Please enter your last name")])
+	username = TextField("Username", [validators.Required("Please enter a username.")])
+	password = PasswordField('Password', [validators.Required("Please enter a password.")])
+	confirm_password = PasswordField('Confirm Password', [validators.Required("Please confirm password.")])
 
-class signupForm(Form):
-	firstname = TextField("First name") #, [validators.Required(), validators.Length(min = 2, max = 25)])#"Please enter your first name.")])
-	lastname = TextField("Last name") #, [validators.Required()])#"Please enter your last name.")])
-	username = TextField("username") #, [validators.Required()])#"Please enter a username.")])
-	password = PasswordField('Password') #, [validators.Required()])#"Please enter a password.")])
-	email = TextField('email')
-	submit = SubmitField("Create account") 
+	email = TextField('Email')
+	submit = SubmitField("Create Account") 
 
 	def __init__(self, *args, **kwargs):
 		Form.__init__(self, *args, **kwargs)
@@ -106,14 +109,49 @@ class signupForm(Form):
 	def validate(self):
 		if not Form.validate(self):
 			return False
-		return True
 
-		# user = ("SELECT username FROM User WHERE username = self.username.data LIMIT 1")
+		connection = mysql.get_db()
+		cursor = connection.cursor() 
 
-		# if user:
-		# 	self.username.errors.append("That username is already taken")
-		# 	return False
-		# else:
-			# return True
+		user = cursor.execute("SELECT username FROM User Where username = '{}' ".format(self.username.data))
+		if user:
+			self.username.errors.append("That username is already taken")
+			return False
+		else:
+			email = cursor.execute("SELECT email FROM User WHERE email = '{}'" .format(self.email.data))
+			if email:
+				self.email.errors.append("That email is already associated with an account")
+				return False
+			else:
+				if self.confirm_password.data != self.password.data:
+					self.confirm_password.errors.append("Passwords do not match")
+					return False
+				else:
+					return True
 
+class SigninForm(Form):
+	my_username = TextField("Username", [validators.Required("Please enter your email address")])
+	my_password = PasswordField("Password", [validators.Required("please enter your password")])
+	sign_in_submit = SubmitField("Sign In")
 
+	def __init__(self, *args, **kwargs):
+		Form.__init__(self, *args, **kwargs)
+
+	def validate(self):
+		if not Form.validate(self):
+			return False
+
+		connection = mysql.get_db()
+		cursor = connection.cursor()
+
+		res_len = cursor.execute("SELECT password FROM User WHERE username = '{}'" .format(self.my_username.data))
+		if res_len == 0:
+			self.my_username.errors.append("Invalid username")
+			return False
+		else:
+			password = cursor.fetchall()[0][0]
+			if check_password_hash(password, self.my_password.data):
+				return True
+			else:
+				self.my_password.errors.append("Invalid password")
+				return False

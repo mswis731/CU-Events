@@ -15,7 +15,8 @@ CREATE PROCEDURE CreateUserEvent(
 	_low_price		REAL,
 	_high_price		REAL,
 	_categories_str			VARCHAR(500),
-	_event_types_str		VARCHAR(500))
+	_event_types_str		VARCHAR(500),
+	_uid			INTEGER)
 BEGIN
 
 	SET sql_mode='';
@@ -64,5 +65,7 @@ BEGIN
 
 		SET _event_types_str = INSERT(_event_types_str, 1, @nextlen + 1, '');
 	END LOOP;
+
+	INSERT INTO EventCreated(eid, uid) VALUES (@eid, _uid);
 END $$
 DELIMITER ;
