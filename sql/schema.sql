@@ -1,7 +1,7 @@
 CREATE TABLE User (
 	uid					INTEGER NOT NULL AUTO_INCREMENT,
 	username			VARCHAR(30) NOT NULL UNIQUE,
-	password			VARCHAR(30),
+	password			VARCHAR(54),
 	firstname			VARCHAR(30),
 	lastname			VARCHAR(30),
 	email				VARCHAR(50) NOT NULL UNIQUE,

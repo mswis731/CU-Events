@@ -1,8 +1,8 @@
 from flask import Flask, render_template, flash, request, redirect, session, url_for
-from app.forms import CreateEventForm, signupForm
+from app.forms import CreateEventForm, SignupForm, SigninForm
 from app import app, mysql
-from app.crawlers.eventful import crawl as eventful_crawl
 from datetime import datetime
+from werkzeug import generate_password_hash, check_password_hash
 
 @app.route('/')
 @app.route('/index')
@@ -14,27 +14,65 @@ def index():
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	return render_template('index.html', categories=categories, event_types=event_types)
+	return render_template('index.html', session=session, categories=categories, event_types=event_types)
 
-@app.route('/signUp', methods = ['GET', 'POST'])
+@app.route('/signin', methods = ['GET', 'POST'])
+def signin():
+	form = SigninForm(request.form)
+
+	if request.method == 'POST':
+		if form.validate() == False:
+			return render_template('signin.html', session=session, form = form)
+		else:
+			session['username'] = form.my_username.data
+			return redirect(url_for('profile'))
+
+	elif request.method == 'GET':
+		return render_template('signin.html', session=session, form = form)
+
+@app.route('/signup', methods = ['GET', 'POST'])
 def sign_up():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
-	form = signupForm(request.form)
+	form = SignupForm(request.form)
 	if request.method == "POST":
 		if form.validate() == False:
 			flash('Fill in required fields')
-			return render_template('signUp.html', form=form)
+			return render_template('signup.html', session=session, form=form)
 		else:
-			# return (form.password.data)
-			 attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, form.password.data)
-			 cursor.callproc('CreateUser', (attr[0], attr[1], attr[2], attr[3], attr[4]))
-			 connection.commit()
-			 return("thank you for signing up!")
+			password_hash = generate_password_hash(form.password.data)
+			attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, password_hash)
+			cursor.callproc('CreateUser', (attr[0], attr[1], attr[2], attr[3], attr[4]))
+			connection.commit()
 
+			session['username'] = form.username.data
+			return redirect(url_for('profile'))
+
+			return("thank you for signing up!")
 	elif request.method == 'GET':
-		return render_template('signUp.html', form=form)
+		return render_template('signup.html', session=session, form=form)
+
+@app.route('/signout')
+def signout():
+	if not session['username']:
+		return redirect(url_for('signin'))
+	session.pop('username', None)
+	return redirect(url_for('index'))
+
+@app.route('/profile')
+def profile():
+	if not session['username']:
+		return redirect(url_for('signin'))
+
+	connection = mysql.get_db()
+	cursor = connection.cursor() 
+
+	user = cursor.execute("SELECT * From User Where email = '{}'".format(session['username']))
+	if user is None:
+		return redirect(url_for('signin'))
+	else:
+		return render_template('profile.html', session=session)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
@@ -47,7 +85,7 @@ def event_create():
 
 	# get uid
 	if not session.get('username'):
-		return redirect("/signUp")
+		return redirect("/signup")
 	cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
 	uid = cursor.fetchall()[0][0]
 
@@ -113,7 +151,7 @@ def event_create():
 
 			return redirect('/browse')
 
-	return render_template('eventcreate.html', form = form, error=error, categories=categories, event_types=event_types)
+	return render_template('eventcreate.html', session=session, form = form, error=error, categories=categories, event_types=event_types)
 
 # filters needed for listing events
 @app.template_filter('month')
@@ -154,7 +192,7 @@ def browse():
                    lowPrice=row[4],
                    highPrice=row[5]) for row in cursor.fetchall()]
 	cursor.close()
-	return render_template('events.html', categories=categories, event_types=event_types, events=events)
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
 
 @app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
@@ -189,7 +227,7 @@ def event_(category):
                    highPrice=row[5]) for row in cursor.fetchall()]
 	cursor.close()
 
-	return render_template('events.html', categories=categories, event_types=event_types, events=events)
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
 
 @app.route('/browse/type/<e_type>', methods=['GET','POST'])
 def event_type(e_type):
@@ -225,7 +263,7 @@ def event_type(e_type):
                    highPrice=row[5]) for row in cursor.fetchall()]
 	cursor.close()
 
-	return render_template('events.html', categories=categories, event_types=event_types, events=events)
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
 	
 @app.route('/communities')
 def communities():
@@ -236,26 +274,4 @@ def communities():
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	return render_template('communities.html', categories=categories, event_types=event_types)
-
-@app.route('/browse/free')
-def find_free():
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-	cursor.execute("SELECT * FROM Event WHERE lowPrice IS NULL AND highPrice IS NULL")
-	frees = [dict(title=row[1],
-                   description=row[2],
-                   building=row[3],
-                   addrAndStreet=row[4],
-                   city=row[5],
-                   zipcode=row[6],
-                   startDate=row[7],
-                   startTime=row[8],
-                   endDate=row[9],
-                   endTime=row[10],
-                   lowPrice=row[11],
-                   highPrice=row[12],
-                   nonUserViews=row[13]) for row in cursor.fetchall()]
-
-	return render_template('temp.html', frees=frees)
-
+	return render_template('communities.html', session=session, categories=categories, event_types=event_types)

@@ -1,0 +1,6 @@
+{% extends 'navbar.html' %}
+
+{% block content %}
+<h3> this is {{session['username']}}'s profile page</h3>
+<button><a href = "/signout">signout</a></button>
+{% endblock %}
