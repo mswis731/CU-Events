@@ -158,6 +158,8 @@ class signupForm(Form):
   confirm_password = PasswordField('Confirm Password', [validators.Required("Please confirm password.")])
 
   email = TextField('email')
+  categories = SelectMultipleField(id ='category', choices = ['Academic', 'Arts and Theatre', 'Family', 'Government', 'Health and Wellness', 'Holiday', 'Home and Lifestyle', 'Music', 'Other', 'Outdoors', 'Sports', 'Technology', 'University'])
+
   submit = SubmitField("Create account") 
 
   def __init__(self, *args, **kwargs):
@@ -194,10 +196,14 @@ def sign_up():
   cursor = connection.cursor()
 
   form = signupForm(request.form)
+  
+  cursor.execute("SELECT name FROM Category")
+  categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
   if request.method == "POST":
     if form.validate() == False:
       flash('Fill in required fields')
-      return render_template('signup.html', session=session, form=form)
+      return render_template('signup.html', session=session, form=form, categories=categories)
     else:
       # return (form.password.data)
       password_hash = generate_password_hash(form.password.data)
@@ -213,7 +219,7 @@ def sign_up():
       return("thank you for signing up!")
  
   elif request.method == 'GET':
-    return render_template('signup.html', session=session, form=form)
+    return render_template('signup.html', session=session, form=form, categories=categories)
 
 @app.route('/signout')
 def signout():

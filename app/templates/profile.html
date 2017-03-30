@@ -1,6 +1,15 @@
 {% extends 'navbar.html' %}
 {% block content %}
-<h3> this is {{session['username']}}'s profile page</h3>
+<h3 style="text-align: center"> this is {{session['username']}}'s profile page</h3>
+<h5> My events </h5>
+<ul>
+	<h6> All events </h6> 
+	<h6> upcoming events </h6>
+</ul>
+<h5> My communities </h5>
+
+
 <button><a href = "/signout">signout</a></button>
+
 
 {% endblock %}
