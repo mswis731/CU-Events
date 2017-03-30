@@ -2,6 +2,7 @@ from flask import Flask, render_template, flash, request, redirect, session, url
 from wtforms import Form, TextField, TextAreaField, validators, SelectMultipleField, SubmitField, PasswordField, IntegerField, DecimalField
 from app import app, mysql
 from app.crawlers.eventful import crawl as eventful_crawl
+from werkzeug import generate_password_hash, check_password_hash
 import sys
 
 @app.route('/')
@@ -107,6 +108,45 @@ class CreateEventForm(Form):
 
       return dict
 
+
+class SigninForm(Form):
+  my_username = TextField("username") #, [validators.Required("Please enter your email address")])
+  my_password = PasswordField("Password") #, [validators.Required("please enter your password")])
+  sign_in_submit = SubmitField("sign in")
+
+  def __init__(self, *args, **kwargs):
+    Form.__init__(self, *args, **kwargs)
+
+  def validate(self):
+    if not Form.validate(self):
+      return False
+     #return True
+
+    connection = mysql.get_db()
+    cursor = connection.cursor()
+
+    user = cursor.execute("SELECT password FROM User Where username = '{}'" .format(self.my_username.data))
+    if user and check_password_hash(user, self.my_password.data):
+    #if self.my_username.data == 'bob' and self.my_password == 'bob':
+      return True
+    else:
+      self.my_username.errors.append("Invalid username or password")
+      return False
+
+@app.route('/signin', methods = ['GET', 'POST'])
+def signin():
+  form = SigninForm()
+
+  if request.method == 'POST':
+    if form.validate() == False:
+      return render_template('signin.html', form = form)
+    else:
+      session['username'] = form.my_username.data
+      return redirect(url_for('profile'))
+
+  elif request.method == 'GET':
+    return render_template('signin.html', form = form)
+
 class signupForm(Form):
   firstname = TextField("First name", [validators.Required("Please enter your first name.")])
   lastname = TextField("Last name", [validators.Required("Please enter your last name")])
@@ -157,14 +197,40 @@ def sign_up():
       return render_template('signUp.html', form=form)
     else:
       # return (form.password.data)
-      attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, form.password.data)
+      password_hash = generate_password_hash(form.password.data)
+      attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, password_hash)
       cursor.callproc('CreateUser', (attr[0], attr[1], attr[2], attr[3], attr[4]))
       connection.commit()
+
+      session['username'] = form.username.data
+      return redirect(url_for('profile'))
+
       return("thank you for signing up!")
  
   elif request.method == 'GET':
     return render_template('signup.html', form=form)
 
+@app.route('/signout')
+def signout():
+
+  if 'username' not in session:
+    return redirect(url_for('signin'))
+  session.pop('username', None)
+  return redirect(url_for('index'))
+
+@app.route('/profile')
+def profile():
+  if 'email' not in session:
+    return redirect(url_for('signin'))
+
+  connection = mysql.get_db()
+  cursor = connection.cursor() 
+
+  user = cursor.execute("SELECT * From User Where email = '{}'".format(session['username']))
+  if user is None:
+    return redirect(url_for('signin'))
+  else:
+    return render_template('profile.html')
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():

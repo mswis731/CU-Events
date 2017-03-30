@@ -1,0 +1,64 @@
+{% extends 'navbar.html' %}
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css"/>
+{% endblock %}
+
+{% block content %}
+  <!-- <h2 style="">Sign up</h2> -->
+
+    {% for message in form.my_username.errors %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+
+    {% for message in form.my_password.errors %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+
+<div class="container">
+    <div id="legend">
+        <legend class="" style="text-align: center; padding-bottom: 40px; ">Sign In</legend>
+    </div>
+  <form action="{{ url_for('signin') }}" autocomplete="off" method=post>
+  	<input style="display:none">
+	<input type="password" style="display:none">
+
+     <div class="form-group row">
+      <label for="my_username" class="col-sm-2 col-form-label">username</label>
+      <div class="col-sm-6">
+        <input type="text" class="form-control" id="my_username" name="my_username" value="{% if form.my_username.data%}{{form.my_username.data}}{% endif %}" placeholder=""; autocomplete="off">
+      </div>
+    </div> 
+
+    <div class="form-group row">
+      <label for="my_password" class="col-sm-2 col-form-label">password</label>
+      <div class="col-sm-3">
+        <input type="password" class="form-control" id="my_password" name="my_password" value="{% if form.my_password.data%}{{form.my_password.data}}{% endif %}" placeholder="" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <div class="offset-sm-2 col-sm-10">
+        <button type="sign_in_submit" class="btn btn-primary">Sign In</button>
+      </div>
+    </div>
+
+   </form>
+ </div>
+ {% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript">
+  $(function() {
+        $('#datetimepicker1').datetimepicker();
+    });
+</script>
+<script type="text/javascript">
+  $(function() {
+        $('#datetimepicker2').datetimepicker();
+    });
+</script>
+{% endblock %}
+
+
