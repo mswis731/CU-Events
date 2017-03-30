@@ -8,31 +8,38 @@
     </div>
 	
 <form action='', method='POST'>
-	<div class="form-group row">
-        <label for="group name" class="col-2 col-form-label">Group Name</label>
-        <div class="col-10">
-          <input class="form-control" type="text" name="groupname" id="groupname">
-        </div>
-    </div>
-    
-	<div class="form-group row">
-			<label for="categories" class="col-2 col-form-label">Categories</label>
-			<div class="col-10">
-				<select class="selectpicker" multiple id="categories" name="categories">
-					{% for category,url in categories %}
-					{% if category in form.categories.data %}
-					<option value="{{category}}" selected="selected">{{category}}</option>
-					{% else %}
-					<option value="{{category}}">{{category}}</option>
-					{% endif %}
-					{% endfor %}
-				</select>
+		{% for field in form %}
+		{% for error in field.errors %}
+		<div class="row">
+			<div class="col-sm-5">
+				<div class="alert alert-danger alert-dismissible" role="alert">
+  					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  					<strong>Error:</strong> {{ error }}
+				</div>
 			</div>
-	</div>
+		</div>
+		{% endfor %}
+		{% endfor %}
+		<div style="visibility:hidden;position:absolute;">
+			{{ form.eid }}
+		</div>
+		<div class="form-group row">
+        		{{ form.name.label(class="col-2 col-form-label") }}
+        		<div class="col-10">
+          			{{form.name(class="form-control") }}
+        		</div>
+   		 </div>
+    
+		<div class="form-group row">
+			{{ form.categories.label(class="col-2 col-form-label") }}
+			<div class="col-10">
+				{{ form.categories(class="selectpicker") }}
+			</div>
+		</div>
 		
 	
-
-				<button type="submit" class="btn btn-primary">Create Group!</button>
+		{{ form.submit(class="btn btn-primary") }}
+				
 			
 	</form>
 </div>

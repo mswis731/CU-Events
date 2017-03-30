@@ -46,7 +46,7 @@ class CreateEventForm(Form):
 				 'highPrice': self.highPrice.data,
 				 'categories': self.categories.data,
 				 'eventTypes': self.eventTypes.data
-			   }
+		}
 		return dict
 
 	def convert_datetime(self, dt):
@@ -350,25 +350,7 @@ def event_type(e_type):
 
 	return render_template('events.html', categories=categories, event_types=event_types, events=events)
 	
-@app.route('/communities')
-def communities():
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	return render_template('communities.html', categories=categories, event_types=event_types)
-
-@app.route('/communitycreate')
-def create_community():
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-
-	return render_template('community_create.html')
 
 @app.route('/browse/free')
 def find_free():
@@ -390,4 +372,60 @@ def find_free():
                    nonUserViews=row[13]) for row in cursor.fetchall()]
 
 	return render_template('temp.html', frees=frees)
+
+class CreateCommunityForm(Form):
+	name = TextField(id='name', label = 'Group Name', validators=[validators.required("Please enter your group name")])
+	
+	#categories = SelectMultipleField(id ='category', choices = ['Academic', 'Arts and Theatre', 'Family', 'Government', 'Health and Wellness', 'Holiday', 'Home and Lifestyle', 'Music', 'Other', 'Outdoors', 'Sports', 'Technology', 'University'])
+	categories = SelectMultipleField(id ='categories', label='Categories', validators=[validators.Required("Select at least one category for your group")])
+	submit = SubmitField("Create Group")
+
+	def __init__(self, *args, **kwargs):
+         	Form.__init__(self, *args, **kwargs)
+
+	def validate(self):
+		if not Form.validate(self):
+			return False
+
+		connection = mysql.get_db()
+		cursor = connection.cursor() 
+
+		name = cursor.execute("SELECT name FROM Community Where name = '{}' ".format(self.name.data))
+		print(name)
+		if name:
+			self.name.errors.append("This group name has already been created!")
+			return False
+		else:
+			return True
+
+@app.route('/communities')
+def communities():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT name FROM EventType")
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	return render_template('communities.html', categories=categories, event_types=event_types)
+
+@app.route('/communitycreate', methods=['GET','POST'])
+def create_community():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	form = CreateCommunityForm(request.form)
+
+	if request.method == "POST":
+		if form.validate() == False:
+			flash('Fill in required fields')
+			return render_template('community_create.html', form=form)
+		else:
+      # return (form.password.data)
+      			attr = (form.name.data, form.categories.data)
+      			cursor.callproc('CreateCommunity', (attr[0], attr[1]))
+      			connection.commit()
+      			return("You have successfully created a group! Thank you!")
+ 
+	elif request.method == 'GET':
+    		return render_template('community_create.html', form=form)
 
