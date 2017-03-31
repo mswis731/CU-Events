@@ -111,3 +111,10 @@ CREATE TABLE IsSharedEvent (
 	FOREIGN KEY(cid) REFERENCES Community(cid) ON DELETE CASCADE ON UPDATE CASCADE,
 	PRIMARY KEY(eid, cid)
 );
+CREATE TABLE IsInterestedIn(
+        uid                             INTEGER,
+        eid                             INTEGER,
+        FOREIGN KEY(uid) REFERENCES User(uid) ON DELETE CASCADE ON UPDATE CASCADE,
+		FOREIGN KEY(eid) REFERENCES Event(eid) ON DELETE CASCADE ON UPDATE CASCADE,
+        PRINAMRY KEY(uid, eid);
+);

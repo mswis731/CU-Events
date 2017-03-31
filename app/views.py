@@ -301,4 +301,18 @@ def get_event(id):
 	cursor.close()
 	print(len(events))
 	print(events[0])
-	return render_template('event.html', event = events)
+	return render_template('event.html', event = events, session=session)
+
+@app.route('/interested')
+def is_interested():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	if not session.get('username'):
+		return redirect(url_for('signin'))
+	else:
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		uid = cursor.fetchall()[0][0]
+		curr_url = request.referrer
+		curr = curr_url.split('/')[-1]
+		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
+		return render_template("profile.html", session=session, curr=curr, uid=uid)
