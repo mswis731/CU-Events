@@ -13,7 +13,12 @@ BEGIN
 	-- 	WHERE username = _username)
 	-- THEN 
 	INSERT INTO Community(name, uid) VALUES (groupname, 0);
-	INSERT INTO CommunityCategories(cid, categoryName) VALUES(SELECT cid FROM Community WHERE name=groupname, categories)
+	DECLARE @cid INTEGER;
+	SET @cid = (SELECT cid 
+		    FROM Community 
+		    WHERE name=groupname);
+
+	INSERT INTO CommunityCategories(cid, categoryName) VALUES(@cid, categories)
 END $$
 DELIMITER ;
 
