@@ -66,13 +66,21 @@ def profile():
 		return redirect(url_for('signin'))
 
 	connection = mysql.get_db()
-	cursor = connection.cursor() 
+	cursor = connection.cursor()
 
-	user = cursor.execute("SELECT * From User Where email = '{}'".format(session['username']))
+	cursor.execute("SELECT Event.eid, title, startDate, building, lowPrice, highPrice FROM IsInterestedIn, User, Event WHERE IsInterestedIn.uid = User.uid AND User.username = '{}' AND Event.eid = IsInterestedIn.eid".format(session['username']))
+	events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
+
+	user = cursor.execute("SELECT * From User Where username = '{}'".format(session['username']))
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
-		return render_template('profile.html', session=session)
+		return render_template('profile.html', session=session, events = events)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
@@ -303,6 +311,7 @@ def get_event(id):
 	print(events[0])
 	return render_template('event.html', event = events, session=session)
 
+
 @app.route('/interested')
 def is_interested():
 	connection = mysql.get_db()
@@ -315,4 +324,5 @@ def is_interested():
 		curr_url = request.referrer
 		curr = curr_url.split('/')[-1]
 		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
+		connection.commit()
 		return render_template("profile.html", session=session, curr=curr, uid=uid)
