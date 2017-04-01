@@ -374,11 +374,11 @@ def find_free():
 	return render_template('temp.html', frees=frees)
 
 class CreateCommunityForm(Form):
-	name = TextField(id='name', label = 'Group Name', validators=[validators.required("Please enter your group name")])
+	name = TextField(id='name', label = 'Community Name', validators=[validators.required("Please enter your group name")])
 	
 	#categories = SelectMultipleField(id ='category', choices = ['Academic', 'Arts and Theatre', 'Family', 'Government', 'Health and Wellness', 'Holiday', 'Home and Lifestyle', 'Music', 'Other', 'Outdoors', 'Sports', 'Technology', 'University'])
-	categories = SelectMultipleField(id ='categories', label='Categories', validators=[validators.Required("Select at least one category for your group")])
-	submit = SubmitField("Create Group")
+	categories = SelectMultipleField(id ='categories', label='Categories', validators=[validators.Required("Select at least one category for your community")])
+	submit = SubmitField("Create Community")
 
 	#def __init__(self, *args, **kwargs):
         # 	Form.__init__(self, *args, **kwargs)
@@ -423,7 +423,7 @@ def communities():
                    name=row[1]) for row in cursor.fetchall()]
 	cursor.close()
 
-	return render_template('communities.html', categories=categories)
+	return render_template('communities.html', categories=categories, communities=communities)
 
 @app.route('/communitycreate', methods=['GET','POST'])
 def create_community():
