@@ -2,23 +2,33 @@ DROP PROCEDURE IF EXISTS CreateCommunity;
 
 DELIMITER $$
 CREATE PROCEDURE CreateCommunity(
-	groupname		VARCHAR(40),
-	categories		VARCHAR(40))
+	_groupname				VARCHAR(40),
+	_uid					INTEGER,
+	_categories_str			VARCHAR(500))
 BEGIN 
 
 	SET sql_mode='';
-	-- IF NOT EXISTS(
-	-- 	SELECT username
-	-- 	FROM User	
-	-- 	WHERE username = _username)
-	-- THEN 
-	INSERT INTO Community(name, uid) VALUES (groupname, 0);
-	DECLARE @cid INTEGER;
+
+	INSERT INTO Community(name, uid) VALUES (_groupname, _uid);
+
 	SET @cid = (SELECT cid 
 		    FROM Community 
-		    WHERE name=groupname);
+		    WHERE name=_groupname);
 
-	INSERT INTO CommunityCategories(cid, categoryName) VALUES(@cid, categories)
+	categories:
+	LOOP
+		IF LENGTH(TRIM(_categories_str)) = 0 OR _categories_str IS NULL THEN
+			LEAVE categories;
+		END IF;
+
+		SET @next = SUBSTRING_INDEX(_categories_str, ',', 1);
+		SET @nextlen = LENGTH(@next);
+		SET @value = TRIM(@next);
+
+		INSERT INTO CommunityCategories(cid, categoryName) VALUES(@cid, @value);
+
+		SET _categories_str = INSERT(_categories_str, 1, @nextlen + 1, '');
+	END LOOP;
 END $$
 DELIMITER ;
 
