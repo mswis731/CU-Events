@@ -380,8 +380,19 @@ class CreateCommunityForm(Form):
 	categories = SelectMultipleField(id ='categories', label='Categories', validators=[validators.Required("Select at least one category for your group")])
 	submit = SubmitField("Create Group")
 
-	def __init__(self, *args, **kwargs):
-         	Form.__init__(self, *args, **kwargs)
+	#def __init__(self, *args, **kwargs):
+        # 	Form.__init__(self, *args, **kwargs)
+
+	def __init__(self, form):
+		Form.__init__(self, form)
+
+		self.connection = mysql.get_db()
+		self.cursor = self.connection.cursor()
+
+		# set category choices
+		self.cursor.execute("SELECT name FROM Category")
+		categories = [row[0] for row in self.cursor.fetchall()]
+		self.categories.choices = [ (c, c) for c in categories ]
 
 	def validate(self):
 		if not Form.validate(self):
@@ -389,9 +400,9 @@ class CreateCommunityForm(Form):
 
 		connection = mysql.get_db()
 		cursor = connection.cursor() 
-
+		print(self.name.data)
 		name = cursor.execute("SELECT name FROM Community Where name = '{}' ".format(self.name.data))
-		print(name)
+		#print(name)
 		if name:
 			self.name.errors.append("This group name has already been created!")
 			return False
@@ -402,30 +413,58 @@ class CreateCommunityForm(Form):
 def communities():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	#cursor.execute("SELECT name FROM EventType")
+	#event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	return render_template('communities.html', categories=categories, event_types=event_types)
+	cursor.execute("SELECT cid, name FROM Community")
+	communities = [dict(cid=row[0],
+                   name=row[1]) for row in cursor.fetchall()]
+	cursor.close()
+
+	return render_template('communities.html', categories=categories)
 
 @app.route('/communitycreate', methods=['GET','POST'])
 def create_community():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	form = CreateCommunityForm(request.form)
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	print(categories)
 
+	if not session.get('username'):
+		uid = '12345'
+		#return redirect("/signup")
+	else:
+		cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
+		uid = cursor.fetchall()[0][0]
+	
+	form = CreateCommunityForm(request.form)
+	
 	if request.method == "POST":
 		if form.validate() == False:
 			flash('Fill in required fields')
-			return render_template('community_create.html', form=form)
+			return render_template('community_create.html', session=session, form=form, categories=categories)
 		else:
       # return (form.password.data)
-      			attr = (form.name.data, form.categories.data)
-      			cursor.callproc('CreateCommunity', (attr[0], attr[1]))
-      			connection.commit()
-      			return("You have successfully created a group! Thank you!")
+      			#attr = (form.name, form.categories)
+			print(form.categories)
+			print(form.categories.data)
+			#cursor.execute("SELECT name FROM Category")
+			#form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
+			print(form.name.data)
+			print(uid)
+			s = ","
+			form.categories.data = s.join(form.categories.data)
+			print(form.categories.data)
+			#category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
+			cursor.callproc('CreateCommunity', (form.name.data, uid, form.categories.data))
+			connection.commit()
+			#return redirect('/browse')
+			return("You have successfully created a group! Thank you!")
  
 	elif request.method == 'GET':
-    		return render_template('community_create.html', form=form)
+    		return render_template('community_create.html', session=session, form=form, categories=categories)
+
 
