@@ -1,18 +1,24 @@
 from flask import Flask, render_template, flash, request, redirect, session, url_for
-from app.forms import CreateEventForm, SignupForm, SigninForm
+from app.forms import *
+from app.filters import *
 from app import app, mysql
 from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
+
+def cat_and_types(connection, cursor):
+	cursor.execute("SELECT name FROM EventType")
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	return (event_types, categories)
 
 @app.route('/')
 @app.route('/index')
 def index():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	return render_template('index.html', session=session, categories=categories, event_types=event_types)
 
@@ -86,10 +92,7 @@ def profile():
 def event_create():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	# get uid
 	if not session.get('username'):
@@ -124,11 +127,6 @@ def event_create():
 		cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(eid))
 		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
 
-		cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(eid))
-		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
-		cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(eid))
-		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
-
 	if request.method == 'POST':
 		if form.validate():
 
@@ -142,12 +140,15 @@ def event_create():
 				elif field.name == 'endDate':
 					attr_list.append(form.end[0])
 					attr_list.append(form.end[1])
+				elif field.name == 'categories' or field.name == 'eventTypes':
+					attr_list.append(','.join(map(str, field.data)))
 				else:
 					attr_list.append(field.data)
 			# only need uid for new events
 			if form.eid.data == -1:
 				attr_list.append(uid)
 			attr = tuple(attr_list)
+			print(attr)
 			# new event
 			if form.eid.data == -1:
 				cursor.callproc('CreateUserEvent', attr)
@@ -161,55 +162,36 @@ def event_create():
 
 	return render_template('eventcreate.html', session=session, form = form, error=error, categories=categories, event_types=event_types)
 
-# filters needed for listing events
-@app.template_filter('month')
-def year_filter(num):
-	abbrs = { 1 : "Jan",
-			  2 : "Feb",	
-			  3 : "Mar",	
-			  4 : "Apr",	
-			  5 : "May",	
-			  6 : "Jun",	
-			  7 : "Jul",	
-			  8 : "Aug",	
-			  9 : "Sep",	
-			  10 : "Oct",	
-			  11 : "Nov",	
-			  12 : "Dec" }
-	abbr = abbrs[num] if abbrs.get(num) else ""
-	return abbr
 
-@app.template_filter('money')
-def money_filter(val):
-	return "${:,.2f}".format(val)
 
-@app.route('/browse')
+MAX_PER_PAGE = 20
+
+@app.route('/browse/', methods=['GET', 'POST'])
 def browse():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
-	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event")
+	page = int(request.args.get('page')) if request.args.get('page') else 1
+	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event")
+	start_row = MAX_PER_PAGE*(page-1)
+	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
+	total_pages = (res_len // MAX_PER_PAGE) + 1
+	#print(res_len, total_pages, start_row, end_row)
 	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],
                    lowPrice=row[4],
-                   highPrice=row[5]) for row in cursor.fetchall()]
+                   highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
 	cursor.close()
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, total_pages=total_pages, page=page)
 
 @app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	"""
 	if request.method == 'POST':
@@ -241,10 +223,7 @@ def event_(category):
 def event_type(e_type):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	"""
 	if request.method == 'POST':
@@ -277,10 +256,7 @@ def event_type(e_type):
 def communities():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	return render_template('communities.html', session=session, categories=categories, event_types=event_types)
 
@@ -288,10 +264,8 @@ def communities():
 def get_event(id):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
+	
 	cursor.execute("SELECT * FROM Event WHERE eid='{}'".format(id))
 	events = [dict(title=row[1],
                    description=row[2],
