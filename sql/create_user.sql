@@ -6,7 +6,7 @@ CREATE PROCEDURE CreateUser(
 	_lastname		VARCHAR(30),
 	_email 			VARCHAR(50),
 	_username		VARCHAR(20),
-	_password		VARCHAR(30))
+	_password		VARCHAR(100))
 BEGIN 
 
 	SET sql_mode='';
@@ -18,7 +18,3 @@ BEGIN
 	INSERT INTO User(firstname, lastname, username, email, password) VALUES (_firstname, _lastname, _username, _email, _password);
 END $$
 DELIMITER ;
-
--- (firstname, lastname, username, password)
-
--- _firstname, _lastname, _username, _password);

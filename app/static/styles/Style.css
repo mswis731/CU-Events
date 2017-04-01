@@ -60,7 +60,8 @@ h3{
 
 form input#firstname,
 form input#lastname,
-form input#password 
+form input#password,
+form input#email,
 form input#username {
   width: 400px;
   background-color: #fafafa;

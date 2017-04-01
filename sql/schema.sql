@@ -1,7 +1,7 @@
 CREATE TABLE User (
 	uid					INTEGER NOT NULL AUTO_INCREMENT,
 	username			VARCHAR(30) NOT NULL UNIQUE,
-	password			VARCHAR(30),
+	password			VARCHAR(54),
 	firstname			VARCHAR(30),
 	lastname			VARCHAR(30),
 	email				VARCHAR(50) NOT NULL UNIQUE,
@@ -110,4 +110,11 @@ CREATE TABLE IsSharedEvent (
 	FOREIGN KEY(eid) REFERENCES EventCrawled(eid) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY(cid) REFERENCES Community(cid) ON DELETE CASCADE ON UPDATE CASCADE,
 	PRIMARY KEY(eid, cid)
+);
+CREATE TABLE IsInterestedIn(
+        uid                             INTEGER,
+        eid                             INTEGER,
+        FOREIGN KEY(uid) REFERENCES User(uid) ON DELETE CASCADE ON UPDATE CASCADE,
+		FOREIGN KEY(eid) REFERENCES Event(eid) ON DELETE CASCADE ON UPDATE CASCADE,
+        PRINAMRY KEY(uid, eid);
 );

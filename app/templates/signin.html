@@ -1,0 +1,43 @@
+{% extends 'navbar.html' %}
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css"/>
+{% endblock %}
+
+{% block content %}
+  	<!-- <h2 style="">Sign up</h2> -->
+
+    	{% for message in form.my_username.errors %}
+      	<div class="flash">{{ message }}</div>
+    	{% endfor %}
+	
+    	{% for message in form.my_password.errors %}
+      	<div class="flash">{{ message }}</div>
+    	{% endfor %}
+	
+	<div class="container">
+    	<div id="legend">
+        	<legend class="" style="text-align: center; padding-bottom: 40px; ">Sign In</legend>
+    	</div>
+  	<form action="{{ url_for('signin') }}" autocomplete="off" method=post>
+  		<!-- <input style="display:none"> -->
+		<!-- <input type="password" style="display:none"> -->
+		<div class="form-group row">
+			{{ form.my_username.label(class="col-sm-2 col-form-label") }}
+			<div class="col-sm-6">
+				{{ form.my_username(class="form-control") }}
+			</div>
+		</div>
+		<div class="form-group row">
+			{{ form.my_password.label(class="col-sm-2 col-form-label") }}
+			<div class="col-sm-6">
+				{{ form.my_password(class="form-control") }}
+			</div>
+		</div>
+		<div class="form-group row">
+			<div class="offset-sm-2 col-sm-10">
+			{{ form.sign_in_submit(class="btn btn-primary") }}
+			</div>
+		</div>
+   	</form>
+ 	</div>
+{% endblock %}

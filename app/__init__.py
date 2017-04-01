@@ -30,6 +30,7 @@ app.config['MYSQL_DATABASE_USER'] = db_user
 app.config['MYSQL_DATABASE_PASSWORD'] = db_password
 app.config['MYSQL_DATABASE_DB'] = db_name
 app.config['MYSQL_DATABASE_HOST'] = db_host
+
 mysql = MySQL()
 mysql.init_app(app)
 
