@@ -4,6 +4,7 @@ from app.filters import *
 from app import app, mysql
 from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
+from flask_paginate import Pagination
 
 def cat_and_types(connection, cursor):
 	cursor.execute("SELECT name FROM EventType")
@@ -172,12 +173,10 @@ def browse():
 	cursor = connection.cursor()
 	event_types, categories = cat_and_types(connection, cursor)
 
-	page = int(request.args.get('page')) if request.args.get('page') else 1
+	page = request.args.get('page', type=int, default=1)
 	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event")
 	start_row = MAX_PER_PAGE*(page-1)
 	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
-	total_pages = (res_len // MAX_PER_PAGE) + 1
-	#print(res_len, total_pages, start_row, end_row)
 	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
@@ -185,7 +184,9 @@ def browse():
                    lowPrice=row[4],
                    highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
 	cursor.close()
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, total_pages=total_pages, page=page)
+
+	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination)
 
 @app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
@@ -207,17 +208,21 @@ def event_(category):
 			return redirect("/eventcreate")
 	"""
 
+	page = request.args.get('page', type=int, default=1)
 	category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
-	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category))
+	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category))
+	start_row = MAX_PER_PAGE*(page-1)
+	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
 	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],
                    lowPrice=row[4],
-                   highPrice=row[5]) for row in cursor.fetchall()]
+                   highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
 	cursor.close()
 
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
+	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination)
 
 @app.route('/browse/type/<e_type>', methods=['GET','POST'])
 def event_type(e_type):
@@ -239,18 +244,21 @@ def event_type(e_type):
 			return redirect("/eventcreate")
 	"""
 
+	page = request.args.get('page', type=int, default=1)
 	e_type = " ".join([ (word.capitalize() if word != 'and' else word) for word in e_type.split('-') ])
-
-	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(e_type))
+	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(e_type))
+	start_row = MAX_PER_PAGE*(page-1)
+	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
 	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],
                    lowPrice=row[4],
-                   highPrice=row[5]) for row in cursor.fetchall()]
+                   highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
 	cursor.close()
 
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
+	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination)
 	
 @app.route('/communities')
 def communities():
