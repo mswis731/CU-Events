@@ -5,6 +5,7 @@ from app import app, mysql
 from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
 from flask_paginate import Pagination
+import googlemaps
 
 def cat_and_types(connection, cursor):
 	cursor.execute("SELECT name FROM EventType")
