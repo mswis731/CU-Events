@@ -309,3 +309,20 @@ def is_interested():
 		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
 		connection.commit()
 		return render_template("profile.html", session=session, curr=curr, uid=uid)
+@app.context_processor
+def googlelocfilter():
+	def _googlelocfilter(building, addr, city, cityzip):
+		
+		locstr = addr+","+city+", IL," + str(cityzip)
+		gmaps = googlemaps.Client(key='AIzaSyCwQgKvuUKzqEkWbNs8VjlHHMkDYri7bKs')
+		ret = gmaps.geocode(address=locstr)
+		lng = ret[0]['geometry']['location']['lng']
+		lat = ret[0]['geometry']['location']['lat']
+		cordstr = str(lng)+","+str(lat)
+		addrmod = addr.replace(" ", "+")
+		buildingmod = building.replace(" ", "+")
+		locstr2 = buildingmod+"+"+addrmod
+		locstr3 = locstr2+",+"+str(cityzip)+",+USA"
+		mapstr =  "https://maps.google.co.uk/maps?f=q&source=s_q&hl=en&geocode=&q="+locstr2+"&sll="+cordstr+"&ie=UTF8&hq=&hnear="+locstr3+"&t=m&z=17"+"&ll="+cordstr+"&output=embed"
+		return mapstr
+	return dict(googlelocfilter=_googlelocfilter)
