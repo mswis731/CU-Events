@@ -5,3 +5,4 @@ selenium
 flask-mysql
 flask-script
 flask-wtf
+flask-paginate

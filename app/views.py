@@ -1,18 +1,25 @@
 from flask import Flask, render_template, flash, request, redirect, session, url_for
-from app.forms import CreateEventForm, SignupForm, SigninForm
+from app.forms import *
+from app.filters import *
 from app import app, mysql
 from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
+from flask_paginate import Pagination
+
+def cat_and_types(connection, cursor):
+	cursor.execute("SELECT name FROM EventType")
+	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	return (event_types, categories)
 
 @app.route('/')
 @app.route('/index')
 def index():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	return render_template('index.html', session=session, categories=categories, event_types=event_types)
 
@@ -66,22 +73,27 @@ def profile():
 		return redirect(url_for('signin'))
 
 	connection = mysql.get_db()
-	cursor = connection.cursor() 
+	cursor = connection.cursor()
 
-	user = cursor.execute("SELECT * From User Where email = '{}'".format(session['username']))
+	cursor.execute("SELECT Event.eid, title, startDate, building, lowPrice, highPrice FROM IsInterestedIn, User, Event WHERE IsInterestedIn.uid = User.uid AND User.username = '{}' AND Event.eid = IsInterestedIn.eid".format(session['username']))
+	events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
+
+	user = cursor.execute("SELECT * From User Where username = '{}'".format(session['username']))
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
-		return render_template('profile.html', session=session)
+		return render_template('profile.html', session=session, events = events)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def event_create():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	# get uid
 	if not session.get('username'):
@@ -116,11 +128,6 @@ def event_create():
 		cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(eid))
 		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
 
-		cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(eid))
-		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
-		cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(eid))
-		form.eventTypes.data = [ tup[0] for tup in cursor.fetchall() ]
-
 	if request.method == 'POST':
 		if form.validate():
 
@@ -134,12 +141,15 @@ def event_create():
 				elif field.name == 'endDate':
 					attr_list.append(form.end[0])
 					attr_list.append(form.end[1])
+				elif field.name == 'categories' or field.name == 'eventTypes':
+					attr_list.append(','.join(map(str, field.data)))
 				else:
 					attr_list.append(field.data)
 			# only need uid for new events
 			if form.eid.data == -1:
 				attr_list.append(uid)
 			attr = tuple(attr_list)
+			print(attr)
 			# new event
 			if form.eid.data == -1:
 				cursor.callproc('CreateUserEvent', attr)
@@ -153,55 +163,36 @@ def event_create():
 
 	return render_template('eventcreate.html', session=session, form = form, error=error, categories=categories, event_types=event_types)
 
-# filters needed for listing events
-@app.template_filter('month')
-def year_filter(num):
-	abbrs = { 1 : "Jan",
-			  2 : "Feb",	
-			  3 : "Mar",	
-			  4 : "Apr",	
-			  5 : "May",	
-			  6 : "Jun",	
-			  7 : "Jul",	
-			  8 : "Aug",	
-			  9 : "Sep",	
-			  10 : "Oct",	
-			  11 : "Nov",	
-			  12 : "Dec" }
-	abbr = abbrs[num] if abbrs.get(num) else ""
-	return abbr
 
-@app.template_filter('money')
-def money_filter(val):
-	return "${:,.2f}".format(val)
 
-@app.route('/browse')
+MAX_PER_PAGE = 20
+
+@app.route('/browse/', methods=['GET', 'POST'])
 def browse():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
-	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event")
+	page = request.args.get('page', type=int, default=1)
+	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event")
+	start_row = MAX_PER_PAGE*(page-1)
+	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
 	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],
                    lowPrice=row[4],
-                   highPrice=row[5]) for row in cursor.fetchall()]
+                   highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
 	cursor.close()
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
+
+	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination)
 
 @app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	"""
 	if request.method == 'POST':
@@ -217,26 +208,27 @@ def event_(category):
 			return redirect("/eventcreate")
 	"""
 
+	page = request.args.get('page', type=int, default=1)
 	category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
-	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category))
+	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category))
+	start_row = MAX_PER_PAGE*(page-1)
+	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
 	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],
                    lowPrice=row[4],
-                   highPrice=row[5]) for row in cursor.fetchall()]
+                   highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
 	cursor.close()
 
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
+	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination)
 
 @app.route('/browse/type/<e_type>', methods=['GET','POST'])
 def event_type(e_type):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	"""
 	if request.method == 'POST':
@@ -252,27 +244,27 @@ def event_type(e_type):
 			return redirect("/eventcreate")
 	"""
 
+	page = request.args.get('page', type=int, default=1)
 	e_type = " ".join([ (word.capitalize() if word != 'and' else word) for word in e_type.split('-') ])
-
-	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(e_type))
+	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(e_type))
+	start_row = MAX_PER_PAGE*(page-1)
+	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
 	events = [dict(eid=row[0],
                    title=row[1],
                    startDate=row[2],
                    building=row[3],
                    lowPrice=row[4],
-                   highPrice=row[5]) for row in cursor.fetchall()]
+                   highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
 	cursor.close()
 
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events)
+	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination)
 	
 @app.route('/communities')
 def communities():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
 
 	return render_template('communities.html', session=session, categories=categories, event_types=event_types)
 
@@ -280,10 +272,8 @@ def communities():
 def get_event(id):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types, categories = cat_and_types(connection, cursor)
+	
 	cursor.execute("SELECT * FROM Event WHERE eid='{}'".format(id))
 	events = [dict(title=row[1],
                    description=row[2],
@@ -301,4 +291,20 @@ def get_event(id):
 	cursor.close()
 	print(len(events))
 	print(events[0])
-	return render_template('event.html', event = events)
+	return render_template('event.html', event = events, session=session)
+
+
+@app.route('/interested')
+def is_interested():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	if not session.get('username'):
+		return redirect(url_for('signin'))
+	else:
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		uid = cursor.fetchall()[0][0]
+		curr_url = request.referrer
+		curr = curr_url.split('/')[-1]
+		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
+		connection.commit()
+		return render_template("profile.html", session=session, curr=curr, uid=uid)

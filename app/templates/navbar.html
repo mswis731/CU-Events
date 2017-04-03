@@ -1,14 +1,17 @@
 <!DOCTYPE html> 
 <html lang="en">
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-<!-- Optional theme -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-<!-- Bootstrap Select -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css">
+<head>
+	<title>CU Events{% block title %}{% endblock %}</title>
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+	<!-- Bootstrap Select -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css">
 
-<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/navbar.css') }}"> 
-{% block stylesheets %}{% endblock %}
+	<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/navbar.css') }}"> 
+	{% block stylesheets %}{% endblock %}
+</head>
 
 <body>
 	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -63,8 +66,8 @@
         	<li class="dropdown">
           	<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ session.username }} <span class="caret"></span></a>
           	<ul class="dropdown-menu">
-            	<li><a href="#">My Events</a></li>
-            	<li><a href="#">My Communities</a></li>
+            	<li><a href="/profile">My Profile</a></li>
+            	<!-- <li><a href="#">My Communities</a></li> -->
             	<li><a href="#">Account Settings</a></li>
             	<li role="separator" class="divider"></li>
             	<li><a href="/signout">Sign out</a></li>
