@@ -193,23 +193,7 @@ def browse():
 		event_type_list = (','.join(map(str, form.eventTypes.data)))
 
 		events = search_results(form.categories.data, form.eventTypes.data)
-		# cat_list_str = str(category_list)
-		# print(cat_list_str)
-		
-		# cat_length = 0
-		# for cat in form.categories.data:
-		# 	cat_length += 1
-
-		# print (cat_length)
-
-		# cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasCategory WHERE categoryName = '{}') AND eid IN (SELECT FROM WHERE) AND " .format(form.categories.data[0]))
-		# events = [dict(eid=row[0],
-  #                title=row[1],
-  #                startDate=row[2],
-  #                building=row[3],
-  #                lowPrice=row[4],
-  #                highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
-
+	
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
 	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination, form = form)
 
