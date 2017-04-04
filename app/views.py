@@ -26,17 +26,58 @@ def index():
 
 @app.route('/signin', methods = ['GET', 'POST'])
 def signin():
-	form = SigninForm(request.form)
 
-	if request.method == 'POST':
-		if form.validate() == False:
-			return render_template('signin.html', session=session, form = form)
-		else:
-			session['username'] = form.my_username.data
-			return redirect(url_for('profile'))
+  form = SigninForm(request.form)
 
-	elif request.method == 'GET':
-		return render_template('signin.html', session=session, form = form)
+  if request.method == 'POST':
+    if form.validate() == False:
+      return render_template('signin.html', session=session, form = form)
+    else:
+      session['username'] = form.my_username.data
+      return redirect(url_for('profile'))
+
+  elif request.method == 'GET':
+    return render_template('signin.html', session=session, form = form)
+
+class signupForm(Form):
+  firstname = TextField("First name", [validators.Required("Please enter your first name.")])
+  lastname = TextField("Last name", [validators.Required("Please enter your last name")])
+  username = TextField("username", [validators.Required("Please enter a username.")])
+  password = PasswordField('Password', [validators.Required("Please enter a password.")])
+  confirm_password = PasswordField('Confirm Password', [validators.Required("Please confirm password.")])
+
+  email = TextField('email')
+  categories = SelectMultipleField(id ='category', choices = ['Academic', 'Arts and Theatre', 'Family', 'Government', 'Health and Wellness', 'Holiday', 'Home and Lifestyle', 'Music', 'Other', 'Outdoors', 'Sports', 'Technology', 'University'])
+
+  submit = SubmitField("Create account") 
+
+  def __init__(self, *args, **kwargs):
+    Form.__init__(self, *args, **kwargs)
+
+  def validate(self):
+    if not Form.validate(self):
+      return False
+
+    connection = mysql.get_db()
+    cursor = connection.cursor() 
+
+    user = cursor.execute("SELECT username FROM User Where username = '{}' ".format(self.username.data))
+    print(user)
+    if user:
+      self.username.errors.append("That username is already taken")
+      return False
+    else:
+      email = cursor.execute("SELECT email FROM User WHERE email = '{}'" .format(self.email.data))
+      if email:
+        self.email.errors.append("That email is already associated with an account")
+        return False
+      else:
+        if self.confirm_password.data != self.password.data:
+          self.confirm_password.errors.append("Passwords do not match")
+          return False
+        else:
+          return True
+
 
 @app.route('/signup', methods = ['GET', 'POST'])
 def sign_up():
@@ -56,6 +97,7 @@ def sign_up():
 
 			session['username'] = form.username.data
 			return redirect(url_for('profile'))
+
 
 			return("thank you for signing up!")
 	elif request.method == 'GET':
