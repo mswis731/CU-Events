@@ -1,5 +1,7 @@
 {% extends 'navbar.html' %}
 
+{% block title %} - Browse Events{% endblock %}
+
 {% block stylesheets %}
 <link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
 
@@ -69,6 +71,9 @@
 				{% endfor %}
 			</ul>
 		</div>
+	</div>
+	<div class="text-center">
+		{{ pagination.links }}
 	</div>
 	{% else %}
 	<p style="text-align: center; font-family: 'Amiko', sans-serif;; font-size: 200%; font-weight: bold;"> No Events Found</p>
