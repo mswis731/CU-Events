@@ -319,9 +319,9 @@ def communities():
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
 
-	cursor.execute("SELECT cid, name FROM Community")
+	cursor.execute("SELECT cid, name, uid FROM Community")
 	communities = [dict(cid=row[0],
-                   name=row[1].replace('/', '\'')) for row in cursor.fetchall()]
+                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
 	cursor.close()
 
 	return render_template('communities.html', categories=categories, communities=communities)
@@ -357,7 +357,8 @@ def create_community():
 			#print(form.name.data)
 			#print(uid)
 			s = ","
-			form.categories.data = s.join(form.categories.data)
+			form.categories.data = s.join(map(str, form.categories.data))
+			
 			#print(form.categories.data)
 			#category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
 			cursor.callproc('CreateCommunity', (form.name.data.replace('\'', '/'), uid, form.categories.data))
