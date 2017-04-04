@@ -212,6 +212,7 @@ MAX_PER_PAGE = 20
 def browse(filter_path = None):
 	form = searchBy(request.form)
 	if request.method == 'POST':
+		searchTerm = form.searchTerm.data
 		filter_path = ""
 		if form.category.data and form.category.data != 'ALL CATEGORIES':
 			if filter_path != "":
@@ -224,8 +225,10 @@ def browse(filter_path = None):
 
 		# TODO: add price and date filters later
 
-		return redirect(url_for('browse', filter_path=filter_path))
+		return redirect(url_for('browse', filter_path=filter_path, searchTerm=searchTerm))
 
+	searchTerm = request.args.get('searchTerm')
+	form.searchTerm.data = searchTerm
 	# parse filter path
 	category = None
 	eventType = None
@@ -262,7 +265,11 @@ def browse(filter_path = None):
 	attrs = "eid, title, startDate, building, lowPrice, highPrice"
 	query = ""
 	where_clause = ""
-	if category or eventType or price or date:
+	if searchTerm or category or eventType or price or date:
+		if searchTerm:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "title LIKE '%{}%'".format(searchTerm)
 		if category:
 			if where_clause:
 				where_clause += " AND "
@@ -373,26 +380,27 @@ def communities():
 
 	return render_template('communities.html', session=session, categories=categories, event_types=event_types)
 
-@app.route('/browse/eventid/<id>', methods=['GET','POST'])
+@app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	event_types, categories = cat_and_types(connection, cursor)
 	
-	cursor.execute("SELECT * FROM Event WHERE eid='{}'".format(id))
-	events = [dict(title=row[1],
-                   description=row[2],
-                   building=row[3],
-                   addrAndStreet=row[4],
-                   city=row[5],
-                   zipcode=row[6],
-                   startDate=row[7],
-                   startTime=row[8],
-                   endDate=row[9],
-                   endTime=row[10],
-                   lowPrice=row[11],
-                   highPrice=row[12],
-                   nonUserViews=row[13]) for row in cursor.fetchall()]
+	attrs = "title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice, nonUserViews"
+	cursor.execute("SELECT {} FROM Event WHERE eid='{}'".format(attrs, id))
+	events = [dict(title=row[0],
+                   description=row[1],
+                   building=row[2],
+                   addrAndStreet=row[3],
+                   city=row[4],
+                   zipcode=row[5],
+                   startDate=row[6],
+                   startTime=row[7],
+                   endDate=row[8],
+                   endTime=row[9],
+                   lowPrice=row[10],
+                   highPrice=row[11],
+                   nonUserViews=row[12]) for row in cursor.fetchall()]
 	cursor.close()
 	print(len(events))
 	print(events[0])
@@ -421,8 +429,11 @@ def googlelocfilter():
 		locstr = addr+","+city+", IL," + str(cityzip)
 		gmaps = googlemaps.Client(key='AIzaSyCwQgKvuUKzqEkWbNs8VjlHHMkDYri7bKs')
 		ret = gmaps.geocode(address=locstr)
-		lng = ret[0]['geometry']['location']['lng']
-		lat = ret[0]['geometry']['location']['lat']
+		lng = 0.0
+		lat = 0.0
+		if len(ret) > 0:
+			lng = ret[0]['geometry']['location']['lng']
+			lat = ret[0]['geometry']['location']['lat']
 		cordstr = str(lng)+","+str(lat)
 		addrmod = addr.replace(" ", "+")
 		buildingmod = building.replace(" ", "+")

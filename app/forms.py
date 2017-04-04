@@ -144,7 +144,7 @@ class SigninForm(Form):
 		connection = mysql.get_db()
 		cursor = connection.cursor()
 
-		res_len = cursor.execute("SELECT password FROM User WHERE username = '{}'" .format(self.my_username.data))
+		res_len = cursor.execute("SELECT password FROM User WHERE username = '{}'".format(self.my_username.data))
 		if res_len == 0:
 			self.my_username.errors.append("Invalid username")
 			return False
@@ -157,8 +157,9 @@ class SigninForm(Form):
 				return False
 
 class searchBy(Form):
-	category = SelectField(id ='category', label='Category') #validators=[validators.Required("Select at least one category")])
-	eventType = SelectField(id ='eventtype', label='Event Type') #validators=[validators.Required("Select at least one event type")])
+	searchTerm = TextField(id = 'searchTerm')
+	category = SelectField(id ='category', label='Category')
+	eventType = SelectField(id ='eventtype', label='Event Type')
 	submit = SubmitField("Search") 
 
 	def __init__(self, form):
