@@ -164,8 +164,6 @@ def event_create():
 
 	return render_template('eventcreate.html', session=session, form = form, error=error, categories=categories, event_types=event_types)
 
-
-
 MAX_PER_PAGE = 20
 
 @app.route('/browse/', methods=['GET', 'POST'])
@@ -173,6 +171,7 @@ def browse():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	event_types, categories = cat_and_types(connection, cursor)
+	form = searchBy(request.form)
 
 	page = request.args.get('page', type=int, default=1)
 	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event")
@@ -184,10 +183,36 @@ def browse():
                    building=row[3],
                    lowPrice=row[4],
                    highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
-	cursor.close()
+
+	# cursor.close()
+	if request.method == 'POST':
+		
+		print(form.categories.data)
+		print(form.eventTypes.data)
+		category_list = (','.join(map(str, form.categories.data)))
+		event_type_list = (','.join(map(str, form.eventTypes.data)))
+
+		events = search_results(form.categories.data, form.eventTypes.data)
+		# cat_list_str = str(category_list)
+		# print(cat_list_str)
+		
+		# cat_length = 0
+		# for cat in form.categories.data:
+		# 	cat_length += 1
+
+		# print (cat_length)
+
+		# cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasCategory WHERE categoryName = '{}') AND eid IN (SELECT FROM WHERE) AND " .format(form.categories.data[0]))
+		# events = [dict(eid=row[0],
+  #                title=row[1],
+  #                startDate=row[2],
+  #                building=row[3],
+  #                lowPrice=row[4],
+  #                highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
 
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination)
+	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination, form = form)
+
 
 @app.route('/browse/category/<category>', methods=['GET','POST'])
 def event_(category):
@@ -309,6 +334,7 @@ def is_interested():
 		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
 		connection.commit()
 		return render_template("profile.html", session=session, curr=curr, uid=uid)
+
 @app.context_processor
 def googlelocfilter():
 	def _googlelocfilter(building, addr, city, cityzip):
@@ -326,3 +352,47 @@ def googlelocfilter():
 		mapstr =  "https://maps.google.co.uk/maps?f=q&source=s_q&hl=en&geocode=&q="+locstr2+"&sll="+cordstr+"&ie=UTF8&hq=&hnear="+locstr3+"&t=m&z=17"+"&ll="+cordstr+"&output=embed"
 		return mapstr
 	return dict(googlelocfilter=_googlelocfilter)
+
+
+def search_results(categories, event_types):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	events = []
+	category = []
+	# k = 0''
+	page = request.args.get('page', type=int, default=1)
+	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event")
+	start_row = MAX_PER_PAGE*(page-1)
+	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
+
+	for cat in categories:
+		print(cat)
+		cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(cat))
+		category = [dict(eid=row[0],
+                 title=row[1],
+                 startDate=row[2],
+                 building=row[3],
+                 lowPrice=row[4],
+                 highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
+
+
+		print(len(category))
+		events = events+category
+		print(len(events))
+
+	for type_ in event_types:
+		print(type_)
+		cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE eid IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(type_))
+		Type = [dict(eid=row[0],
+                 title=row[1],
+                 startDate=row[2],
+                 building=row[3],
+                 lowPrice=row[4],
+                 highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
+
+		print(len(Type))
+		events = events+Type
+		print(len(events))
+	# print("EVENT LENGTH:")
+	# print(len(events))
+	return events

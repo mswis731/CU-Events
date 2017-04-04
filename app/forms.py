@@ -155,3 +155,28 @@ class SigninForm(Form):
 			else:
 				self.my_password.errors.append("Invalid password")
 				return False
+
+class searchBy(Form):
+	categories = SelectMultipleField(id ='category', label='Categories', validators=[validators.Required("Select at least one category")])
+	eventTypes = SelectMultipleField(id ='eventtype', label='Event Types', validators=[validators.Required("Select at least one event type")])
+	submit = SubmitField("Search") 
+
+	def __init__(self, form):
+		Form.__init__(self, form)
+
+		self.connection = mysql.get_db()
+		self.cursor = self.connection.cursor()
+
+		# set category choices
+		self.cursor.execute("SELECT name FROM Category")
+		categories = [row[0] for row in self.cursor.fetchall()]
+		self.categories.choices = [ (c, c) for c in categories ]
+
+		# set event types choices
+		self.cursor.execute("SELECT name FROM EventType")
+		event_types = [row[0] for row in self.cursor.fetchall()]
+		self.eventTypes.choices = [ (e, e) for e in event_types ]
+		
+	def validate(self):
+		return True
+
