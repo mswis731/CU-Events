@@ -21,3 +21,17 @@ def year_filter(num):
 @app.template_filter('money')
 def money_filter(val):
 	return "${:,.2f}".format(val)
+
+@app.template_filter('url_to_cat')
+def url_to_cat_filter(val):
+	try:
+		return " ".join([ (word.capitalize() if word != 'and' else word) for word in val.split('-') ])
+	except:
+		return ""
+
+@app.template_filter('cat_to_url')
+def cat_to_url_filter(val):
+	try:
+		return val.replace(' ', '-').lower()
+	except:
+		return ""

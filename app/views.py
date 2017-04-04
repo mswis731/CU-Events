@@ -9,9 +9,9 @@ import googlemaps
 
 def cat_and_types(connection, cursor):
 	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	event_types = [(row[0], cat_to_url_filter(row[0])) for row in cursor.fetchall()]
 	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+	categories = [(row[0], cat_to_url_filter(row[0])) for row in cursor.fetchall()]
 
 	return (event_types, categories)
 
@@ -192,7 +192,6 @@ def event_create():
 			if form.eid.data == -1:
 				attr_list.append(uid)
 			attr = tuple(attr_list)
-			print(attr)
 			# new event
 			if form.eid.data == -1:
 				cursor.callproc('CreateUserEvent', attr)
@@ -209,14 +208,77 @@ def event_create():
 MAX_PER_PAGE = 20
 
 @app.route('/browse/', methods=['GET', 'POST'])
-def browse():
+@app.route('/browse/<filter_path>', methods=['GET', 'POST'])
+def browse(filter_path = None):
+	form = searchBy(request.form)
+	if request.method == 'POST':
+		filter_path = ""
+		if form.category.data and form.category.data != 'ALL CATEGORIES':
+			if filter_path != "":
+				filter_path += "--"
+			filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
+		if form.eventType.data and form.eventType.data != 'ALL EVENT TYPES':
+			if filter_path != "":
+				filter_path += "--"
+			filter_path += "e%{}".format(cat_to_url_filter(form.eventType.data))
+
+		# TODO: add price and date filters later
+
+		return redirect(url_for('browse', filter_path=filter_path))
+
+	# parse filter path
+	category = None
+	eventType = None
+	price = None
+	date = None
+	if filter_path:
+		for filter_str in filter_path.split('--'):
+			key, val = filter_str.split('%')
+			# category
+			if key == 'c':
+				category = url_to_cat_filter(val)
+				form.category.data = category
+			# event type
+			elif key == 'e':
+				eventType = url_to_cat_filter(val)
+				form.eventType.data = eventType
+			# price
+			elif key == 'p':
+				price = val
+			# date
+			elif date == 'd':
+				date = val
+	if not category:
+		form.category.data = 'ALL CATEGORIES'
+	if not eventType:
+		form.eventType.data = 'ALL EVENT TYPES'
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	event_types, categories = cat_and_types(connection, cursor)
-	form = searchBy(request.form)
 
 	page = request.args.get('page', type=int, default=1)
-	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event")
+
+	# generate query with any filters if necessary
+	attrs = "eid, title, startDate, building, lowPrice, highPrice"
+	query = ""
+	where_clause = ""
+	if category or eventType or price or date:
+		if category:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category)
+		if eventType:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "eid IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(eventType)
+		# TODO: add further queries for price and date later
+
+		query = "SELECT {} lowPrice, highPrice FROM Event WHERE {}".format(attrs, where_clause)
+	else:
+		query = "SELECT {} FROM Event".format(attrs)
+	
+	res_len = cursor.execute(query)
+
 	start_row = MAX_PER_PAGE*(page-1)
 	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
 	events = [dict(eid=row[0],
@@ -227,15 +289,6 @@ def browse():
                    highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
 
 	# cursor.close()
-	if request.method == 'POST':
-		
-		print(form.categories.data)
-		print(form.eventTypes.data)
-		category_list = (','.join(map(str, form.categories.data)))
-		event_type_list = (','.join(map(str, form.eventTypes.data)))
-
-		events = search_results(form.categories.data, form.eventTypes.data)
-	
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
 	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination, form = form)
 

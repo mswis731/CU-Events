@@ -1,5 +1,5 @@
 from app import mysql
-from wtforms import Form, TextField, TextAreaField, validators, SelectMultipleField, SubmitField, PasswordField, IntegerField, DecimalField
+from wtforms import Form, TextField, TextAreaField, validators, SelectField, SelectMultipleField, SubmitField, PasswordField, IntegerField, DecimalField
 from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
 
@@ -157,8 +157,8 @@ class SigninForm(Form):
 				return False
 
 class searchBy(Form):
-	categories = SelectMultipleField(id ='category', label='Categories', validators=[validators.Required("Select at least one category")])
-	eventTypes = SelectMultipleField(id ='eventtype', label='Event Types', validators=[validators.Required("Select at least one event type")])
+	category = SelectField(id ='category', label='Category') #validators=[validators.Required("Select at least one category")])
+	eventType = SelectField(id ='eventtype', label='Event Type') #validators=[validators.Required("Select at least one event type")])
 	submit = SubmitField("Search") 
 
 	def __init__(self, form):
@@ -170,12 +170,14 @@ class searchBy(Form):
 		# set category choices
 		self.cursor.execute("SELECT name FROM Category")
 		categories = [row[0] for row in self.cursor.fetchall()]
-		self.categories.choices = [ (c, c) for c in categories ]
+		categories.insert(0, 'ALL CATEGORIES')
+		self.category.choices = [ (c, c) for c in categories ]
 
 		# set event types choices
 		self.cursor.execute("SELECT name FROM EventType")
 		event_types = [row[0] for row in self.cursor.fetchall()]
-		self.eventTypes.choices = [ (e, e) for e in event_types ]
+		event_types.insert(0, 'ALL EVENT TYPES')
+		self.eventType.choices = [ (e, e) for e in event_types ]
 		
 	def validate(self):
 		return True
