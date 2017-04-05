@@ -183,3 +183,20 @@ class searchBy(Form):
 	def validate(self):
 		return True
 
+class interest_form(Form):
+	categories = SelectMultipleField(id ='category', label='Categories')
+	submit = SubmitField("update")
+
+	def __init__(self, form):
+		Form.__init__(self, form)
+		self.connection = mysql.get_db()
+		self.cursor = self.connection.cursor()
+
+		self.cursor.execute("SELECT name FROM Category")
+		categories = [row[0] for row in self.cursor.fetchall()]
+		self.categories.choices = [ (c, c) for c in categories ]
+
+
+	def validate(self):
+		return True
+
