@@ -1,0 +1,14 @@
+{% extends 'navbar.html' %}
+
+{% block title %} - Community {% endblock %}
+
+{% block stylesheets %}
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+{% endblock %}
+
+{% block content %}
+<h3 style="float: right; padding-right: 40px"> {{cname}}</h3>
+<h3 style="float: right; padding-right: 40px"> {{categories}}</h3>
+<h3 style="float: right; padding-right: 40px"> {{username}}</h3>
+{% endblock %}
+

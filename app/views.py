@@ -414,3 +414,36 @@ def googlelocfilter():
 		return mapstr
 	return dict(googlelocfilter=_googlelocfilter)
 
+
+@app.route('/communities/communityid/<id>', methods=['GET','POST'])
+def commmunity(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	#event_types, categories = cat_and_types(connection, cursor)
+
+	cursor.execute("SELECT name, uid FROM Community WHERE cid='{}'".format(id))
+	#print(cursor.fetchall())
+	#print(cursor.fetchall()[0])
+	info_tuple = cursor.fetchall()[0]
+	cname = info_tuple[0]
+	uid = info_tuple[1]
+	print(cname)
+	print(uid)
+	
+	cursor.execute("SELECT categoryName FROM CommunityCategories WHERE cid='{}'".format(id))
+	categories_list = cursor.fetchall()
+	categories = ""
+	for row in categories_list:
+		categories += row[0]
+		categories += ","
+	categories = categories[:-1]
+	print("this is the category")
+	print(categories)	
+
+	cursor.execute("SELECT username FROM User WHERE uid ='{}'".format(uid))
+	username = cursor.fetchall()[0][0]
+	print(username)
+
+	cursor.close()
+	return render_template('community.html', cname=cname, categories=categories, username=username, session=session)
+
