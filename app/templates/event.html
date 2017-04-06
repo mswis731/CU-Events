@@ -54,7 +54,13 @@
                 {% else %}
                 <p class = "desc" style="font-weight: bold; font-size: 16px"><br>Price:</p>
                 <p class = "desc">Not Available</p>
-                <br><a class="btn icon-btn btn-success" href="#"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Interested</a>
+
+                {% if already_interested is not none %}
+                <br><a class="btn icon-btn btn-success" href="/browse/eventid/{{eid}}/uninterested"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"s</span> Uninterested</a>
+                {% else %}
+                <br><a class="btn icon-btn btn-success" href="/browse/eventid/{{eid}}/interested"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Interested</a>
+                {% endif %}
+
                 {% endif %}
             </div>
         </div>

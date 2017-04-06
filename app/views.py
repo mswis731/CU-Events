@@ -381,7 +381,6 @@ def event_type(e_type):
 		else:
 			return redirect("/eventcreate")
 	"""
-
 	page = request.args.get('page', type=int, default=1)
 	e_type = " ".join([ (word.capitalize() if word != 'and' else word) for word in e_type.split('-') ])
 	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(e_type))
@@ -408,10 +407,30 @@ def communities():
 
 @app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
+	eid = id
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	event_types, categories = cat_and_types(connection, cursor)
 	
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+
+	already_interested = None
+	cursor.execute("SELECT eid FROM IsInterestedIn WHERE IsInterestedIn.uid = '{}'".format(uid))
+	interested_events = [row[0] for row in cursor.fetchall()]
+	print(interested_events)
+
+	print("ID IS")
+	print(eid)
+	for event in interested_events:
+		print(event)
+		if event == int(eid):
+			print("HELLO")
+			already_interested = 1
+
+	print("ALREADY_INTERESTED")
+	print(already_interested)
+
 	attrs = "title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice, nonUserViews"
 	cursor.execute("SELECT {} FROM Event WHERE eid='{}'".format(attrs, id))
 	events = [dict(title=row[0],
@@ -430,11 +449,11 @@ def get_event(id):
 	cursor.close()
 	print(len(events))
 	print(events[0])
-	return render_template('event.html', event = events, session=session)
+	return render_template('event.html', event = events, session=session, eid =eid, already_interested=already_interested)
 
 
-@app.route('/interested')
-def is_interested():
+@app.route('/browse/eventid/<id>/interested')
+def is_interested(id):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	if not session.get('username'):
@@ -444,9 +463,29 @@ def is_interested():
 		uid = cursor.fetchall()[0][0]
 		curr_url = request.referrer
 		curr = curr_url.split('/')[-1]
+		new_url = curr_url.split('//')[1]
+		print("NEW URL:")
+		print(new_url)
 		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
 		connection.commit()
-		return render_template("profile.html", session=session, curr=curr, uid=uid)
+		return redirect(url_for('browse'))
+		# return redirect(url_for('browse'))
+		 # , session=session, curr=curr, uid=uid)
+
+@app.route('/browse/eventid/<id>/uninterested')
+def is_uninterested(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	if not session.get('username'):
+		return redirect(url_for('signin'))
+	else:
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		uid = cursor.fetchall()[0][0]
+		curr_url = request.referrer
+		curr = curr_url.split('/')[-1]
+		cursor.execute("DELETE FROM IsInterestedIn WHERE uid = '{}' AND eid = '{}'".format(uid, curr))
+		connection.commit()
+		return redirect(url_for('browse'))
 
 @app.context_processor
 def googlelocfilter():
