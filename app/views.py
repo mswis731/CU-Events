@@ -71,6 +71,32 @@ def signout():
 	session.pop('username', None)
 	return redirect(url_for('index'))
 
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+	form = interest_form(request.form)
+	categories = form.categories.data
+
+	if request.method == "POST":
+		connection = mysql.get_db()
+		cursor = connection.cursor()
+
+
+		cursor.execute("SELECT uid FROM User WHERE username = '{}'" .format(session['username']))
+		uid = cursor.fetchall()[0][0]
+
+		cursor.execute("SELECT categoryName FROM HasInterests WHERE uid ={}".format(uid))
+		pre_selected = [ tup[0] for tup in cursor.fetchall() ]
+
+		cursor.execute("DELETE FROM HasInterests WHERE HasInterests.uid = '{}'" .format(uid))
+		connection.commit()
+		print(uid)
+		for category in categories:
+			cursor.execute("INSERT INTO HasInterests(uid, categoryName) VALUES('{}', '{}')".format(uid, category))
+			connection.commit()
+		return render_template('settings.html', session=session, form=form, pre_selected = pre_selected)
+
+	return render_template('settings.html', session=session, form=form)
+
 @app.route('/profile')
 def profile():
 	if not session['username']:
@@ -275,6 +301,7 @@ def communities():
 
 @app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
+	eid = id
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	event_types, categories = cat_and_types(connection, cursor)
@@ -289,8 +316,17 @@ def get_event(id):
 			if reslen > 0 and cursor.fetchall()[0][0] == session['username']:
 				editPermission = True
 
-		
-	
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+
+	already_interested = None
+	cursor.execute("SELECT eid FROM IsInterestedIn WHERE IsInterestedIn.uid = '{}'".format(uid))
+	interested_events = [row[0] for row in cursor.fetchall()]
+
+	for event in interested_events:
+		if event == int(eid):
+			already_interested = 1
+
 	attrs = "eid, title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice, nonUserViews"
 	cursor.execute("SELECT {} FROM Event WHERE eid='{}'".format(attrs, id))
 	events = [dict(eid=row[0],
@@ -310,8 +346,8 @@ def get_event(id):
 	cursor.close()
 	print(len(events))
 	print(events[0])
-	return render_template('event.html', event = events, session=session, editPermission=editPermission)
 
+	return render_template('event.html', event = events, session=session, editPermission=editPermission, already_interested=already_interested)
 
 @app.route('/deleteevent')
 def delete_event(eid=None, next = None):
@@ -330,8 +366,8 @@ def delete_event(eid=None, next = None):
 		else:
 			return redirect(url_for('browse'))
 	
-@app.route('/interested')
-def is_interested():
+@app.route('/browse/eventid/<id>/interested')
+def is_interested(id):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	if not session.get('username'):
@@ -341,9 +377,29 @@ def is_interested():
 		uid = cursor.fetchall()[0][0]
 		curr_url = request.referrer
 		curr = curr_url.split('/')[-1]
+		new_url = curr_url.split('//')[1]
+		print("NEW URL:")
+		print(new_url)
 		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
 		connection.commit()
-		return render_template("profile.html", session=session, curr=curr, uid=uid)
+		return redirect(url_for('browse'))
+		# return redirect(url_for('browse'))
+		 # , session=session, curr=curr, uid=uid)
+
+@app.route('/browse/eventid/<id>/uninterested')
+def is_uninterested(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	if not session.get('username'):
+		return redirect(url_for('signin'))
+	else:
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		uid = cursor.fetchall()[0][0]
+		curr_url = request.referrer
+		curr = curr_url.split('/')[-1]
+		cursor.execute("DELETE FROM IsInterestedIn WHERE uid = '{}' AND eid = '{}'".format(uid, curr))
+		connection.commit()
+		return redirect(url_for('browse'))
 
 @app.context_processor
 def googlelocfilter():
