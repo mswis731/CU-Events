@@ -22,8 +22,8 @@
         	<legend class="" style="text-align: center; padding-bottom: 40px; ">Sign In</legend>
     	</div>
   	<form action="{{ url_for('signin') }}" autocomplete="off" method=post>
-  		<!-- <input style="display:none"> -->
 		<!-- <input type="password" style="display:none"> -->
+  		<input type="text" id="next" name="next" style="display:none" value={% if next %}{{ next }}{% endif %}>
 		<div class="form-group row">
 			{{ form.my_username.label(class="col-sm-2 col-form-label") }}
 			<div class="col-sm-6">

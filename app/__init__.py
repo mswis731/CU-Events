@@ -34,4 +34,6 @@ app.config['MYSQL_DATABASE_HOST'] = db_host
 mysql = MySQL()
 mysql.init_app(app)
 
+GMAPS_KEY = 'AIzaSyCwQgKvuUKzqEkWbNs8VjlHHMkDYri7bKs'
+
 from app import views

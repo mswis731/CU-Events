@@ -1,7 +1,8 @@
-from app import mysql
+from app import mysql, GMAPS_KEY
 from wtforms import Form, TextField, TextAreaField, validators, SelectField, SelectMultipleField, SubmitField, PasswordField, IntegerField, DecimalField
 from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
+import googlemaps
 
 class CreateEventForm(Form):
 	eid = IntegerField(id = 'eid', default=-1)
@@ -90,6 +91,36 @@ class CreateEventForm(Form):
 					if result_len >= 1:
 						self.title.errors.append("An event with similar information already exists")
 
+		# validate address
+		locstr = self.addrAndStreet.data+ "," + self.city.data + ", IL," + str(self.zipcode.data)
+		gmaps = googlemaps.Client(key=GMAPS_KEY)
+		ret = gmaps.geocode(address=locstr)
+		if len(ret) == 0:
+			valid = False
+			self.addrAndStreet.errors.append("Invalid address")
+		else:
+			# look for minor errors in address
+			street_num = ""
+			street_name = ""
+			city = ""
+			zipcode = ""
+			for dict in ret[0]['address_components']:
+				if 'street_number' in dict['types']:
+					street_num = dict['short_name']
+				elif 'route' in dict['types']:
+					street_name = dict['short_name']
+				elif 'locality' in dict['types']:
+					city = dict['short_name']
+				elif 'postal_code' in dict['types']:
+					zipcode = dict['short_name']
+
+			if not (street_num and street_name and city and zipcode):
+				valid = False
+				self.addrAndStreet.errors.append("Invalid address")
+			else:
+				self.addrAndStreet.data = street_num + " " + street_name
+				self.city.data = city
+				self.zipcode.data = zipcode
 		
 		return valid
 		

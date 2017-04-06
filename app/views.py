@@ -1,7 +1,7 @@
 from flask import Flask, render_template, flash, request, redirect, session, url_for
 from app.forms import *
 from app.filters import *
-from app import app, mysql
+from app import app, mysql, GMAPS_KEY
 from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
 from flask_paginate import Pagination
@@ -26,58 +26,19 @@ def index():
 
 @app.route('/signin', methods = ['GET', 'POST'])
 def signin():
+	next = request.args.get('next')
+	form = SigninForm(request.form)
 
-  form = SigninForm(request.form)
+	if request.method == 'POST':
+		if form.validate():
+			session['username'] = form.my_username.data
+			if request.form.get('next') != None:
+				return redirect(request.form.get('next'))
+			else:
+				return redirect(url_for('profile'))
+		# else fall through and render signin form again
 
-  if request.method == 'POST':
-    if form.validate() == False:
-      return render_template('signin.html', session=session, form = form)
-    else:
-      session['username'] = form.my_username.data
-      return redirect(url_for('profile'))
-
-  elif request.method == 'GET':
-    return render_template('signin.html', session=session, form = form)
-
-class signupForm(Form):
-  firstname = TextField("First name", [validators.Required("Please enter your first name.")])
-  lastname = TextField("Last name", [validators.Required("Please enter your last name")])
-  username = TextField("username", [validators.Required("Please enter a username.")])
-  password = PasswordField('Password', [validators.Required("Please enter a password.")])
-  confirm_password = PasswordField('Confirm Password', [validators.Required("Please confirm password.")])
-
-  email = TextField('email')
-  categories = SelectMultipleField(id ='category', choices = ['Academic', 'Arts and Theatre', 'Family', 'Government', 'Health and Wellness', 'Holiday', 'Home and Lifestyle', 'Music', 'Other', 'Outdoors', 'Sports', 'Technology', 'University'])
-
-  submit = SubmitField("Create account") 
-
-  def __init__(self, *args, **kwargs):
-    Form.__init__(self, *args, **kwargs)
-
-  def validate(self):
-    if not Form.validate(self):
-      return False
-
-    connection = mysql.get_db()
-    cursor = connection.cursor() 
-
-    user = cursor.execute("SELECT username FROM User Where username = '{}' ".format(self.username.data))
-    print(user)
-    if user:
-      self.username.errors.append("That username is already taken")
-      return False
-    else:
-      email = cursor.execute("SELECT email FROM User WHERE email = '{}'" .format(self.email.data))
-      if email:
-        self.email.errors.append("That email is already associated with an account")
-        return False
-      else:
-        if self.confirm_password.data != self.password.data:
-          self.confirm_password.errors.append("Passwords do not match")
-          return False
-        else:
-          return True
-
+	return render_template('signin.html', session=session, form=form, next=next)
 
 @app.route('/signup', methods = ['GET', 'POST'])
 def sign_up():
@@ -133,14 +94,16 @@ def profile():
 		return render_template('profile.html', session=session, events = events)
 
 @app.route('/eventcreate', methods=['GET','POST'])
-def event_create():
+def eventcreate():
+	if not session.get('username'):
+		print(request.url_rule)
+		return redirect(url_for("signin", next=request.url_rule))
+
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	event_types, categories = cat_and_types(connection, cursor)
 
 	# get uid
-	if not session.get('username'):
-		return redirect("/signup")
 	cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
 	uid = cursor.fetchall()[0][0]
 
@@ -198,10 +161,13 @@ def event_create():
 			# update event
 			else:
 				cursor.callproc('UpdateEvent', attr)
+
+			cursor.execute("SELECT eid FROM Event WHERE title='{}' AND startDate='{}' AND startTime='{}'".format(form.title.data, form.start[0], form.start[1]))
+			id = cursor.fetchall()[0][0]
 				
 			connection.commit()
 
-			return redirect('/browse')
+			return redirect(url_for('get_event', id=id))
 
 	return render_template('eventcreate.html', session=session, form = form, error=error, categories=categories, event_types=event_types)
 
@@ -299,79 +265,6 @@ def browse(filter_path = None):
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
 	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination, form = form)
 
-
-@app.route('/browse/category/<category>', methods=['GET','POST'])
-def event_(category):
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-	event_types, categories = cat_and_types(connection, cursor)
-
-	"""
-	if request.method == 'POST':
-		btn_id = request.form['btn']
-		# delete button was pressed
-		if btn_id[0] == 'd':
-			event_id = btn_id[1:]
-			cursor.execute("DELETE FROM Event WHERE eid={}".format(event_id))
-			connection.commit()
-			return redirect("/browse/category/{}".format(category))
-		# edit button was pressed
-		else:
-			return redirect("/eventcreate")
-	"""
-
-	page = request.args.get('page', type=int, default=1)
-	category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
-	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category))
-	start_row = MAX_PER_PAGE*(page-1)
-	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
-	events = [dict(eid=row[0],
-                   title=row[1],
-                   startDate=row[2],
-                   building=row[3],
-                   lowPrice=row[4],
-                   highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
-	cursor.close()
-
-	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination)
-
-@app.route('/browse/type/<e_type>', methods=['GET','POST'])
-def event_type(e_type):
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-	event_types, categories = cat_and_types(connection, cursor)
-
-	"""
-	if request.method == 'POST':
-		btn_id = request.form['btn']
-		# delete button was pressed
-		if btn_id[0] == 'd':
-			event_id = btn_id[1:]
-			cursor.execute("DELETE FROM Event WHERE eid={}".format(event_id))
-			connection.commit()
-			return redirect("/browse/type/{}".format(e_type))
-		# edit button was pressed
-		else:
-			return redirect("/eventcreate")
-	"""
-
-	page = request.args.get('page', type=int, default=1)
-	e_type = " ".join([ (word.capitalize() if word != 'and' else word) for word in e_type.split('-') ])
-	res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(e_type))
-	start_row = MAX_PER_PAGE*(page-1)
-	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
-	events = [dict(eid=row[0],
-                   title=row[1],
-                   startDate=row[2],
-                   building=row[3],
-                   lowPrice=row[4],
-                   highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]]
-	cursor.close()
-
-	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination)
-	
 @app.route('/communities')
 def communities():
 	connection = mysql.get_db()
@@ -385,28 +278,58 @@ def get_event(id):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	event_types, categories = cat_and_types(connection, cursor)
+
+	# check if user can edit and delete
+	editPermission = False
+	if session['username']:
+		if session['username'] == 'admin':
+			editPermission = True
+		else:
+			reslen = cursor.execute("SELECT username FROM User WHERE uid = (SELECT uid FROM EventCreated WHERE eid={})".format(id))
+			if reslen > 0 and cursor.fetchall()[0][0] == session['username']:
+				editPermission = True
+
+		
 	
-	attrs = "title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice, nonUserViews"
+	attrs = "eid, title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice, nonUserViews"
 	cursor.execute("SELECT {} FROM Event WHERE eid='{}'".format(attrs, id))
-	events = [dict(title=row[0],
-                   description=row[1],
-                   building=row[2],
-                   addrAndStreet=row[3],
-                   city=row[4],
-                   zipcode=row[5],
-                   startDate=row[6],
-                   startTime=row[7],
-                   endDate=row[8],
-                   endTime=row[9],
-                   lowPrice=row[10],
-                   highPrice=row[11],
-                   nonUserViews=row[12]) for row in cursor.fetchall()]
+	events = [dict(eid=row[0],
+				   title=row[1],
+                   description=row[2],
+                   building=row[3],
+                   addrAndStreet=row[4],
+                   city=row[5],
+                   zipcode=row[6],
+                   startDate=row[7],
+                   startTime=row[8],
+                   endDate=row[9],
+                   endTime=row[10],
+                   lowPrice=row[11],
+                   highPrice=row[12],
+                   nonUserViews=row[13]) for row in cursor.fetchall()]
 	cursor.close()
 	print(len(events))
 	print(events[0])
-	return render_template('event.html', event = events, session=session)
+	return render_template('event.html', event = events, session=session, editPermission=editPermission)
 
 
+@app.route('/deleteevent')
+def delete_event(eid=None, next = None):
+	eid = request.args.get('eid')
+	next = request.args.get('next')
+	print('eid', eid)
+	print('next', next)
+	if eid and next:
+		connection = mysql.get_db()
+		cursor = connection.cursor()
+		cursor.execute("DELETE FROM Event WHERE eid={}".format(eid))
+		connection.commit()
+
+		if 'browse' in next:
+			return redirect(next)
+		else:
+			return redirect(url_for('browse'))
+	
 @app.route('/interested')
 def is_interested():
 	connection = mysql.get_db()
@@ -427,7 +350,7 @@ def googlelocfilter():
 	def _googlelocfilter(building, addr, city, cityzip):
 		
 		locstr = addr+","+city+", IL," + str(cityzip)
-		gmaps = googlemaps.Client(key='AIzaSyCwQgKvuUKzqEkWbNs8VjlHHMkDYri7bKs')
+		gmaps = googlemaps.Client(key=GMAPS_KEY)
 		ret = gmaps.geocode(address=locstr)
 		lng = 0.0
 		lat = 0.0

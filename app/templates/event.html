@@ -27,6 +27,17 @@
       <div class="tab-content">
         <div class="tab-pane fade in active" id="tab1">
             <div class="info" margin-top="105px">
+            	{% if editPermission %}
+				<li class="dropdown pull-right">
+          			<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-pencil"></span></a>
+          			<ul class="dropdown-menu">
+            			<li><a href="{{ url_for('eventcreate', eid=e.eid) }}"><span class="pull-right">Edit Event</span></a></li>
+            			<li><a href="{{ url_for('delete_event', eid=e.eid, next=request.referrer) }}"><span class="pull-right">Delete Event</span></a></li>
+          			</ul>
+        		</li>
+            	{% endif %}
+                <br><a class="btn icon-btn btn-success" href="#"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Interested</a>
+                <p></p>
                 <p class = "desc" style="font-weight: bold; font-size: 16px">Date:</p>
                 {% if e.startDate.day == e.endDate.day %}
                 <span class="day">{{ e.startDate.day }}</span>
@@ -54,7 +65,6 @@
                 {% else %}
                 <p class = "desc" style="font-weight: bold; font-size: 16px"><br>Price:</p>
                 <p class = "desc">Not Available</p>
-                <br><a class="btn icon-btn btn-success" href="#"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Interested</a>
                 {% endif %}
             </div>
         </div>
