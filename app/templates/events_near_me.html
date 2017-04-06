@@ -1,0 +1,12 @@
+{% extends 'navbar.html' %}
+
+{% block title %} - Events Near Me{% endblock %}
+
+{% block stylesheets %}
+{{ clustermap.js }}
+{% endblock %}
+
+
+{% block content %}
+{{ clustermap.html }}
+{% endblock %}

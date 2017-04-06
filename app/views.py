@@ -6,6 +6,9 @@ from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
 from flask_paginate import Pagination
 import googlemaps
+from flask_googlemaps import Map
+from urllib.request import urlopen
+import json
 
 @app.route('/')
 @app.route('/index')
@@ -403,3 +406,25 @@ def googlelocfilter():
 		mapstr =  "https://maps.google.co.uk/maps?f=q&source=s_q&hl=en&geocode=&q="+locstr2+"&sll="+cordstr+"&ie=UTF8&hq=&hnear="+locstr3+"&t=m&z=17"+"&ll="+cordstr+"&output=embed"
 		return mapstr
 	return dict(googlelocfilter=_googlelocfilter)
+
+@app.route('/eventsnearme')
+def events_near_me():
+	if not session.get('username'):
+		return redirect(url_for("signin", next=request.url_rule))
+	
+	# get latitude and longitude of user's ip address
+	url = 'http://ipinfo.io/json'
+	response = urlopen(url)
+	data = json.load(response)
+	user_lat, user_lng = data['loc'].split(',')
+
+	clustermap = Map(
+		identifier="cluster-map",
+		lat=user_lat,
+		lng=user_lng,
+		markers=[ {'lat': user_lat, 'lng': user_lng} ],
+		cluster=True,
+		cluster_gridsize=10
+	)
+	return render_template('events_near_me.html', clustermap=clustermap)
+
