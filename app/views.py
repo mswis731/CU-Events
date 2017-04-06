@@ -444,6 +444,30 @@ def commmunity(id):
 	username = cursor.fetchall()[0][0]
 	print(username)
 
+	#cursor.execute("SELECT uid FROM isCommunityMember WHERE cid ='{}'".format(id))
+	#uid_list = cursor.fetchall()
+	#print(uid_list)
+
+	#cursor.execute("SELECT username FROM User WHERE uid IN'{}'".format(uid_list))
+	#member_list = cursor.fetchall()
+	#print(member_list)
+	#I was gonna print out all the community members but didn't succeed
+	
 	cursor.close()
-	return render_template('community.html', cname=cname, categories=categories, username=username, session=session)
+	return render_template("community.html", cname=cname, categories=categories, username=username, session=session)
+
+
+
+@app.route('/communities/communityid/<id>/joined')
+def is_communitymember(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	if not session.get('username'):
+		return redirect(url_for('signin'))
+	else:
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		uid = cursor.fetchall()[0][0]
+		cursor.execute("INSERT INTO IsCommunityMember(uid, id) VALUES({}, {})".format(uid, id))
+		connection.commit()
+		return render_template("community.html", session=session, uid=uid)
 
