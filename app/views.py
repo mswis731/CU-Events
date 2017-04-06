@@ -432,13 +432,13 @@ def commmunity(id):
 	
 	cursor.execute("SELECT categoryName FROM CommunityCategories WHERE cid='{}'".format(id))
 	categories_list = cursor.fetchall()
-	categories = ""
+	community_categories = ""
 	for row in categories_list:
-		categories += row[0]
-		categories += ","
-	categories = categories[:-1]
+		community_categories += row[0]
+		community_categories += ","
+	community_categories = community_categories[:-1]
 	print("this is the category")
-	print(categories)	
+	print(community_categories)	
 
 	cursor.execute("SELECT username FROM User WHERE uid ='{}'".format(uid))
 	username = cursor.fetchall()[0][0]
@@ -454,7 +454,7 @@ def commmunity(id):
 	#I was gonna print out all the community members but didn't succeed
 	
 	cursor.close()
-	return render_template("community.html", cname=cname, categories=categories, username=username, session=session)
+	return render_template("community.html", cid=id, cname=cname, community_categories=community_categories, username=username, session=session)
 
 
 
@@ -467,7 +467,8 @@ def is_communitymember(id):
 	else:
 		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
 		uid = cursor.fetchall()[0][0]
-		cursor.execute("INSERT INTO IsCommunityMember(uid, id) VALUES({}, {})".format(uid, id))
+		#cid = id
+		cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, id))
 		connection.commit()
 		return render_template("community.html", session=session, uid=uid)
 
