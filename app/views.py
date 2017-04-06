@@ -7,22 +7,10 @@ from werkzeug import generate_password_hash, check_password_hash
 from flask_paginate import Pagination
 import googlemaps
 
-def cat_and_types(connection, cursor):
-	cursor.execute("SELECT name FROM EventType")
-	event_types = [(row[0], cat_to_url_filter(row[0])) for row in cursor.fetchall()]
-	cursor.execute("SELECT name FROM Category")
-	categories = [(row[0], cat_to_url_filter(row[0])) for row in cursor.fetchall()]
-
-	return (event_types, categories)
-
 @app.route('/')
 @app.route('/index')
 def index():
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-	event_types, categories = cat_and_types(connection, cursor)
-
-	return render_template('index.html', session=session, categories=categories, event_types=event_types)
+	return render_template('index.html')
 
 @app.route('/signin', methods = ['GET', 'POST'])
 def signin():
@@ -38,7 +26,7 @@ def signin():
 				return redirect(url_for('profile'))
 		# else fall through and render signin form again
 
-	return render_template('signin.html', session=session, form=form, next=next)
+	return render_template('signin.html', form=form, next=next)
 
 @app.route('/signup', methods = ['GET', 'POST'])
 def sign_up():
@@ -49,7 +37,7 @@ def sign_up():
 	if request.method == "POST":
 		if form.validate() == False:
 			flash('Fill in required fields')
-			return render_template('signup.html', session=session, form=form)
+			return render_template('signup.html', form=form)
 		else:
 			password_hash = generate_password_hash(form.password.data)
 			attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, password_hash)
@@ -62,7 +50,7 @@ def sign_up():
 
 			return("thank you for signing up!")
 	elif request.method == 'GET':
-		return render_template('signup.html', session=session, form=form)
+		return render_template('signup.html', form=form)
 
 @app.route('/signout')
 def signout():
@@ -93,9 +81,9 @@ def settings():
 		for category in categories:
 			cursor.execute("INSERT INTO HasInterests(uid, categoryName) VALUES('{}', '{}')".format(uid, category))
 			connection.commit()
-		return render_template('settings.html', session=session, form=form, pre_selected = pre_selected)
+		return render_template('settings.html', form=form, pre_selected=pre_selected)
 
-	return render_template('settings.html', session=session, form=form)
+	return render_template('settings.html', form=form)
 
 @app.route('/profile')
 def profile():
@@ -117,7 +105,7 @@ def profile():
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
-		return render_template('profile.html', session=session, events = events)
+		return render_template('profile.html', events=events)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def eventcreate():
@@ -127,7 +115,6 @@ def eventcreate():
 
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	event_types, categories = cat_and_types(connection, cursor)
 
 	# get uid
 	cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
@@ -195,7 +182,7 @@ def eventcreate():
 
 			return redirect(url_for('get_event', id=id))
 
-	return render_template('eventcreate.html', session=session, form = form, error=error, categories=categories, event_types=event_types)
+	return render_template('eventcreate.html', form=form, error=error)
 
 MAX_PER_PAGE = 20
 
@@ -247,9 +234,9 @@ def browse(filter_path = None):
 		form.category.data = 'ALL CATEGORIES'
 	if not eventType:
 		form.eventType.data = 'ALL EVENT TYPES'
+
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	event_types, categories = cat_and_types(connection, cursor)
 
 	page = request.args.get('page', type=int, default=1)
 
@@ -289,22 +276,17 @@ def browse(filter_path = None):
 
 	# cursor.close()
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
-	return render_template('events.html', session=session, categories=categories, event_types=event_types, events=events, pagination=pagination, form = form)
+	return render_template('events.html', events=events, pagination=pagination, form=form)
 
 @app.route('/communities')
 def communities():
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-	event_types, categories = cat_and_types(connection, cursor)
-
-	return render_template('communities.html', session=session, categories=categories, event_types=event_types)
+	return render_template('communities.html')
 
 @app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
 	eid = id
 	connection = mysql.get_db()
 	cursor = connection.cursor()
-	event_types, categories = cat_and_types(connection, cursor)
 
 	# check if user can edit and delete
 	editPermission = False
@@ -347,7 +329,7 @@ def get_event(id):
 	print(len(events))
 	print(events[0])
 
-	return render_template('event.html', event = events, session=session, editPermission=editPermission, already_interested=already_interested)
+	return render_template('event.html', event=events, editPermission=editPermission, already_interested=already_interested)
 
 @app.route('/deleteevent')
 def delete_event(eid=None, next = None):
