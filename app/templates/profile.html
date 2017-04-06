@@ -11,12 +11,13 @@
 
 <!--  col-sm-offset-2 col-sm-6
  -->
-<div class="container">
-<h2 style="padding-left: 15px"> My Events </h2>
+<div class="col-md-2" >
+<h2 style="padding-left: 15px; width: 500px" > My Interested Events </h2>
+<div id="" style="overflow:scroll; height:600px; width: 550px; padding-top: 30px">
 	{% if events|length > 0 %}
-	<div class="row" style="padding: 0; float: left; margin: 0; position: absolute;">
-		<div class="[ col-xs-2 col-sm-12 ]">
-			<ul class="event-list">
+	<!-- <div class="row"> -->
+		<!-- <div class="[ col-xs-2 col-sm-12 ]"> -->
+			<ul class="event-list" style = "width: 500px">
 				{% for event in events %}
 				<li onclick="location.href='/browse/eventid/{{event.eid}}';">
 					<time datetime="{{ event.startDate }}">
@@ -43,7 +44,8 @@
 				{% endfor %}
 			</ul>
 		</div>
-	</div>
+		<!-- </div> -->
+	<!-- </div> -->
 	{% else %}
 	<p style="text-align: center; font-family: 'Amiko', sans-serif;; font-size: 200%; font-weight: bold;"> No Events Found</p>
 	{% endif %}

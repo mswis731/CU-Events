@@ -382,7 +382,7 @@ def is_interested(id):
 		print(new_url)
 		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
 		connection.commit()
-		return redirect(url_for('browse'))
+		return redirect(url_for('get_event', id=id))
 		# return redirect(url_for('browse'))
 		 # , session=session, curr=curr, uid=uid)
 
@@ -399,7 +399,7 @@ def is_uninterested(id):
 		curr = curr_url.split('/')[-1]
 		cursor.execute("DELETE FROM IsInterestedIn WHERE uid = '{}' AND eid = '{}'".format(uid, curr))
 		connection.commit()
-		return redirect(url_for('browse'))
+		return redirect(url_for('get_event', id=id))
 
 @app.context_processor
 def googlelocfilter():
