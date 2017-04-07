@@ -349,9 +349,16 @@ def create_community():
 			#print(form.categories.data)
 			#category = " ".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
 			cursor.callproc('CreateCommunity', (form.name.data.replace('\'', '/'), uid, form.categories.data))
+			#cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, cid)
+			cursor.execute("SELECT cid FROM Community WHERE name='{}'".format(form.name.data.replace('\'', '/')))
+			cid = cursor.fetchall()[0][0]
+			print(cid)
+			print(uid)
+			cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, cid))
+			cursor.close()
 			connection.commit()
 			#return redirect('/browse')
-			return("You have successfully created a group! Thank you!")
+			return redirect(url_for('communities'))
  
 	elif request.method == 'GET':
     		return render_template('community_create.html', session=session, form=form, categories=categories)
@@ -416,10 +423,11 @@ def googlelocfilter():
 
 
 @app.route('/communities/communityid/<id>', methods=['GET','POST'])
-def commmunity(id):
+def community(id):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 	#event_types, categories = cat_and_types(connection, cursor)
+	
 
 	cursor.execute("SELECT name, uid FROM Community WHERE cid='{}'".format(id))
 	#print(cursor.fetchall())
@@ -448,9 +456,9 @@ def commmunity(id):
 	#uid_list = cursor.fetchall()
 	#print(uid_list)
 
-	#cursor.execute("SELECT username FROM User WHERE uid IN'{}'".format(uid_list))
-	#member_list = cursor.fetchall()
-	#print(member_list)
+	cursor.execute("SELECT username FROM User WHERE uid IN (SELECT uid FROM isCommunityMember WHERE cid ='{}')".format(id))
+	member_list = cursor.fetchall()
+	print(member_list)
 	#I was gonna print out all the community members but didn't succeed
 	
 	cursor.close()
@@ -469,6 +477,50 @@ def is_communitymember(id):
 		uid = cursor.fetchall()[0][0]
 		#cid = id
 		cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, id))
-		connection.commit()
-		return render_template("community.html", session=session, uid=uid)
 
+		cursor.execute("SELECT name, uid FROM Community WHERE cid='{}'".format(id))
+		#print(cursor.fetchall())
+		#print(cursor.fetchall()[0])
+		info_tuple = cursor.fetchall()[0]
+		cname = info_tuple[0]
+		uid = info_tuple[1]
+		print(cname)
+		print(uid)
+	
+		cursor.execute("SELECT categoryName FROM CommunityCategories WHERE cid='{}'".format(id))
+		categories_list = cursor.fetchall()
+		community_categories = ""
+		for row in categories_list:
+			community_categories += row[0]
+			community_categories += ","
+		community_categories = community_categories[:-1]
+		print("this is the category")
+		print(community_categories)	
+
+		cursor.execute("SELECT username FROM User WHERE uid ='{}'".format(uid))
+		username = cursor.fetchall()[0][0]
+		print(username)
+
+	#cursor.execute("SELECT uid FROM isCommunityMember WHERE cid ='{}'".format(id))
+	#uid_list = cursor.fetchall()
+	#print(uid_list)
+
+		cursor.execute("SELECT username FROM User WHERE uid IN (SELECT uid FROM isCommunityMember WHERE cid ='{}')".format(id))
+		member_list = cursor.fetchall()
+		print(member_list)
+		connection.commit()
+		return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, session=session)
+
+
+@app.route('/communities/communityid/<id>/unjoined')
+def is_not_communitymember(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+	#cid = id
+	cursor.execute("DELETE FROM isCommunityMember WHERE uid = '{}' AND cid = '{}'".format(uid, id))
+	connection.commit()
+	return redirect(url_for('community', id=id))
+	
