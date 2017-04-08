@@ -7,13 +7,13 @@
 {% endblock %}
 
 {% block content %}
-<h3 style="float: right; padding-right: 40px"> {{session['username']}}</h3>
+<!-- <h3 style="float: right; padding-right: 40px"> {{session['username']}}</h3> -->
 
 <!--  col-sm-offset-2 col-sm-6
  -->
-<div class="col-md-2" >
-<h2 style="padding-left: 15px; width: 500px" > My Interested Events </h2>
-<div id="" style="overflow:scroll; height:600px; width: 550px; padding-top: 30px">
+<div class="col-md-2" style="position:relative;" >
+<h2 style="padding-left: 0px; width: 500px; margin: 3px" > My Interested Events </h2>
+<div id="" style="overflow:scroll; height:250px; width: 520px;   border: 3px; border-style: solid; padding-top: 0px">
 	{% if events|length > 0 %}
 	<!-- <div class="row"> -->
 		<!-- <div class="[ col-xs-2 col-sm-12 ]"> -->
@@ -47,7 +47,49 @@
 		<!-- </div> -->
 	<!-- </div> -->
 	{% else %}
-	<p style="text-align: center; font-family: 'Amiko', sans-serif;; font-size: 200%; font-weight: bold;"> No Events Found</p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; font-weight: bold; padding-top: 35px"> No Events Found</p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; font-weight: bold;"> <a href = "browse">Browse Events</a></p>
+	{% endif %}
+</div>
+
+<div class="col-md-2" style="position:relative; top: 0px; left: 310px" >
+<h2 style="padding-left: 0px; width: 500px; margin: 3px" > My Created Events </h2>
+<div id="" style="overflow:scroll; height:250px; width: 520px; border: 3px; border-style: solid;">
+	{% if created_events|length > 0 %}
+	<!-- <div class="row"> -->
+		<!-- <div class="[ col-xs-2 col-sm-12 ]"> -->
+			<ul class="event-list" style = "width: 500px">
+				{% for event in created_events %}
+				<li onclick="location.href='/browse/eventid/{{event.eid}}';">
+					<time datetime="{{ event.startDate }}">
+						<span class="day">{{ event.startDate.day }}</span>
+						<span class="month">{{ event.startDate.month|month }}</span>
+						<span class="year">{{ event.startDate.year }}</span>
+						<!-- <span class="time"></span> -->
+					</time>
+					<div class="info">
+						<h2 class="title">{{ event.title }}</h2>
+						<p class="desc">{% if event.building %}{{ event.building }}{% endif %}</p>
+						{% if event.lowPrice and event.highPrice %}
+						<ul>
+							{% if event.lowPrice < event.highPrice %}
+							<li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}} - {{event.highPrice|money}}</li>
+							{% else %}
+							<li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}}</li>
+							{% endif %}
+							 
+						</ul>
+						{% endif %}
+					</div>
+				</li>
+				{% endfor %}
+			</ul>
+		</div>
+		<!-- </div> -->
+	<!-- </div> -->
+	{% else %}
+	<p style="text-align: center; font-family: 'Amiko', sans-serif;; font-size: 200%; font-weight: bold; padding-top: 35px"> No Events Found</p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif;; font-size: 200%; font-weight: bold;"> <a href = "eventcreate">Create an Event</a></p>
 	{% endif %}
 </div>
 

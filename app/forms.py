@@ -203,6 +203,7 @@ class searchBy(Form):
 		self.cursor.execute("SELECT name FROM Category")
 		categories = [row[0] for row in self.cursor.fetchall()]
 		categories.insert(0, 'ALL CATEGORIES')
+		categories.insert(1, 'User Created')
 		self.category.choices = [ (c, c) for c in categories ]
 
 		# set event types choices

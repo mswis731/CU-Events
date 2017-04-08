@@ -93,6 +93,18 @@ def profile():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
+	cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+
+	cursor.execute("SELECT Event.eid, title, startDate, building, lowPrice, highPrice FROM Event, EventCreated WHERE EventCreated.uid = '{}' AND EventCreated.eid = Event.eid".format(uid))
+	created_events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
+
+
 	cursor.execute("SELECT Event.eid, title, startDate, building, lowPrice, highPrice FROM IsInterestedIn, User, Event WHERE IsInterestedIn.uid = User.uid AND User.username = '{}' AND Event.eid = IsInterestedIn.eid".format(session['username']))
 	events = [dict(eid=row[0],
                    title=row[1],
@@ -105,7 +117,7 @@ def profile():
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
-		return render_template('profile.html', events=events)
+		return render_template('profile.html', events=events, created_events=created_events)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def eventcreate():
