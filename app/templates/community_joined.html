@@ -7,11 +7,31 @@
 {% endblock %}
 
 {% block content %}
-<h3 style="float: right; padding-right: 40px"> {{cname}}</h3>
-<h3 style="float: right; padding-right: 40px"> {{community_categories}}</h3>
-<h3 style="float: right; padding-right: 40px"> {{username}}</h3>
+<center>
+	<h2>{{cname}}</h2>
+</center>
 
- <br><a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/unjoined"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"s</span> leave the group</a>
+<h4> categories: {{community_categories}}</h4>
+<h4> creator: {{username}}</h4>
+
+ <br><a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/unjoined"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"s</span> leave the community</a>
+
+<div class="container">
+	<p> Members in this community:</p>
+	{% if members|length > 0 %}
+	<div class="row">
+		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+			<ul class="member-list">
+				{% for member in members %}
+					<p>{{ member }}</p>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	{% else %}
+	<b> No Community Member Found</b>
+	{% endif %}
+</div>
 
 
 {% endblock %}

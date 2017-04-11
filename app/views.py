@@ -458,11 +458,15 @@ def community(id):
 
 	cursor.execute("SELECT username FROM User WHERE uid IN (SELECT uid FROM isCommunityMember WHERE cid ='{}')".format(id))
 	member_list = cursor.fetchall()
+	members = []
+	for row in member_list:
+		members.append(row[0])
 	print(member_list)
+	print(members)
 	#I was gonna print out all the community members but didn't succeed
 	
 	cursor.close()
-	return render_template("community.html", cid=id, cname=cname, community_categories=community_categories, username=username, session=session)
+	return render_template("community.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, session=session)
 
 
 
@@ -507,9 +511,13 @@ def is_communitymember(id):
 
 		cursor.execute("SELECT username FROM User WHERE uid IN (SELECT uid FROM isCommunityMember WHERE cid ='{}')".format(id))
 		member_list = cursor.fetchall()
+		members = []
+		for row in member_list:
+			members.append(row[0])
 		print(member_list)
+		print(members)
 		connection.commit()
-		return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, session=session)
+		return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, session=session)
 
 
 @app.route('/communities/communityid/<id>/unjoined')
