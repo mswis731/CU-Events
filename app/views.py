@@ -465,6 +465,15 @@ def community(id):
 	print(members)
 	#I was gonna print out all the community members but didn't succeed
 	
+	
+	if session.get('username'):
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		userid = cursor.fetchall()[0][0]
+		print(userid)
+		length = cursor.execute("SELECT * FROM IsCommunityMember WHERE cid ='{}' AND uid='{}'".format(id,userid))
+		cursor.close()
+		if length:
+			return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, session=session)
 	cursor.close()
 	return render_template("community.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, session=session)
 
