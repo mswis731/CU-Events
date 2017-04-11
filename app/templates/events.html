@@ -28,9 +28,11 @@
 	</div>
 	<div class="form-group row" style="padding: 0; margin: 0">
 		<h6 style="padding-left: 4px"> Date Range</h6>
-		<div id="daterange" class="col-sm-4 pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
-    		<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>&nbsp;
-    		<span></span> <b class="caret"></b>
+		<div class="input-group">
+    		{{ form.daterange(class="form-control", placeholder="Anytime") }}
+        	<span class="input-group-addon">
+            	<span class="glyphicon glyphicon-calendar"></span>
+        	</span>
 		</div>
 	</div>
 	<div class="form-group row" style="padding: 0; margin: 0">
@@ -64,9 +66,11 @@
 					<div class="info">
 						<h2 class="title">{{ event.title }}</h2>
 						<p class="desc">{% if event.building %}{{ event.building }}{% endif %}</p>
-						{% if event.lowPrice and event.highPrice %}
+						{% if event.lowPrice != None and event.highPrice != None %}
 						<ul>
-							{% if event.lowPrice < event.highPrice %}
+							{% if event.lowPrice == 0 and  event.highPrice == 0 %}
+							<li style="width:50%;"><span class="fa fa-money"></span> Free</li>
+							{% elif event.lowPrice < event.highPrice %}
 							<li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}} - {{event.highPrice|money}}</li>
 							{% else %}
 							<li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}}</li>
@@ -94,33 +98,25 @@
 <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
 <script type="text/javascript">
 $(function() {
-
-    //var start = moment().subtract(29, 'days');
-    //var end = moment();
-    var start = null;
-    var end = null;
-
-    function cb(start, end) {
-    	if(start.isValid() && end.isValid()) {
-        	$('#daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-        }
-        else {
-			$('#daterange span').html('Anytime')
-		}
-    }
-
-    $('#daterange').daterangepicker({
-        startDate: start,
-        endDate: end,
-        ranges: {
-        	'All Dates': [null, null],
+	$('input[name="daterange"]').daterangepicker({
+		autoUpdateInput: false,
+		locale: {
+			cancelLabel: 'Clear'
+		},
+    	ranges: {
            'Today': [moment(), moment()],
            'This Month': [moment().startOf('month'), moment().endOf('month')]
-        }
-    }, cb);
+    	},
+    	minDate: moment()
+	});
 
-    cb(start, end);
-    
+	$('input[name="daterange"]').on('apply.daterangepicker', function(ev, picker) {
+		$(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
+	});
+
+	$('input[name="daterange"]').on('cancel.daterangepicker', function(ev, picker) {
+      $(this).val('');
+	});
 });
 </script>
 {% endblock %}

@@ -216,6 +216,34 @@ class searchBy(Form):
 		
 	def validate(self):
 		return True
+	
+	# format: MM/DD/YYYY - MM/DD/YYYY
+	def get_daterange(self):
+		if self.daterange.data:
+			try:
+				start_orig = self.daterange.data.split('-')[0].strip()
+				end_orig = self.daterange.data.split('-')[1].strip()
+				s_dt = datetime.strptime(start_orig, '%m/%d/%Y')
+				e_dt = datetime.strptime(end_orig, '%m/%d/%Y')
+
+				start = "{}-{}-{}".format(s_dt.year, s_dt.month, s_dt.day)
+				end = "{}-{}-{}".format(e_dt.year, e_dt.month, e_dt.day)
+
+				return (start, end)
+			except:
+				pass
+
+		return (None, None)
+	
+	# format: YYYY-MM-DD
+	def set_daterange(self, start, end):
+		try:
+			s_dt = datetime.strptime(start, '%Y-%m-%d')
+			e_dt = datetime.strptime(end, '%Y-%m-%d')
+
+			self.daterange.data = "{:02d}/{:02d}/{} - {:02d}/{:02d}/{}".format(s_dt.month, s_dt.day, s_dt.year, e_dt.month, e_dt.day, e_dt.year)
+		except:
+			pass
 
 class interest_form(Form):
 	categories = SelectMultipleField(id ='category', label='Categories')

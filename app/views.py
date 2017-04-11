@@ -217,10 +217,13 @@ def browse(filter_path = None):
 			if filter_path != "":
 				filter_path += "--"
 			filter_path += "p%{}".format(form.price.data)
+		if form.daterange.data:
+			if filter_path != "":
+				filter_path += "--"
+			daterange = form.get_daterange()
+			if daterange and daterange[0] and daterange[1]:
+				filter_path += "d%{}&{}".format(daterange[0], daterange[1])
 			
-
-		# TODO: add price and date filters later
-
 		return redirect(url_for('browse', filter_path=filter_path, searchTerm=searchTerm))
 
 	searchTerm = request.args.get('searchTerm')
@@ -229,7 +232,7 @@ def browse(filter_path = None):
 	category = None
 	eventType = None
 	price = None
-	date = None
+	daterange = None
 	if filter_path:
 		for filter_str in filter_path.split('--'):
 			key, val = filter_str.split('%')
@@ -246,8 +249,9 @@ def browse(filter_path = None):
 				price = val
 				form.price.data = price
 			# date
-			elif date == 'd':
-				date = val
+			elif key == 'd':
+				daterange = tuple(val.split('&'))
+				form.set_daterange(daterange[0], daterange[1])
 	if not category:
 		form.category.data = 'All Categories'
 	if not eventType:
@@ -264,7 +268,7 @@ def browse(filter_path = None):
 	attrs = "eid, title, startDate, building, lowPrice, highPrice"
 	query = ""
 	where_clause = ""
-	if searchTerm or category or eventType or price or date:
+	if searchTerm or category or eventType or price or daterange:
 		if searchTerm:
 			if where_clause:
 				where_clause += " AND "
@@ -284,10 +288,11 @@ def browse(filter_path = None):
 				where_clause += "lowPrice IS NOT NULL AND highPrice IS NOT NULL AND lowPrice = 0 AND highPrice = 0"
 			elif price == 'Paid':
 				where_clause += "lowPrice IS NOT NULL AND highPrice IS NOT NULL AND lowPrice <> 0 AND highPrice <> 0"
-				
+		if daterange and daterange[0] and daterange[1]:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "DATEDIFF(startDate, '{}') >= 0 AND DATEDIFF(endDate, '{}') <= 0".format(daterange[0], daterange[1])
 			
-		# TODO: add further queries for price and date later
-
 		query = "SELECT {} lowPrice, highPrice FROM Event WHERE {}".format(attrs, where_clause)
 	else:
 		query = "SELECT {} FROM Event".format(attrs)
