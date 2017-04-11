@@ -191,6 +191,8 @@ class searchBy(Form):
 	searchTerm = TextField(id = 'searchTerm')
 	category = SelectField(id ='category', label='Category')
 	eventType = SelectField(id ='eventtype', label='Event Type')
+	daterange = TextField(id = 'daterange')
+	price = SelectField(id='price', label='Price', choices=[('All Prices', 'All Prices'), ('Free', 'Free'), ('Paid', 'Paid')])
 	submit = SubmitField("Search") 
 
 	def __init__(self, form):
@@ -202,14 +204,14 @@ class searchBy(Form):
 		# set category choices
 		self.cursor.execute("SELECT name FROM Category")
 		categories = [row[0] for row in self.cursor.fetchall()]
-		categories.insert(0, 'ALL CATEGORIES')
+		categories.insert(0, 'All Categories')
 		categories.insert(1, 'User Created')
 		self.category.choices = [ (c, c) for c in categories ]
 
 		# set event types choices
 		self.cursor.execute("SELECT name FROM EventType")
 		event_types = [row[0] for row in self.cursor.fetchall()]
-		event_types.insert(0, 'ALL EVENT TYPES')
+		event_types.insert(0, 'All Event Types')
 		self.eventType.choices = [ (e, e) for e in event_types ]
 		
 	def validate(self):

@@ -205,14 +205,19 @@ def browse(filter_path = None):
 	if request.method == 'POST':
 		searchTerm = form.searchTerm.data
 		filter_path = ""
-		if form.category.data and form.category.data != 'ALL CATEGORIES':
+		if form.category.data and form.category.data != 'All Categories':
 			if filter_path != "":
 				filter_path += "--"
 			filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
-		if form.eventType.data and form.eventType.data != 'ALL EVENT TYPES':
+		if form.eventType.data and form.eventType.data != 'All Event Types':
 			if filter_path != "":
 				filter_path += "--"
 			filter_path += "e%{}".format(cat_to_url_filter(form.eventType.data))
+		if form.price.data and form.price.data != 'All Prices':
+			if filter_path != "":
+				filter_path += "--"
+			filter_path += "p%{}".format(form.price.data)
+			
 
 		# TODO: add price and date filters later
 
@@ -239,13 +244,16 @@ def browse(filter_path = None):
 			# price
 			elif key == 'p':
 				price = val
+				form.price.data = price
 			# date
 			elif date == 'd':
 				date = val
 	if not category:
-		form.category.data = 'ALL CATEGORIES'
+		form.category.data = 'All Categories'
 	if not eventType:
-		form.eventType.data = 'ALL EVENT TYPES'
+		form.eventType.data = 'All Event Types'
+	if not price:
+		form.price.data = 'All Prices'
 
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -269,6 +277,15 @@ def browse(filter_path = None):
 			if where_clause:
 				where_clause += " AND "
 			where_clause += "eid IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(eventType)
+		if price:
+			if where_clause:
+				where_clause += " AND "
+			if price == 'Free':
+				where_clause += "lowPrice IS NOT NULL AND highPrice IS NOT NULL AND lowPrice = 0 AND highPrice = 0"
+			elif price == 'Paid':
+				where_clause += "lowPrice IS NOT NULL AND highPrice IS NOT NULL AND lowPrice <> 0 AND highPrice <> 0"
+				
+			
 		# TODO: add further queries for price and date later
 
 		query = "SELECT {} lowPrice, highPrice FROM Event WHERE {}".format(attrs, where_clause)
@@ -296,13 +313,13 @@ def communities():
 
 @app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
-	eid = id
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
-	# check if user can edit and delete
 	editPermission = False
-	if session['username']:
+	already_interested = None
+	if session.get('username'):
+		# check if user can edit and delete
 		if session['username'] == 'admin':
 			editPermission = True
 		else:
@@ -310,15 +327,12 @@ def get_event(id):
 			if reslen > 0 and cursor.fetchall()[0][0] == session['username']:
 				editPermission = True
 
-	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
-	uid = cursor.fetchall()[0][0]
+		# check if user is already interested in event
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		uid = cursor.fetchall()[0][0]
 
-	already_interested = None
-	cursor.execute("SELECT eid FROM IsInterestedIn WHERE IsInterestedIn.uid = '{}'".format(uid))
-	interested_events = [row[0] for row in cursor.fetchall()]
-
-	for event in interested_events:
-		if event == int(eid):
+		reslen = cursor.execute("SELECT eid FROM IsInterestedIn WHERE uid = '{}' AND eid = '{}'".format(uid,id))
+		if reslen > 0:
 			already_interested = 1
 
 	attrs = "eid, title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice, nonUserViews"
