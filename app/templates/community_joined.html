@@ -1,0 +1,29 @@
+{% extends 'navbar.html' %}
+
+{% block title %} - Community {% endblock %}
+
+{% block stylesheets %}
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+{% endblock %}
+
+{% block content %}
+<center>
+	<h2>{{cname}}</h2>
+</center>
+
+<h4> categories: {{community_categories}}</h4>
+<h4> creator: {{username}}</h4>
+
+ <br><a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/unjoined"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"s</span> leave the community</a>
+
+<p></p>
+
+<button type="button">
+	<a href="/communities/communityid/{{cid}}/members">Look at community members</a>
+</button>
+
+
+
+
+{% endblock %}
+

@@ -223,7 +223,7 @@ class searchBy(Form):
 		
 	def validate(self):
 		return True
-	
+
 	# format: MM/DD/YYYY - MM/DD/YYYY
 	def get_daterange(self):
 		if self.daterange.data:
@@ -269,3 +269,32 @@ class interest_form(Form):
 	def validate(self):
 		return True
 
+class CreateCommunityForm(Form):
+	name = TextField(id='name', label = 'Community Name', validators=[validators.required("Please enter your group name")])
+	categories = SelectMultipleField(id ='categories', label='Categories', validators=[validators.Required("Select at least one category for your community")])
+	submit = SubmitField("Create Community")
+
+	def __init__(self, form):
+		Form.__init__(self, form)
+
+		self.connection = mysql.get_db()
+		self.cursor = self.connection.cursor()
+
+		# set category choices
+		self.cursor.execute("SELECT name FROM Category")
+		categories = [row[0] for row in self.cursor.fetchall()]
+		self.categories.choices = [ (c, c) for c in categories ]
+
+	def validate(self):
+		if not Form.validate(self):
+			return False
+
+		connection = mysql.get_db()
+		cursor = connection.cursor() 
+		print(self.name.data.replace('\'', '/'))
+		result_length = cursor.execute("SELECT name FROM Community Where name = '{}' ".format(self.name.data.replace('\'', '/')))
+		if result_length:
+			self.name.errors.append("This group name has already been created!")
+			return False
+		else:
+			return True

@@ -33,6 +33,7 @@
 			<li><a href="/browse">Browse Events</a></li>
         	<li><a href="/communities">Browse Communities</a></li>
         	<li><a href="/eventcreate">Create Event</a></li>
+			<li><a href="/communitycreate">Create Community</a></li>
 			{% if not session.username %}
 			<li><a href='/signup'>Sign up </a></li>
 			<li><a href='{{ url_for('signin', next=request.url) }}'>Sign in </a></li>

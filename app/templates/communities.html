@@ -2,6 +2,40 @@
 
 {% block title %} - Browse Communities{% endblock %}
 
+{% block stylesheets %}
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+{% endblock %}
+
+
 {% block content %}
-<p>Not complete.</p>
+
+
+<ul class="nav navbar-nav">
+        	<li class="dropdown">
+          	<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Categories <span class="caret"></span></a>
+          	<ul class="dropdown-menu">
+            	{% for category,url in categories %}
+            	<li><a href="/communities/category/{{ url }}">{{ category }}</a></li>
+            	{% endfor %}
+          	</ul>
+        	</li>
+      	</ul>
+
+
+<div class="container">
+	{% if communities|length > 0 %}
+	<div class="row">
+		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+			<ul class="community-list">
+				{% for community in communities %}
+					<a href="/communities/communityid/{{community.cid}}">{{ community.name }}</a>
+					<p></p>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	{% else %}
+	<p style="text-align: center; font-family: 'Lato', sans-serif; font-size: 200%; font-weight: bold;"> No Community Found</p>
+	{% endif %}
+</div>
 {% endblock %}

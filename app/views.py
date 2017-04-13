@@ -324,7 +324,164 @@ def browse(filter_path = None):
 
 @app.route('/communities')
 def communities():
-	return render_template('communities.html')
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT cid, name, uid FROM Community")
+	communities = [dict(cid=row[0],
+                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
+	cursor.close()
+
+	return render_template('communities.html', communities=communities)
+
+@app.route('/communitycreate', methods=['GET','POST'])
+def create_community():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT name FROM Category")
+	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
+	if not session.get('username'):
+		return redirect("/signin")
+	else:
+		cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
+		uid = cursor.fetchall()[0][0]
+	
+	form = CreateCommunityForm(request.form)
+	
+	if request.method == "POST":
+		if form.validate() == False:
+			flash('Fill in required fields')
+			return render_template('community_create.html', form=form, categories=categories)
+		else:
+			s = ","
+			form.categories.data = s.join(map(str, form.categories.data))
+			
+			cursor.callproc('CreateCommunity', (form.name.data.replace('\'', '/'), uid, form.categories.data))
+			cursor.execute("SELECT cid FROM Community WHERE name='{}'".format(form.name.data.replace('\'', '/')))
+			cid = cursor.fetchall()[0][0]
+			cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, cid))
+			cursor.close()
+			connection.commit()
+			return redirect(url_for('communities'))
+ 
+	elif request.method == 'GET':
+    		return render_template('community_create.html', form=form, categories=categories)
+
+@app.route('/communities/category/<category>', methods=['GET','POST'])
+def community_(category):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	page = request.args.get('page', type=int, default=1)
+	category = ",".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
+	res_len = cursor.execute("SELECT cid, name, uid FROM Community WHERE (cid) IN (SELECT cid FROM CommunityCategories WHERE categoryName='{}')".format(category))
+	start_row = MAX_PER_PAGE*(page-1)
+	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
+	communities = [dict(cid=row[0],
+                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()[start_row:end_row]]
+	cursor.close()
+
+	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
+	return render_template('communities.html', communities=communities, pagination=pagination)
+
+@app.route('/communities/communityid/<id>', methods=['GET','POST'])
+def community(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT name, uid FROM Community WHERE cid='{}'".format(id))
+	info_tuple = cursor.fetchall()[0]
+	cname = info_tuple[0]
+	uid = info_tuple[1]
+	
+	cursor.execute("SELECT categoryName FROM CommunityCategories WHERE cid='{}'".format(id))
+	categories_list = cursor.fetchall()
+	community_categories = ""
+	for row in categories_list:
+		community_categories += row[0]
+		community_categories += ","
+	community_categories = community_categories[:-1]
+
+	cursor.execute("SELECT username FROM User WHERE uid ='{}'".format(uid))
+	username = cursor.fetchall()[0][0]
+
+	cursor.execute("SELECT username FROM User WHERE uid IN (SELECT uid FROM isCommunityMember WHERE cid ='{}')".format(id))
+	member_list = cursor.fetchall()
+	members = []
+	for row in member_list:
+		members.append(row[0])
+	
+	if session.get('username'):
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		userid = cursor.fetchall()[0][0]
+		length = cursor.execute("SELECT * FROM IsCommunityMember WHERE cid ='{}' AND uid='{}'".format(id,userid))
+		cursor.close()
+		if length:
+			return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members)
+	cursor.close()
+	return render_template("community.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members)
+
+@app.route('/communities/communityid/<id>/joined')
+def is_communitymember(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	if not session.get('username'):
+		return redirect(url_for('signin'))
+	else:
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		uid = cursor.fetchall()[0][0]
+		cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, id))
+
+		cursor.execute("SELECT name, uid FROM Community WHERE cid='{}'".format(id))
+		info_tuple = cursor.fetchall()[0]
+		cname = info_tuple[0]
+		uid = info_tuple[1]
+	
+		cursor.execute("SELECT categoryName FROM CommunityCategories WHERE cid='{}'".format(id))
+		categories_list = cursor.fetchall()
+		community_categories = ""
+		for row in categories_list:
+			community_categories += row[0]
+			community_categories += ","
+		community_categories = community_categories[:-1]
+
+		cursor.execute("SELECT username FROM User WHERE uid ='{}'".format(uid))
+		username = cursor.fetchall()[0][0]
+
+		cursor.execute("SELECT username FROM User WHERE uid IN (SELECT uid FROM isCommunityMember WHERE cid ='{}')".format(id))
+		member_list = cursor.fetchall()
+		members = []
+		for row in member_list:
+			members.append(row[0])
+		connection.commit()
+		return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members)
+
+@app.route('/communities/communityid/<id>/unjoined')
+def is_not_communitymember(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+	cursor.execute("DELETE FROM isCommunityMember WHERE uid = '{}' AND cid = '{}'".format(uid, id))
+	connection.commit()
+	return redirect(url_for('community', id=id))
+
+@app.route('/communities/communityid/<id>/members')
+def community_member_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT username FROM User WHERE uid IN (SELECT uid FROM isCommunityMember WHERE cid ='{}')".format(id))
+	member_list = cursor.fetchall()
+	members = []
+	for row in member_list:
+		members.append(row[0])
+
+	cursor.execute("SELECT name FROM Community WHERE cid='{}'".format(id))
+	cname = cursor.fetchall()[0][0];
+	return render_template("community_members.html", cid=id, members=members, cname=cname)
 
 @app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
