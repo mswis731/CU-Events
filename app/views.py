@@ -9,6 +9,7 @@ import googlemaps
 from flask_googlemaps import Map
 from urllib.request import urlopen
 import json
+from haversine import haversine
 
 @app.route('/')
 @app.route('/index')
@@ -411,18 +412,41 @@ def googlelocfilter():
 def events_near_me():
 	if not session.get('username'):
 		return redirect(url_for("signin", next=request.url_rule))
+
+	connection = mysql.get_db()
+	cursor = connection.cursor()
 	
 	# get latitude and longitude of user's ip address
 	url = 'http://ipinfo.io/json'
 	response = urlopen(url)
 	data = json.load(response)
-	user_lat, user_lng = data['loc'].split(',')
+	user_loc = list(map(float, data['loc'].split(',')))
+
+	# calculate distances
+	attrs = "eid, title, addrAndStreet, city, zipcode"
+	retlen = cursor.execute("SELECT {} FROM Event".format(attrs))
+	if retlen > 0:
+		for row in cursor.fetchall():
+			eid = row[0]
+			title = row[1]
+			addrAndStreet = row[2]
+			city = row[3]
+			zipcode = row[4]
+
+			locstr = "{}, {}, IL, {}".format(addrAndStreet, city, zipcode)
+			gmaps = googlemaps.Client(key=GMAPS_KEY)
+			ret = gmaps.geocode(address=locstr)
+			if len(ret) > 0:
+				event_loc = (ret[0]['geometry']['location']['lat'], ret[0]['geometry']['location']['lng'])
+
+				dist = haversine(user_loc, event_loc, miles=True)
+				print("{}: {}".format(locstr, dist))
 
 	clustermap = Map(
 		identifier="cluster-map",
-		lat=user_lat,
-		lng=user_lng,
-		markers=[ {'lat': user_lat, 'lng': user_lng} ],
+		lat=user_loc[0],
+		lng=user_loc[1],
+		markers=[ {'lat': user_loc[0], 'lng': user_loc[1]} ],
 		cluster=True,
 		cluster_gridsize=10
 	)

@@ -37,6 +37,8 @@ CREATE TABLE Event (
 	addrAndStreet		VARCHAR(30),
 	city				VARCHAR(30),
 	zipcode				INTEGER,
+	lat					REAL,
+	lng					REAL,
 	startDate			DATE,
 	startTime			TIME,
 	endDate				DATE,
