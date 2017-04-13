@@ -214,28 +214,35 @@ MAX_PER_PAGE = 20
 def browse(filter_path = None):
 	form = searchBy(request.form)
 	if request.method == 'POST':
-		searchTerm = form.searchTerm.data
 		filter_path = ""
-		if form.category.data and form.category.data != 'All Categories':
-			if filter_path != "":
-				filter_path += "--"
-			filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
-		if form.eventType.data and form.eventType.data != 'All Event Types':
-			if filter_path != "":
-				filter_path += "--"
-			filter_path += "e%{}".format(cat_to_url_filter(form.eventType.data))
-		if form.price.data and form.price.data != 'All Prices':
-			if filter_path != "":
-				filter_path += "--"
-			filter_path += "p%{}".format(form.price.data)
-		if form.daterange.data:
-			if filter_path != "":
-				filter_path += "--"
-			daterange = form.get_daterange()
-			if daterange and daterange[0] and daterange[1]:
-				filter_path += "d%{}&{}".format(daterange[0], daterange[1])
+		searchTerm = None
+		if request.form.get('homeSearch'):
+			searchTerm = request.form.get('homeSearch')
+		else:
+			searchTerm = form.searchTerm.data
+			if form.category.data and form.category.data != 'All Categories':
+				if filter_path != "":
+					filter_path += "--"
+				filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
+			if form.eventType.data and form.eventType.data != 'All Event Types':
+				if filter_path != "":
+					filter_path += "--"
+				filter_path += "e%{}".format(cat_to_url_filter(form.eventType.data))
+			if form.price.data and form.price.data != 'All Prices':
+				if filter_path != "":
+					filter_path += "--"
+				filter_path += "p%{}".format(form.price.data)
+			if form.daterange.data:
+				if filter_path != "":
+					filter_path += "--"
+				daterange = form.get_daterange()
+				if daterange and daterange[0] and daterange[1]:
+					filter_path += "d%{}&{}".format(daterange[0], daterange[1])
 			
-		return redirect(url_for('browse', filter_path=filter_path, searchTerm=searchTerm))
+		if searchTerm:
+			return redirect(url_for('browse', filter_path=filter_path, searchTerm=searchTerm))
+		else:
+			return redirect(url_for('browse', filter_path=filter_path))
 
 	searchTerm = request.args.get('searchTerm')
 	form.searchTerm.data = searchTerm
