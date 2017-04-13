@@ -1,0 +1,33 @@
+{% extends 'navbar.html' %}
+
+{% block title %} - Community Members {% endblock %}
+
+{% block stylesheets %}
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+{% endblock %}
+
+{% block content %}
+<center>
+	<h2>{{cname}}</h2>
+</center>
+
+<div class="container">
+	<p> Members in this community:</p>
+	{% if members|length > 0 %}
+	<div class="row">
+		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+			<ul class="member-list">
+				{% for member in members %}
+					<p>{{ member }}</p>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	{% else %}
+	<b> No Community Member Found</b>
+	{% endif %}
+</div>
+
+
+{% endblock %}
+

@@ -16,22 +16,13 @@
 
  <br><a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/unjoined"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"s</span> leave the community</a>
 
-<div class="container">
-	<p> Members in this community:</p>
-	{% if members|length > 0 %}
-	<div class="row">
-		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
-			<ul class="member-list">
-				{% for member in members %}
-					<p>{{ member }}</p>
-				{% endfor %}
-			</ul>
-		</div>
-	</div>
-	{% else %}
-	<b> No Community Member Found</b>
-	{% endif %}
-</div>
+<p></p>
+
+<button type="button">
+	<a href="/communities/communityid/{{cid}}/members">Look at community members</a>
+</button>
+
+
 
 
 {% endblock %}

@@ -540,4 +540,20 @@ def is_not_communitymember(id):
 	cursor.execute("DELETE FROM isCommunityMember WHERE uid = '{}' AND cid = '{}'".format(uid, id))
 	connection.commit()
 	return redirect(url_for('community', id=id))
-	
+
+@app.route('/communities/communityid/<id>/members')
+def community_member_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT username FROM User WHERE uid IN (SELECT uid FROM isCommunityMember WHERE cid ='{}')".format(id))
+	member_list = cursor.fetchall()
+	members = []
+	for row in member_list:
+		members.append(row[0])
+	print(member_list)
+	print(members)
+
+	cursor.execute("SELECT name FROM Community WHERE cid='{}'".format(id))
+	cname = cursor.fetchall()[0][0];
+	return render_template("community_members.html", cid=id, members=members, cname=cname, session=session)
