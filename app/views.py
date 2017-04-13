@@ -64,24 +64,26 @@ def settings():
 	form = interest_form(request.form)
 	categories = form.categories.data
 
-	if request.method == "POST":
-		connection = mysql.get_db()
-		cursor = connection.cursor()
+	connection = mysql.get_db()
+	cursor = connection.cursor()
 
+	cursor.execute("SELECT uid FROM User WHERE username = '{}'" .format(session['username']))
+	uid = cursor.fetchall()[0][0]
 
-		cursor.execute("SELECT uid FROM User WHERE username = '{}'" .format(session['username']))
-		uid = cursor.fetchall()[0][0]
-
-		cursor.execute("SELECT categoryName FROM HasInterests WHERE uid ={}".format(uid))
-		pre_selected = [ tup[0] for tup in cursor.fetchall() ]
-
+	if request.method == "POST":		
 		cursor.execute("DELETE FROM HasInterests WHERE HasInterests.uid = '{}'" .format(uid))
 		connection.commit()
 		print(uid)
 		for category in categories:
 			cursor.execute("INSERT INTO HasInterests(uid, categoryName) VALUES('{}', '{}')".format(uid, category))
 			connection.commit()
-		return render_template('settings.html', form=form, pre_selected=pre_selected)
+
+	cursor.execute("SELECT categoryName FROM HasInterests WHERE uid ={}".format(uid))
+	pre_selected = [ tup[0] for tup in cursor.fetchall()]
+
+	form.categories.data = pre_selected
+
+		# return render_template('settings.html', form=form, pre_selected=pre_selected)
 
 	return render_template('settings.html', form=form)
 
