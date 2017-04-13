@@ -27,6 +27,7 @@
       <div class="tab-content">
         <div class="tab-pane fade in active" id="tab1">
             <div class="info" margin-top="105px">
+            	{% if session.username %}
             	{% if editPermission %}
 				<li class="dropdown pull-right">
           			<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-pencil"></span></a>
@@ -42,6 +43,7 @@
                 <br><a class="btn icon-btn btn-success" href="/browse/eventid/{{e.eid}}/interested"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Interested</a>
                 {% endif %}
                 <p></p>
+                {% endif %}
                 <p class = "desc" style="font-weight: bold; font-size: 16px">Date:</p>
                 {% if e.startDate.day == e.endDate.day %}
                 <span class="day">{{ e.startDate.day }}</span>

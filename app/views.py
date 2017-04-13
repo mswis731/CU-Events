@@ -97,6 +97,18 @@ def profile():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
+	cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+
+	cursor.execute("SELECT Event.eid, title, startDate, building, lowPrice, highPrice FROM Event, EventCreated WHERE EventCreated.uid = '{}' AND EventCreated.eid = Event.eid".format(uid))
+	created_events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
+
+
 	cursor.execute("SELECT Event.eid, title, startDate, building, lowPrice, highPrice FROM IsInterestedIn, User, Event WHERE IsInterestedIn.uid = User.uid AND User.username = '{}' AND Event.eid = IsInterestedIn.eid".format(session['username']))
 	events = [dict(eid=row[0],
                    title=row[1],
@@ -105,16 +117,15 @@ def profile():
                    lowPrice=row[4],
                    highPrice=row[5]) for row in cursor.fetchall()]
 
-	user = cursor.execute("SELECT * From User Where username = '{}'".format(session['username']))
+	user = cursor.execute("SELECT uid From User Where username = '{}'".format(session['username']))
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
-		return render_template('profile.html', events=events)
+		return render_template('profile.html', events=events, created_events=created_events)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def eventcreate():
 	if not session.get('username'):
-		print(request.url_rule)
 		return redirect(url_for("signin", next=request.url_rule))
 
 	connection = mysql.get_db()
@@ -129,7 +140,8 @@ def eventcreate():
 
 	eid = request.args.get('eid')
 	if request.method == "GET" and eid:
-		cursor.execute("SELECT * FROM Event WHERE eid={}".format(eid))
+		attrs = "eid, title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice"
+		cursor.execute("SELECT {} FROM Event WHERE eid={}".format(attrs, eid))
 		data = cursor.fetchall()[0]
 		form.eid.data = data[0]
 		form.title.data = data[1]
@@ -141,10 +153,14 @@ def eventcreate():
 		form.lowPrice.data = data[11]
 		form.highPrice.data = data[12]
 
-		startTime = "{}:{}".format(data[8].seconds//3600, (data[8].seconds//60)%60)
-		endTime = "{}:{}".format(data[10].seconds//3600, (data[10].seconds//60)%60)
-		form.startDate.data = "{}/{}/{} {}".format(data[7].month, data[7].day, data[7].year, datetime.strptime(startTime, "%H:%M").strftime("%I:%M %p"))
-		form.endDate.data = "{}/{}/{} {}".format(data[9].month, data[9].day, data[9].year, datetime.strptime(endTime, "%H:%M").strftime("%I:%M %p"))
+		sd = data[7]
+		st = data[8]
+		ed = data[9]
+		et = data[10]
+		startTime = "{}:{}".format(st.seconds//3600, (st.seconds//60)%60)
+		endTime = "{}:{}".format(et.seconds//3600, (et.seconds//60)%60)
+		form.startDate.data = "{}/{}/{} {}".format(sd.month, sd.day, sd.year, datetime.strptime(startTime, "%H:%M").strftime("%I:%M %p"))
+		form.endDate.data = "{}/{}/{} {}".format(ed.month, ed.day, ed.year, datetime.strptime(endTime, "%H:%M").strftime("%I:%M %p"))
 
 		cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(eid))
 		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
@@ -168,6 +184,12 @@ def eventcreate():
 					attr_list.append(','.join(map(str, field.data)))
 				else:
 					attr_list.append(field.data)
+
+				# add lat and lng after zipcode
+				if field.name == 'zipcode':
+					attr_list.append(form.lat)
+					attr_list.append(form.lng)
+
 			# only need uid for new events
 			if form.eid.data == -1:
 				attr_list.append(uid)
@@ -197,17 +219,25 @@ def browse(filter_path = None):
 	if request.method == 'POST':
 		searchTerm = form.searchTerm.data
 		filter_path = ""
-		if form.category.data and form.category.data != 'ALL CATEGORIES':
+		if form.category.data and form.category.data != 'All Categories':
 			if filter_path != "":
 				filter_path += "--"
 			filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
-		if form.eventType.data and form.eventType.data != 'ALL EVENT TYPES':
+		if form.eventType.data and form.eventType.data != 'All Event Types':
 			if filter_path != "":
 				filter_path += "--"
 			filter_path += "e%{}".format(cat_to_url_filter(form.eventType.data))
-
-		# TODO: add price and date filters later
-
+		if form.price.data and form.price.data != 'All Prices':
+			if filter_path != "":
+				filter_path += "--"
+			filter_path += "p%{}".format(form.price.data)
+		if form.daterange.data:
+			if filter_path != "":
+				filter_path += "--"
+			daterange = form.get_daterange()
+			if daterange and daterange[0] and daterange[1]:
+				filter_path += "d%{}&{}".format(daterange[0], daterange[1])
+			
 		return redirect(url_for('browse', filter_path=filter_path, searchTerm=searchTerm))
 
 	searchTerm = request.args.get('searchTerm')
@@ -216,7 +246,7 @@ def browse(filter_path = None):
 	category = None
 	eventType = None
 	price = None
-	date = None
+	daterange = None
 	if filter_path:
 		for filter_str in filter_path.split('--'):
 			key, val = filter_str.split('%')
@@ -231,13 +261,17 @@ def browse(filter_path = None):
 			# price
 			elif key == 'p':
 				price = val
+				form.price.data = price
 			# date
-			elif date == 'd':
-				date = val
+			elif key == 'd':
+				daterange = tuple(val.split('&'))
+				form.set_daterange(daterange[0], daterange[1])
 	if not category:
-		form.category.data = 'ALL CATEGORIES'
+		form.category.data = 'All Categories'
 	if not eventType:
-		form.eventType.data = 'ALL EVENT TYPES'
+		form.eventType.data = 'All Event Types'
+	if not price:
+		form.price.data = 'All Prices'
 
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -248,7 +282,7 @@ def browse(filter_path = None):
 	attrs = "eid, title, startDate, building, lowPrice, highPrice"
 	query = ""
 	where_clause = ""
-	if searchTerm or category or eventType or price or date:
+	if searchTerm or category or eventType or price or daterange:
 		if searchTerm:
 			if where_clause:
 				where_clause += " AND "
@@ -261,8 +295,18 @@ def browse(filter_path = None):
 			if where_clause:
 				where_clause += " AND "
 			where_clause += "eid IN (SELECT eid FROM HasEventType WHERE eventType='{}')".format(eventType)
-		# TODO: add further queries for price and date later
-
+		if price:
+			if where_clause:
+				where_clause += " AND "
+			if price == 'Free':
+				where_clause += "lowPrice IS NOT NULL AND highPrice IS NOT NULL AND lowPrice = 0 AND highPrice = 0"
+			elif price == 'Paid':
+				where_clause += "lowPrice IS NOT NULL AND highPrice IS NOT NULL AND lowPrice <> 0 AND highPrice <> 0"
+		if daterange and daterange[0] and daterange[1]:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "DATEDIFF(startDate, '{}') >= 0 AND DATEDIFF(endDate, '{}') <= 0".format(daterange[0], daterange[1])
+			
 		query = "SELECT {} lowPrice, highPrice FROM Event WHERE {}".format(attrs, where_clause)
 	else:
 		query = "SELECT {} FROM Event".format(attrs)
@@ -288,13 +332,13 @@ def communities():
 
 @app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
-	eid = id
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
-	# check if user can edit and delete
 	editPermission = False
-	if session['username']:
+	already_interested = None
+	if session.get('username'):
+		# check if user can edit and delete
 		if session['username'] == 'admin':
 			editPermission = True
 		else:
@@ -302,15 +346,12 @@ def get_event(id):
 			if reslen > 0 and cursor.fetchall()[0][0] == session['username']:
 				editPermission = True
 
-	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
-	uid = cursor.fetchall()[0][0]
+		# check if user is already interested in event
+		cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+		uid = cursor.fetchall()[0][0]
 
-	already_interested = None
-	cursor.execute("SELECT eid FROM IsInterestedIn WHERE IsInterestedIn.uid = '{}'".format(uid))
-	interested_events = [row[0] for row in cursor.fetchall()]
-
-	for event in interested_events:
-		if event == int(eid):
+		reslen = cursor.execute("SELECT eid FROM IsInterestedIn WHERE uid = '{}' AND eid = '{}'".format(uid,id))
+		if reslen > 0:
 			already_interested = 1
 
 	attrs = "eid, title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice, nonUserViews"
@@ -330,8 +371,6 @@ def get_event(id):
                    highPrice=row[12],
                    nonUserViews=row[13]) for row in cursor.fetchall()]
 	cursor.close()
-	print(len(events))
-	print(events[0])
 
 	return render_template('event.html', event=events, editPermission=editPermission, already_interested=already_interested)
 
@@ -390,16 +429,15 @@ def is_uninterested(id):
 @app.context_processor
 def googlelocfilter():
 	def _googlelocfilter(building, addr, city, cityzip):
-		
-		locstr = addr+","+city+", IL," + str(cityzip)
+		locstr = "{}, {}, IL, {}".format(addr, city, cityzip)
 		gmaps = googlemaps.Client(key=GMAPS_KEY)
 		ret = gmaps.geocode(address=locstr)
 		lng = 0.0
 		lat = 0.0
 		if len(ret) > 0:
-			lng = ret[0]['geometry']['location']['lng']
-			lat = ret[0]['geometry']['location']['lat']
-		cordstr = str(lng)+","+str(lat)
+			lat = "{0:.7f}".format(ret[0]['geometry']['location']['lat'])
+			lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
+		cordstr = "{},{}".format(lat,lng)
 		addrmod = addr.replace(" ", "+")
 		buildingmod = building.replace(" ", "+")
 		locstr2 = buildingmod+"+"+addrmod
@@ -423,24 +461,16 @@ def events_near_me():
 	user_loc = list(map(float, data['loc'].split(',')))
 
 	# calculate distances
-	attrs = "eid, title, addrAndStreet, city, zipcode"
+	attrs = "eid, lat, lng"
 	retlen = cursor.execute("SELECT {} FROM Event".format(attrs))
 	if retlen > 0:
 		for row in cursor.fetchall():
 			eid = row[0]
-			title = row[1]
-			addrAndStreet = row[2]
-			city = row[3]
-			zipcode = row[4]
+			event_loc = (row[1], row[2])
 
-			locstr = "{}, {}, IL, {}".format(addrAndStreet, city, zipcode)
-			gmaps = googlemaps.Client(key=GMAPS_KEY)
-			ret = gmaps.geocode(address=locstr)
-			if len(ret) > 0:
-				event_loc = (ret[0]['geometry']['location']['lat'], ret[0]['geometry']['location']['lng'])
-
+			if event_loc and event_loc[0] and event_loc[1]:
 				dist = haversine(user_loc, event_loc, miles=True)
-				print("{}: {}".format(locstr, dist))
+				print("{}: {}".format(eid, dist))
 
 	clustermap = Map(
 		identifier="cluster-map",
@@ -451,4 +481,26 @@ def events_near_me():
 		cluster_gridsize=10
 	)
 	return render_template('events_near_me.html', clustermap=clustermap)
+
+def update_locs():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	attrs = "eid, addrAndStreet, city, zipcode"
+	cursor.execute("SELECT {} FROM Event".format(attrs))
+	for row in cursor.fetchall():
+		eid = row[0]
+		addrAndStreet = row[1]
+		city = row[2]
+		zipcode = row[3]
+
+		gmaps = googlemaps.Client(key=GMAPS_KEY)
+		ret = gmaps.geocode(address=locstr)
+		if len(ret) > 0:
+			lat = "{0:.7f}".format(ret[0]['geometry']['location']['lat'])
+			lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
+
+			cursor.execute("UPDATE Event SET lat = {}, lng = {} WHERE eid={}".format(lat, lng, eid))
+			print(lat, lng)
+		connection.commit()
 

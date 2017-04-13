@@ -9,6 +9,8 @@ CREATE PROCEDURE UpdateEvent(
 	_street 		VARCHAR(30),
 	_city 			VARCHAR(30),
 	_zipcode 		INTEGER,
+	_lat			REAL,
+	_lng			REAL,
 	_start_date 	DATE,
 	_start_time 	TIME,
 	_end_date 		DATE,
@@ -23,7 +25,7 @@ BEGIN
 
 	UPDATE Event
 	SET title = _title, startDate = _start_date, startTime = _start_time, description = _description, building = _building, addrAndStreet = _street,
-	city = _city, zipcode = _zipcode, endDate = _end_date, endTime = _end_time, lowPrice = _low_price, highPrice = _high_price
+	city = _city, zipcode = _zipcode, lat = _lat, lng = _lng, endDate = _end_date, endTime = _end_time, lowPrice = _low_price, highPrice = _high_price
 	WHERE eid=_eid;
 
 	DELETE FROM HasCategory WHERE eid = _eid;

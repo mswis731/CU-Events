@@ -40,6 +40,10 @@ class CreateEventForm(Form):
 		self.start = ('', '')
 		self.end = ('', '')
 
+		#lat and lng
+		self.lat = 0,0
+		self.lng = 0.0
+
 	def validate(self):
 		if not Form.validate(self):
 			return False
@@ -121,6 +125,9 @@ class CreateEventForm(Form):
 				self.addrAndStreet.data = street_num + " " + street_name
 				self.city.data = city
 				self.zipcode.data = zipcode
+
+				self.lat = "{0:.7f}".format(ret[0]['geometry']['location']['lat'])
+				self.lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
 		
 		return valid
 		
@@ -191,6 +198,8 @@ class searchBy(Form):
 	searchTerm = TextField(id = 'searchTerm')
 	category = SelectField(id ='category', label='Category')
 	eventType = SelectField(id ='eventtype', label='Event Type')
+	daterange = TextField(id = 'daterange')
+	price = SelectField(id='price', label='Price', choices=[('All Prices', 'All Prices'), ('Free', 'Free'), ('Paid', 'Paid')])
 	submit = SubmitField("Search") 
 
 	def __init__(self, form):
@@ -202,17 +211,46 @@ class searchBy(Form):
 		# set category choices
 		self.cursor.execute("SELECT name FROM Category")
 		categories = [row[0] for row in self.cursor.fetchall()]
-		categories.insert(0, 'ALL CATEGORIES')
+		categories.insert(0, 'All Categories')
+		categories.insert(1, 'User Created')
 		self.category.choices = [ (c, c) for c in categories ]
 
 		# set event types choices
 		self.cursor.execute("SELECT name FROM EventType")
 		event_types = [row[0] for row in self.cursor.fetchall()]
-		event_types.insert(0, 'ALL EVENT TYPES')
+		event_types.insert(0, 'All Event Types')
 		self.eventType.choices = [ (e, e) for e in event_types ]
 		
 	def validate(self):
 		return True
+	
+	# format: MM/DD/YYYY - MM/DD/YYYY
+	def get_daterange(self):
+		if self.daterange.data:
+			try:
+				start_orig = self.daterange.data.split('-')[0].strip()
+				end_orig = self.daterange.data.split('-')[1].strip()
+				s_dt = datetime.strptime(start_orig, '%m/%d/%Y')
+				e_dt = datetime.strptime(end_orig, '%m/%d/%Y')
+
+				start = "{}-{}-{}".format(s_dt.year, s_dt.month, s_dt.day)
+				end = "{}-{}-{}".format(e_dt.year, e_dt.month, e_dt.day)
+
+				return (start, end)
+			except:
+				pass
+
+		return (None, None)
+	
+	# format: YYYY-MM-DD
+	def set_daterange(self, start, end):
+		try:
+			s_dt = datetime.strptime(start, '%Y-%m-%d')
+			e_dt = datetime.strptime(end, '%Y-%m-%d')
+
+			self.daterange.data = "{:02d}/{:02d}/{} - {:02d}/{:02d}/{}".format(s_dt.month, s_dt.day, s_dt.year, e_dt.month, e_dt.day, e_dt.year)
+		except:
+			pass
 
 class interest_form(Form):
 	categories = SelectMultipleField(id ='category', label='Categories')
