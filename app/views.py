@@ -77,7 +77,6 @@ def settings():
 
 		cursor.execute("DELETE FROM HasInterests WHERE HasInterests.uid = '{}'" .format(uid))
 		connection.commit()
-		print(uid)
 		for category in categories:
 			cursor.execute("INSERT INTO HasInterests(uid, categoryName) VALUES('{}', '{}')".format(uid, category))
 			connection.commit()
@@ -497,6 +496,13 @@ def get_event(id):
 			if retlen == 0:
 				cursor.execute("INSERT INTO HasRegisteredViews(uid, eid) VALUES ({}, {})".format(uid, id)) 
 				connection.commit()
+	else:
+		retlen = cursor.execute("SELECT nonUserViews FROM Event WHERE eid = {}".format(id))
+		if retlen > 0:
+			nonUserViews = cursor.fetchall()[0][0]
+			nonUserViews += 1
+			cursor.execute("UPDATE Event SET nonUserViews = {} WHERE eid = {}".format(nonUserViews, id))
+			connection.commit()
 
 	editPermission = False
 	already_interested = None
@@ -541,8 +547,6 @@ def get_event(id):
 def delete_event(eid=None, next = None):
 	eid = request.args.get('eid')
 	next = request.args.get('next')
-	print('eid', eid)
-	print('next', next)
 	if eid and next:
 		connection = mysql.get_db()
 		cursor = connection.cursor()
@@ -566,8 +570,6 @@ def is_interested(id):
 		curr_url = request.referrer
 		curr = curr_url.split('/')[-1]
 		new_url = curr_url.split('//')[1]
-		print("NEW URL:")
-		print(new_url)
 		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
 		connection.commit()
 		return redirect(url_for('get_event', id=id))
@@ -628,6 +630,5 @@ def update_locs():
 			lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
 
 			cursor.execute("UPDATE Event SET lat = {}, lng = {} WHERE eid={}".format(lat, lng, eid))
-			print(lat, lng)
 		connection.commit()
 
