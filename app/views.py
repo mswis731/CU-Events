@@ -335,6 +335,16 @@ def get_event(id):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
+	# add event as registered view for logged in user if not done so already
+	if session.get('username'):
+		retlen = cursor.execute("SELECT uid FROM User WHERE username = '{}'" .format(session['username']))
+		if retlen > 0:
+			uid = cursor.fetchall()[0][0]
+			retlen = cursor.execute("SELECT uid FROM HasRegisteredViews WHERE uid = {} AND eid = {}".format(uid, id))
+			if retlen == 0:
+				cursor.execute("INSERT INTO HasRegisteredViews(uid, eid) VALUES ({}, {})".format(uid, id)) 
+				connection.commit()
+
 	editPermission = False
 	already_interested = None
 	if session.get('username'):
