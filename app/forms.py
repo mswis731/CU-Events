@@ -40,6 +40,10 @@ class CreateEventForm(Form):
 		self.start = ('', '')
 		self.end = ('', '')
 
+		#lat and lng
+		self.lat = 0,0
+		self.lng = 0.0
+
 	def validate(self):
 		if not Form.validate(self):
 			return False
@@ -121,6 +125,9 @@ class CreateEventForm(Form):
 				self.addrAndStreet.data = street_num + " " + street_name
 				self.city.data = city
 				self.zipcode.data = zipcode
+
+				self.lat = "{0:.7f}".format(ret[0]['geometry']['location']['lat'])
+				self.lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
 		
 		return valid
 		

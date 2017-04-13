@@ -113,7 +113,7 @@ def profile():
                    lowPrice=row[4],
                    highPrice=row[5]) for row in cursor.fetchall()]
 
-	user = cursor.execute("SELECT * From User Where username = '{}'".format(session['username']))
+	user = cursor.execute("SELECT uid From User Where username = '{}'".format(session['username']))
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
@@ -122,7 +122,6 @@ def profile():
 @app.route('/eventcreate', methods=['GET','POST'])
 def eventcreate():
 	if not session.get('username'):
-		print(request.url_rule)
 		return redirect(url_for("signin", next=request.url_rule))
 
 	connection = mysql.get_db()
@@ -137,7 +136,8 @@ def eventcreate():
 
 	eid = request.args.get('eid')
 	if request.method == "GET" and eid:
-		cursor.execute("SELECT * FROM Event WHERE eid={}".format(eid))
+		attrs = "eid, title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice"
+		cursor.execute("SELECT {} FROM Event WHERE eid={}".format(attrs, eid))
 		data = cursor.fetchall()[0]
 		form.eid.data = data[0]
 		form.title.data = data[1]
@@ -149,10 +149,14 @@ def eventcreate():
 		form.lowPrice.data = data[11]
 		form.highPrice.data = data[12]
 
-		startTime = "{}:{}".format(data[8].seconds//3600, (data[8].seconds//60)%60)
-		endTime = "{}:{}".format(data[10].seconds//3600, (data[10].seconds//60)%60)
-		form.startDate.data = "{}/{}/{} {}".format(data[7].month, data[7].day, data[7].year, datetime.strptime(startTime, "%H:%M").strftime("%I:%M %p"))
-		form.endDate.data = "{}/{}/{} {}".format(data[9].month, data[9].day, data[9].year, datetime.strptime(endTime, "%H:%M").strftime("%I:%M %p"))
+		sd = data[7]
+		st = data[8]
+		ed = data[9]
+		et = data[10]
+		startTime = "{}:{}".format(st.seconds//3600, (st.seconds//60)%60)
+		endTime = "{}:{}".format(et.seconds//3600, (et.seconds//60)%60)
+		form.startDate.data = "{}/{}/{} {}".format(sd.month, sd.day, sd.year, datetime.strptime(startTime, "%H:%M").strftime("%I:%M %p"))
+		form.endDate.data = "{}/{}/{} {}".format(ed.month, ed.day, ed.year, datetime.strptime(endTime, "%H:%M").strftime("%I:%M %p"))
 
 		cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(eid))
 		form.categories.data = [ tup[0] for tup in cursor.fetchall() ]
@@ -176,6 +180,12 @@ def eventcreate():
 					attr_list.append(','.join(map(str, field.data)))
 				else:
 					attr_list.append(field.data)
+
+				# add lat and lng after zipcode
+				if field.name == 'zipcode':
+					attr_list.append(form.lat)
+					attr_list.append(form.lng)
+
 			# only need uid for new events
 			if form.eid.data == -1:
 				attr_list.append(uid)
@@ -357,8 +367,6 @@ def get_event(id):
                    highPrice=row[12],
                    nonUserViews=row[13]) for row in cursor.fetchall()]
 	cursor.close()
-	print(len(events))
-	print(events[0])
 
 	return render_template('event.html', event=events, editPermission=editPermission, already_interested=already_interested)
 
@@ -417,16 +425,15 @@ def is_uninterested(id):
 @app.context_processor
 def googlelocfilter():
 	def _googlelocfilter(building, addr, city, cityzip):
-		
-		locstr = addr+","+city+", IL," + str(cityzip)
+		locstr = "{}, {}, IL, {}".format(addr, city, cityzip)
 		gmaps = googlemaps.Client(key=GMAPS_KEY)
 		ret = gmaps.geocode(address=locstr)
 		lng = 0.0
 		lat = 0.0
 		if len(ret) > 0:
-			lng = ret[0]['geometry']['location']['lng']
-			lat = ret[0]['geometry']['location']['lat']
-		cordstr = str(lng)+","+str(lat)
+			lat = "{0:.7f}".format(ret[0]['geometry']['location']['lat'])
+			lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
+		cordstr = "{},{}".format(lat,lng)
 		addrmod = addr.replace(" ", "+")
 		buildingmod = building.replace(" ", "+")
 		locstr2 = buildingmod+"+"+addrmod
@@ -434,3 +441,26 @@ def googlelocfilter():
 		mapstr =  "https://maps.google.co.uk/maps?f=q&source=s_q&hl=en&geocode=&q="+locstr2+"&sll="+cordstr+"&ie=UTF8&hq=&hnear="+locstr3+"&t=m&z=17"+"&ll="+cordstr+"&output=embed"
 		return mapstr
 	return dict(googlelocfilter=_googlelocfilter)
+
+def update_locs():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	attrs = "eid, addrAndStreet, city, zipcode"
+	cursor.execute("SELECT {} FROM Event".format(attrs))
+	for row in cursor.fetchall():
+		eid = row[0]
+		addrAndStreet = row[1]
+		city = row[2]
+		zipcode = row[3]
+
+		gmaps = googlemaps.Client(key=GMAPS_KEY)
+		ret = gmaps.geocode(address=locstr)
+		if len(ret) > 0:
+			lat = "{0:.7f}".format(ret[0]['geometry']['location']['lat'])
+			lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
+
+			cursor.execute("UPDATE Event SET lat = {}, lng = {} WHERE eid={}".format(lat, lng, eid))
+			print(lat, lng)
+		connection.commit()
+
