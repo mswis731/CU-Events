@@ -330,9 +330,24 @@ def communities():
 	cursor.execute("SELECT cid, name, uid FROM Community")
 	communities = [dict(cid=row[0],
                    name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
-	cursor.close()
 
-	return render_template('communities.html', communities=communities)
+	logged_in = 0
+
+	if not session.get('username'):
+		cursor.close()
+		return render_template('communities.html', communities=communities, logged_in=logged_in)
+
+	else:
+		logged_in = 1
+		cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
+		curr_uid = cursor.fetchall()[0][0]
+
+		cursor.execute("SELECT cid, name, uid FROM Community WHERE Community.cid IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(curr_uid))
+		my_communities = [dict(cid=row[0],
+                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
+		cursor.close()
+
+		return render_template('communities.html', communities=communities, logged_in=logged_in, my_communities=my_communities)
 
 @app.route('/communitycreate', methods=['GET','POST'])
 def create_community():
@@ -340,6 +355,7 @@ def create_community():
 	cursor = connection.cursor()
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
 
 	if not session.get('username'):
 		return redirect("/signin")
