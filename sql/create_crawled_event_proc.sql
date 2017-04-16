@@ -8,6 +8,8 @@ CREATE PROCEDURE CreateCrawledEvent(
 	_street 		VARCHAR(30),
 	_city 			VARCHAR(30),
 	_zipcode 		INTEGER,
+	_lat			REAL,
+	_lng			REAL,
 	_start_date 	DATE,
 	_start_time 	TIME,
 	_end_date 		DATE,
@@ -27,9 +29,9 @@ BEGIN
 				FROM Event
 				WHERE title = _title AND startDate = _start_date AND startTime = _start_time
 	) THEN
-		INSERT INTO Event(title, description, building, addrAndStreet, city, zipcode,
+		INSERT INTO Event(title, description, building, addrAndStreet, city, zipcode, lat, lng,
 							startDate, startTime, endDate, endTime, lowPrice, highPrice)
-		VALUES (_title, _description, _building, _street, _city, _zipcode,
+		VALUES (_title, _description, _building, _street, _city, _zipcode, _lat, _lng,
 				_start_date, _start_time, _end_date, _end_time, _low_price, _high_price);
 
 		SET @eid = (SELECT eid FROM Event WHERE title = _title AND startDate = _start_date AND startTime = _start_time);
