@@ -500,8 +500,6 @@ def events_near_me():
 		locs.sort(key=lambda loc: loc["dist"])
 		end_row = int(form.limit.data) if len(locs) >= int(form.limit.data) else len(locs)
 		markers = locs[0:end_row]
-		for marker in markers:
-			print(marker['eid'], marker['dist'])
 
 	return render_template('events_near_me.html', user_loc=user_loc, markers=markers, form=form)
 
