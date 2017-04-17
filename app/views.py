@@ -456,10 +456,21 @@ def googlelocfilter():
 		return mapstr
 	return dict(googlelocfilter=_googlelocfilter)
 
-@app.route('/eventsnearme')
+@app.route('/eventsnearme', methods=['get','post'])
 def events_near_me():
 	if not session.get('username'):
 		return redirect(url_for("signin", next=request.url_rule))
+	
+	form = EventsNearMeForm(request.form)
+
+	if request.args.get('radius'):
+		form.radius.data = request.args.get('radius')
+	if request.args.get('limit'):
+		form.limit.data = request.args.get('limit')
+	
+	if request.method=='post':
+		return redirect(url_for('events_near_me', radius=form.radius.data, limit=form.limit.data))
+		
 
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -468,29 +479,31 @@ def events_near_me():
 	url = 'http://ipinfo.io/json'
 	response = urlopen(url)
 	data = json.load(response)
-	user_loc = list(map(float, data['loc'].split(',')))
+	user_loc_tup = tuple(map(float, data['loc'].split(',')))
+	user_loc = {"lat": user_loc_tup[0], "lng": user_loc_tup[1]}
 
 	# calculate distances
-	attrs = "eid, lat, lng"
+	locs = []
+	attrs = "eid, title, lat, lng"
 	retlen = cursor.execute("SELECT {} FROM Event".format(attrs))
 	if retlen > 0:
 		for row in cursor.fetchall():
 			eid = row[0]
-			event_loc = (row[1], row[2])
+			title = row[1]
+			event_loc = (row[2], row[3])
 
 			if event_loc and event_loc[0] and event_loc[1]:
-				dist = haversine(user_loc, event_loc, miles=True)
-				print("{}: {}".format(eid, dist))
+				dist = haversine(user_loc_tup, event_loc, miles=True)
+				if dist <= float(form.radius.data):
+					dict = {"eid": eid, "title": title, "dist": dist, "loc": {"lat": event_loc[0], "lng": event_loc[1]}}
+					locs.append(dict)
+		locs.sort(key=lambda loc: loc["dist"])
+		end_row = int(form.limit.data) if len(locs) >= int(form.limit.data) else len(locs)
+		markers = locs[0:end_row]
+		for marker in markers:
+			print(marker['eid'], marker['dist'])
 
-	clustermap = Map(
-		identifier="cluster-map",
-		lat=user_loc[0],
-		lng=user_loc[1],
-		markers=[ {'lat': user_loc[0], 'lng': user_loc[1]} ],
-		cluster=True,
-		cluster_gridsize=10
-	)
-	return render_template('events_near_me.html', clustermap=clustermap)
+	return render_template('events_near_me.html', user_loc=user_loc, markers=markers, form=form)
 
 def update_locs():
 	connection = mysql.get_db()
