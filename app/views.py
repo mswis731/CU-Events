@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, request, redirect, session, url_for
+from flask import Flask, render_template, flash, request, redirect, session, url_for, Response, jsonify
 from app.forms import *
 from app.filters import *
 from app import app, mysql, GMAPS_KEY
@@ -6,11 +6,17 @@ from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
 from flask_paginate import Pagination
 import googlemaps
+import json
 
 @app.route('/')
 @app.route('/index')
 def index():
-	return render_template('index.html')
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT title FROM event")
+	all_events = [tup[0] for tup in cursor.fetchall()]
+
+	return render_template('index.html', all_events = all_events)
 
 @app.route('/signin', methods = ['GET', 'POST'])
 def signin():
@@ -640,4 +646,12 @@ def update_locs():
 
 			cursor.execute("UPDATE Event SET lat = {}, lng = {} WHERE eid={}".format(lat, lng, eid))
 		connection.commit()
+
+@app.route('/autocomplete')
+def autocomplete():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT title FROM Event")
+	all_events = [tup[0] for tup in cursor.fetchall()]
+	return jsonify(json_list=all_events) 
 
