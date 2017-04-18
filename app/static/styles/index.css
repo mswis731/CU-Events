@@ -3,7 +3,19 @@
     float: none;
 }
 
+body{
+    font-family: 'Amiko', sans-serif;
+}
+/*
+.ui-autocomplete.ui-widget {
+  font-family: 'Amiko', sans-serif;
+  font-size: 10px;
+}
 
+.ui-widget {
+  font-family: 'Amiko', sans-serif;
+  font-size: 10px;
+}*/
     .ui-autocomplete {
     position: absolute;
     top: 100%;
@@ -47,7 +59,7 @@
 .ui-state-hover, .ui-state-active {
     color: #ffffff;
     text-decoration: none;
-    background-color: #0088cc;
+    background-color: #ffa851;
     border-radius: 0px;
     -webkit-border-radius: 0px;
     -moz-border-radius: 0px;
