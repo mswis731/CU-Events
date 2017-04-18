@@ -1,6 +1,5 @@
 from flask import Flask
 from flaskext.mysql import MySQL
-from flask_googlemaps import GoogleMaps
 import os
 
 db_user = None
@@ -34,9 +33,6 @@ app.config['MYSQL_DATABASE_HOST'] = db_host
 
 mysql = MySQL()
 mysql.init_app(app)
-
-app.config['GOOGLEMAPS_KEY'] = 'AIzaSyCwQgKvuUKzqEkWbNs8VjlHHMkDYri7bKs'
-GoogleMaps(app)
 
 GMAPS_KEY = 'AIzaSyCwQgKvuUKzqEkWbNs8VjlHHMkDYri7bKs'
 
