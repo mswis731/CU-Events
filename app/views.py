@@ -654,6 +654,8 @@ def events_near_me():
 	user_loc = None
 	print("Remote addr: {}".format(request.environ['REMOTE_ADDR']))
 	g = ip(request.environ['REMOTE_ADDR'])
+	if g:
+		print("g.latlng: {}".format(g.latlng))
 	if g and g.latlng and len(g.latlng) > 0:
 		user_loc_tup = tuple(g.latlng)
 		print("Geocoder used")
@@ -665,11 +667,15 @@ def events_near_me():
 		if data['ip'] and data['loc']:
 			user_loc_tup = tuple(map(float, data['loc'].split(',')))
 			print("ipinfo.io used")
+			print("data['loc']: {}".format(data['loc']))
+			print("ip: {}".format(data['ip']))
 	
-	if user_loc_tup == None:
+	if user_loc_tup == None or len(user_loc_tup) == 0:
 		user_loc_tup = (40.1164, -88.2434) # lat/lng of Champaign
 		print("Default IP address used")
 	user_loc = {"lat": user_loc_tup[0], "lng": user_loc_tup[1]}
+	print("user_loc_tup: {}".format(user_loc_tup))
+	print("user_loc: {}".format(user_loc))
 	sys.stdout.flush()
 
 	# calculate distances
