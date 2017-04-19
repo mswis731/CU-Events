@@ -9,6 +9,8 @@ import googlemaps
 import json
 from urllib.request import urlopen
 from haversine import haversine
+from geocoder import ip
+import sys
 
 @app.route('/')
 @app.route('/index')
@@ -648,11 +650,27 @@ def events_near_me():
 	cursor = connection.cursor()
 	
 	# get latitude and longitude of user's ip address
-	url = 'http://ipinfo.io/json'
-	response = urlopen(url)
-	data = json.load(response)
-	user_loc_tup = tuple(map(float, data['loc'].split(',')))
+	user_loc_tup = None
+	user_loc = None
+	print("Remote addr: {}".format(request.environ['REMOTE_ADDR']))
+	g = ip(request.environ['REMOTE_ADDR'])
+	if g and g.latlng and len(g.latlng) > 0:
+		user_loc_tup = tuple(g.latlng)
+		print("Geocoder used")
+	else:
+		url = 'http://ipinfo.io/json'
+		response = urlopen(url)
+		data = json.load(response)
+
+		if data['ip'] and data['loc']:
+			user_loc_tup = tuple(map(float, data['loc'].split(',')))
+			print("ipinfo.io used")
+	
+	if user_loc_tup == None:
+		user_loc_tup = (40.1164, -88.2434) # lat/lng of Champaign
+		print("Default IP address used")
 	user_loc = {"lat": user_loc_tup[0], "lng": user_loc_tup[1]}
+	sys.stdout.flush()
 
 	# calculate distances
 	locs = []
