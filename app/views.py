@@ -657,37 +657,18 @@ def events_near_me():
 	provided_ips2 = request.access_route
 	print(provided_ips)
 	print(provided_ips2)
-	g = ipinfo('me')
-	if g:
-		print("me ip: {}".format(g.ip))
+
+	ip = provided_ips[0] if len(provided_ips) > 0 else 'me'
+	print('ip: {}'.format(ip))
+	g = ipinfo(ip)
 	if g and g.latlng and len(g.latlng) > 0:
 		user_loc_tup = tuple(g.latlng)
-		print("me latlng: {}".format(user_loc_tup))
-	elif len(provided_ips) > 0:
-		g = ipinfo(provided_ips[0])
-		if g:
-			print("forwarded ip: {}".format(g.ip))
-		if g and g.latlng and len(g.latlng) > 0:
-			user_loc_tup = tuple(g.latlng)
-			print("forwarded latlng: {}".format(user_loc_tup))
 
-	"""
-	else:
-		url = 'http://ipinfo.io/json'
-		response = urlopen(url)
-		data = json.load(response)
-
-		if data['ip'] and data['loc']:
-			user_loc_tup = tuple(map(float, data['loc'].split(',')))
-			print("ipinfo.io used")
-			print("data['loc']: {}".format(data['loc']))
-			print("ip: {}".format(data['ip']))
-	"""
-	
 	if user_loc_tup == None or len(user_loc_tup) == 0:
 		user_loc_tup = (40.1164, -88.2434) # lat/lng of Champaign
 		print("Default IP address used")
 	user_loc = {"lat": user_loc_tup[0], "lng": user_loc_tup[1]}
+
 	print("user_loc_tup: {}".format(user_loc_tup))
 	print("user_loc: {}".format(user_loc))
 	sys.stdout.flush()
