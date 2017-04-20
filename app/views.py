@@ -7,6 +7,8 @@ from werkzeug import generate_password_hash, check_password_hash
 from flask_paginate import Pagination
 import googlemaps
 import json
+import xlsxwriter
+from surprise import SVD, Dataset, evaluate, print_perf, Reader
 
 @app.route('/')
 @app.route('/index')
@@ -88,9 +90,11 @@ def settings():
 
 	form.categories.data = pre_selected
 
-		# return render_template('settings.html', form=form, pre_selected=pre_selected)
-
-	return render_template('settings.html', form=form)
+	admin = None
+	if session['username'] == 'admin':
+		admin = True
+	
+	return render_template('settings.html', form=form, admin=admin)
 
 @app.route('/profile')
 def profile():
@@ -121,6 +125,7 @@ def profile():
                    highPrice=row[5]) for row in cursor.fetchall()]
 
 	user = cursor.execute("SELECT uid From User Where username = '{}'".format(session['username']))
+
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
@@ -655,3 +660,73 @@ def autocomplete():
 	all_events = [tup[0] for tup in cursor.fetchall()]
 	return jsonify(json_list=all_events) 
 
+@app.route('/recommend_file')
+def generate_file():
+
+
+	workbook = xlsxwriter.Workbook('test.xlsx')
+	worksheet = workbook.add_worksheet()
+
+	# worksheet.set_column('A:A', 20)
+
+	bold = workbook.add_format({'bold': True})
+
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT uid From User")
+	all_users = [tup[0] for tup in cursor.fetchall()]
+	print(all_users)
+	i = 0
+	categories = []
+	eventtypes = []
+	for user in all_users:
+		# print("*********************")
+		# print(user)
+		# print("*********************")
+		worksheet.write(i, 0, user)
+
+		cursor.execute("SELECT name FROM Category")
+		all_cats = [tupl[0] for tupl in cursor.fetchall()]
+		categories = all_cats 
+
+		cursor.execute("SELECT name FROM EventType")
+		all_types = [row[0] for row in cursor.fetchall()]
+		eventtypes = all_types
+
+		# cursor.execute("SELECT count(eid) FROM IsInterestedIn Where uid = '{}'" .format(user))
+		# count = cursor.fetchall()[0][0]
+		# # print("COUNT:")
+		# # print(count)
+		# worksheet.write(i, 1, count)
+		# i = i+1
+		# #get all event categories and names from a query. store them in an iteratable list as variables 
+		# j = 2
+		# for cat in all_cats:
+		# 	# print(cat)
+		# 	cursor.execute("SELECT count(eid) FROM HasCategory WHERE categoryName = '{}' AND eid in (SELECT eid FROM IsInterestedIn WHERE uid = '{}')" .format(cat, user))
+		# 	event_count = cursor.fetchall()[0][0]
+		# 	print(event_count)
+		# 	worksheet.write(i-1, j, event_count,)
+		# 	j = j+1
+
+		# for type_ in all_types:
+		# 	# print(type_)
+		# 	cursor.execute("SELECT count(eid) FROM HasEventType WHERE eventType = '{}' AND eid in (SELECT eid FROM IsInterestedIn WHERE uid = '{}')" .format(type_, user))
+		# 	type_count = cursor.fetchall()[0][0]
+		# 	worksheet.write(i-1, j, type_count)
+		# 	j = j+1	
+
+	workbook.close()
+
+	cat_string = " ".join(categories)
+	type_string = " ".join(eventtypes)
+
+	file_path = (url_for('static', filename="test.txt"))
+	print(file_path)
+
+	line_format= "user total_likes Academic Arts_and_Theatre Family Food_and_Drink Government Health_and_Wellness Holiday Home_and_Lifestyle Music Other Outdoors Sports Technology University Charity Concerts Conferences Festivals_and_Fairs Galleries_and_Exhibits Networking_and_Career Fairs Other Talks"
+
+	reader = Reader(line_format = line_format, sep='\t')
+	print(reader)
+
+	return redirect(url_for('settings'))

@@ -7,3 +7,6 @@ flask-script
 flask-wtf
 flask-paginate
 googlemaps
+xlsxwriter
+numpy 
+surprise 
