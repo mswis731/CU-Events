@@ -18,7 +18,7 @@
 					{{ form.submit(class="btn btn-primary") }}
 			</div>
 			<div class="form-group row">
-				<div class="list-group" style="overflow:scroll; height:460px">
+				<div class="list-group" style="overflow:scroll; height:460px; width: 400px">
 					{% for marker in markers %}
 					<a href="{{ url_for('get_event', id=marker.eid) }}" class="list-group-item">{{ loop.index }}. {{ marker.title }}<span class="pull-right">{{'%0.2f'| format(marker.dist|float)}} mi</span></a>
 					{% endfor %}
@@ -37,10 +37,7 @@
 <script type="text/javascript" async defer src="https://cdnjs.cloudflare.com/ajax/libs/gmaps.js/0.4.25/gmaps.min.js"></script>
 <script type="text/javascript" async defer src="http://jawj.github.io/OverlappingMarkerSpiderfier/bin/oms.min.js"></script>
 <script>
-	var mapLibsReady = 0;
-    //function mapLibReadyHandler() {
 	$(document).ready(function(){
-    	//if (++ mapLibsReady < 2) return;
     	var mapElement = document.getElementById('map');
     	var map = new google.maps.Map(mapElement, { center: { lat: {{ user_loc.lat }}, lng: {{ user_loc.lng }} }, zoom: 12 });
     	var iw = new google.maps.InfoWindow();
@@ -53,7 +50,11 @@
 		for (var i = 0, len = window.mapData.length; i < len; i ++) {
 			(function() {  // make a closure over the marker and marker data
 				var markerData = window.mapData[i];  // e.g. { lat: 50.123, lng: 0.123, text: 'XYZ' }
-          		var marker = new google.maps.Marker({ position: markerData });  // markerData works here as a LatLngLiteral
+          		var marker = new google.maps.Marker({ position: markerData,
+          											  click: function(e) {
+          											  	alert('hello');
+          											  }
+          											});  // markerData works here as a LatLngLiteral
 				google.maps.event.addListener(marker, 'spider_click', function(e) {  // 'spider_click', not plain 'click'
 					iw.setContent(markerData.text);
 					iw.open(map, marker);
@@ -67,11 +68,15 @@
     });
 
    	var data = [];
+   	var title = "";
+   	var the_title = "";
 	{% for marker in markers %}
+	title = '{{marker.title}}'
+	the_title = title.link('{{ url_for('get_event', id=marker.eid) }}');
 	data.push({
 		lat: {{ marker.loc.lat }},
 		lng: {{ marker.loc.lng }},
-		text: '{{ marker.title }}'
+		text: the_title,
 	});
 	{% endfor %}
     window.mapData = data;

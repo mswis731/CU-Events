@@ -621,13 +621,15 @@ def googlelocfilter():
 		if len(ret) > 0:
 			lat = "{0:.7f}".format(ret[0]['geometry']['location']['lat'])
 			lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
-		cordstr = "{},{}".format(lat,lng)
-		addrmod = addr.replace(" ", "+")
-		buildingmod = building.replace(" ", "+")
-		locstr2 = buildingmod+"+"+addrmod
-		locstr3 = locstr2+",+"+str(cityzip)+",+USA"
-		mapstr =  "https://maps.google.co.uk/maps?f=q&source=s_q&hl=en&geocode=&q="+locstr2+"&sll="+cordstr+"&ie=UTF8&hq=&hnear="+locstr3+"&t=m&z=17"+"&ll="+cordstr+"&output=embed"
-		return mapstr
+			cordstr = "{},{}".format(lat,lng)
+			addrmod = addr.replace(" ", "+")
+			buildingmod = building.replace(" ", "+")
+			locstr2 = buildingmod+"+"+addrmod
+			locstr3 = locstr2+",+"+str(cityzip)+",+USA"
+			mapstr =  "https://maps.google.co.uk/maps?f=q&source=s_q&hl=en&geocode=&q="+locstr2+"&sll="+cordstr+"&ie=UTF8&hq=&hnear="+locstr3+"&t=m&z=17"+"&ll="+cordstr+"&output=embed"
+			return mapstr
+		else:
+			return ""
 	return dict(googlelocfilter=_googlelocfilter)
 
 @app.route('/eventsnearme', methods=['get','post'])
