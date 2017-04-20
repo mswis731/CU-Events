@@ -630,6 +630,15 @@ def googlelocfilter():
 		return mapstr
 	return dict(googlelocfilter=_googlelocfilter)
 
+@app.context_processor
+def peopleCount():
+	def _peopleCount(members):
+		counter = 0
+		for m in members:
+			counter += 1
+		return counter
+	return dict(peopleCount= _peopleCount)
+
 @app.route('/eventsnearme', methods=['get','post'])
 def events_near_me():
 	if not session.get('username'):
