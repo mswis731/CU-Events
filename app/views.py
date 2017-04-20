@@ -345,9 +345,12 @@ def communities():
 		cursor.execute("SELECT cid, name, uid FROM Community WHERE Community.cid IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(curr_uid))
 		my_communities = [dict(cid=row[0],
                    name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
+		cursor.execute("SELECT cid, name, uid FROM Community WHERE Community.cid NOT IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(curr_uid))
+		notmycommunities = [dict(cid=row[0],
+                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
 		cursor.close()
 
-		return render_template('communities.html', communities=communities, logged_in=logged_in, my_communities=my_communities)
+		return render_template('communities.html', communities=communities, logged_in=logged_in, my_communities=my_communities, notmycommunities=notmycommunities)
 
 @app.route('/communitycreate', methods=['GET','POST'])
 def create_community():

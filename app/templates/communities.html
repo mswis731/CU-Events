@@ -16,6 +16,7 @@
           	<ul class="dropdown-menu">
             	{% for category,url in categories %}
             	<li><a href="/communities/category/{{ url }}">{{ category }}</a></li>
+		
             	{% endfor %}
           	</ul>
         	</li>
@@ -24,13 +25,54 @@
 {% if logged_in == 1 %}
 
 <div class="container">
-	<h2>My Communities</h2>
+	<h2>Your Communities</h2>
 	{% if my_communities|length > 0 %}
 	<div class="row">
 		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
 			<ul class="community-list">
 				{% for mycommunity in my_communities %}
 					<a href="/communities/communityid/{{mycommunity.cid}}" class="list-group-item">{{mycommunity.name}}</a>
+					
+					<p></p>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	{% else %}
+	<p style="text-align: center; font-family: 'Lato', sans-serif; font-size: 200%; font-weight: bold;"> No Community Found</p>
+	{% endif %}
+</div>
+
+<div class="container">
+	<h2>Communities that you can join</h2>
+	{% if notmycommunities|length > 0 %}
+	<div class="row">
+		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+			<ul class="community-list">
+				{% for notcommunity in notmycommunities %}
+					<a href="/communities/communityid/{{notcommunity.cid}}" class="list-group-item">{{notcommunity.name}}</a>
+					
+					<p></p>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	{% else %}
+	<p style="text-align: center; font-family: 'Lato', sans-serif; font-size: 200%; font-weight: bold;"> No Community Found</p>
+	{% endif %}
+</div>
+
+{% else %}
+
+<div class="container">
+	<h2>Communities</h2>
+	{% if communities|length > 0 %}
+	<div class="row">
+		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+			<ul class="community-list">
+				{% for community in communities %}
+					<a href="/communities/communityid/{{community.cid}}" class="list-group-item">{{community.name}}</a>
+					
 					<p></p>
 				{% endfor %}
 			</ul>
@@ -41,23 +83,4 @@
 	{% endif %}
 </div>
 {% endif %}
-
-<div class="container">
-	<h2>Communities</h2>
-	{% if communities|length > 0 %}
-	<div class="row">
-		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
-			<ul class="community-list">
-				{% for community in communities %}
-					<!--<a href="/communities/communityid/{{community.cid}}">{{ community.name }}</a>-->
-					<a href="/communities/communityid/{{community.cid}}" class="list-group-item">{{community.name}}</a>
-					<p></p>
-				{% endfor %}
-			</ul>
-		</div>
-	</div>
-	{% else %}
-	<p style="text-align: center; font-family: 'Lato', sans-serif; font-size: 200%; font-weight: bold;"> No Community Found</p>
-	{% endif %}
-</div>
 {% endblock %}
