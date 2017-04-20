@@ -298,3 +298,8 @@ class CreateCommunityForm(Form):
 			return False
 		else:
 			return True
+
+class EventsNearMeForm(Form):
+	radius = SelectField(id='radius', label='Radius', choices=[(0.5, '0.5 mi'), (1, '1 mi'), (2, '2 mi'), (5, '5 mi') ], default=1, validators=[validators.Required("Radius is missing")])
+	limit = SelectField(id='limit', label='Limit', choices=[(10, '10'), (50, '50'), (100, '100')], default=50, validators=[validators.Required("Limit is missing")])
+	submit = SubmitField("Filter") 

@@ -1,9 +1,10 @@
-from app import app, mysql
+from app import app, mysql, GMAPS_KEY
 from app.crawlers.mappings import map_months, map_categories, map_event_types 
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import re
 from decimal import Decimal
+import googlemaps
 
 def crawl():
 	# connect to database
@@ -61,6 +62,37 @@ def individual_event(driver, connection, cursor, event_url, update):
 	street = street_sp.text.strip() if street_sp else None
 	city = city_sp.text.strip() if city_sp else None
 	zipcode = zipcode_sp.text.strip() if zipcode_sp else None
+
+	lat = None
+	lng = None
+
+	# validate address
+	locstr = "{}, {}, IL, {}".format(street, city, zipcode)
+	gmaps = googlemaps.Client(key=GMAPS_KEY)
+	ret = gmaps.geocode(address=locstr)
+	if len(ret) > 0:
+		# look for minor errors in address
+		g_street_num = ""
+		g_street_name = ""
+		g_city = ""
+		g_zipcode = ""
+		for dict in ret[0]['address_components']:
+			if 'street_number' in dict['types']:
+				g_street_num = dict['short_name']
+			elif 'route' in dict['types']:
+				g_street_name = dict['short_name']
+			elif 'locality' in dict['types']:
+				g_city = dict['short_name']
+			elif 'postal_code' in dict['types']:
+				g_zipcode = dict['short_name']
+
+		if (g_street_num and g_street_name and g_city and g_zipcode):
+			street = g_street_num + " " + g_street_name
+			city = g_city
+			zipcode = g_zipcode
+
+			lat = "{0:.7f}".format(ret[0]['geometry']['location']['lat'])
+			lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
 	
 	dates = event_soup.find("div", {"itemprop": "startDate"})
 	dates_text = dates.text.lower().strip()
@@ -94,9 +126,10 @@ def individual_event(driver, connection, cursor, event_url, update):
 			elif size == 3:
 				end_date = start_date
 	except:
-		pas
+		pass
 	# skip if starting time is not found
 	if not title or not start_date:
+		print("Event skipped: {}".format(event_url))
 		return
 	price_div = event_soup.find("div", {"id": "event-price"})
 	price_text = None
@@ -155,6 +188,8 @@ def individual_event(driver, connection, cursor, event_url, update):
 												street,
 												city,
 												zipcode,
+												lat,
+												lng,
 												start_date,
 												start_time,
 												end_date,
@@ -172,6 +207,8 @@ def individual_event(driver, connection, cursor, event_url, update):
 												street,
 												city,
 												zipcode,
+												lat,
+												lng,
 												start_date,
 												start_time,
 												end_date,

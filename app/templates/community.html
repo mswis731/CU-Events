@@ -3,26 +3,43 @@
 {% block title %} - Community {% endblock %}
 
 {% block stylesheets %}
-<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/community.css') }}"> 
 {% endblock %}
 
 {% block content %}
-<center>
-	<h2>{{cname}}</h2>
-</center>
-
-<h3> categories: {{community_categories}}</h3>
-<h3> creator: {{username}}</h3>
-
- <br><a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/joined"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"s</span> Join the community</a>
-
-<p></p>
-
-<button type="button">
-	<a href="/communities/communityid/{{cid}}/members">Look at community members</a>
-</button>
 
 
+
+<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+<div class="container" style="margin-top: 20px; margin-bottom: 20px;">
+	<div class="row panel">
+		<div class="col-md-4 bg_blur ">
+    	    <a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/joined" style="margin-top: 20px; margin-left: 20px"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Join the community</a>
+		</div>
+        <div class="col-md-8  col-xs-12">
+           <img src="http://www.clker.com/cliparts/a/r/C/L/q/z/green-box-hi.png" class="img-thumbnail picture hidden-xs" />
+           <img src="http://www.clker.com/cliparts/a/r/C/L/q/z/green-box-hi.png" class="img-thumbnail visible-xs picture_mob" />
+           <div class="header">
+                <h1>{{cname}}</h1>
+                <h4>Categories: {{community_categories}}</h4>
+                <h4>Creator: {{username}}</h4>
+           </div>
+        </div>
+    </div>   
+    
+	<div class="row nav">    
+        <div class="col-md-4"></div>
+        <div class="col-md-8 col-xs-12" style="margin: 0px;padding: 0px;">
+        	{% if members|length > 0 %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/members"><i class="fa fa-user" aria-hidden="true"></i></a> {{ peopleCount(members) }}</div>
+            {% else %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/members"><i class="fa fa-user" aria-hidden="true"></i></a> 0</div>
+            {% endif %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><i class="fa fa-thumbs-o-up fa-lg"></i> 26</div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
-

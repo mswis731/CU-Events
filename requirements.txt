@@ -7,3 +7,5 @@ flask-script
 flask-wtf
 flask-paginate
 googlemaps
+haversine
+geocoder

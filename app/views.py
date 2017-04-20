@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, request, redirect, session, url_for
+from flask import Flask, render_template, flash, request, redirect, session, url_for, Response, jsonify
 from app.forms import *
 from app.filters import *
 from app import app, mysql, GMAPS_KEY
@@ -6,11 +6,21 @@ from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
 from flask_paginate import Pagination
 import googlemaps
+import json
+from urllib.request import urlopen
+from haversine import haversine
+from geocoder import ipinfo
+import sys
 
 @app.route('/')
 @app.route('/index')
 def index():
-	return render_template('index.html')
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT title FROM event")
+	all_events = [tup[0] for tup in cursor.fetchall()]
+
+	return render_template('index.html', all_events = all_events)
 
 @app.route('/signin', methods = ['GET', 'POST'])
 def signin():
@@ -64,24 +74,25 @@ def settings():
 	form = interest_form(request.form)
 	categories = form.categories.data
 
-	if request.method == "POST":
-		connection = mysql.get_db()
-		cursor = connection.cursor()
+	connection = mysql.get_db()
+	cursor = connection.cursor()
 
+	cursor.execute("SELECT uid FROM User WHERE username = '{}'" .format(session['username']))
+	uid = cursor.fetchall()[0][0]
 
-		cursor.execute("SELECT uid FROM User WHERE username = '{}'" .format(session['username']))
-		uid = cursor.fetchall()[0][0]
-
-		cursor.execute("SELECT categoryName FROM HasInterests WHERE uid ={}".format(uid))
-		pre_selected = [ tup[0] for tup in cursor.fetchall() ]
-
+	if request.method == "POST":		
 		cursor.execute("DELETE FROM HasInterests WHERE HasInterests.uid = '{}'" .format(uid))
 		connection.commit()
-		print(uid)
 		for category in categories:
 			cursor.execute("INSERT INTO HasInterests(uid, categoryName) VALUES('{}', '{}')".format(uid, category))
 			connection.commit()
-		return render_template('settings.html', form=form, pre_selected=pre_selected)
+
+	cursor.execute("SELECT categoryName FROM HasInterests WHERE uid ={}".format(uid))
+	pre_selected = [ tup[0] for tup in cursor.fetchall()]
+
+	form.categories.data = pre_selected
+
+		# return render_template('settings.html', form=form, pre_selected=pre_selected)
 
 	return render_template('settings.html', form=form)
 
@@ -213,28 +224,35 @@ MAX_PER_PAGE = 20
 def browse(filter_path = None):
 	form = searchBy(request.form)
 	if request.method == 'POST':
-		searchTerm = form.searchTerm.data
 		filter_path = ""
-		if form.category.data and form.category.data != 'All Categories':
-			if filter_path != "":
-				filter_path += "--"
-			filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
-		if form.eventType.data and form.eventType.data != 'All Event Types':
-			if filter_path != "":
-				filter_path += "--"
-			filter_path += "e%{}".format(cat_to_url_filter(form.eventType.data))
-		if form.price.data and form.price.data != 'All Prices':
-			if filter_path != "":
-				filter_path += "--"
-			filter_path += "p%{}".format(form.price.data)
-		if form.daterange.data:
-			if filter_path != "":
-				filter_path += "--"
-			daterange = form.get_daterange()
-			if daterange and daterange[0] and daterange[1]:
-				filter_path += "d%{}&{}".format(daterange[0], daterange[1])
+		searchTerm = None
+		if request.form.get('homeSearch'):
+			searchTerm = request.form.get('homeSearch')
+		else:
+			searchTerm = form.searchTerm.data
+			if form.category.data and form.category.data != 'All Categories':
+				if filter_path != "":
+					filter_path += "--"
+				filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
+			if form.eventType.data and form.eventType.data != 'All Event Types':
+				if filter_path != "":
+					filter_path += "--"
+				filter_path += "e%{}".format(cat_to_url_filter(form.eventType.data))
+			if form.price.data and form.price.data != 'All Prices':
+				if filter_path != "":
+					filter_path += "--"
+				filter_path += "p%{}".format(form.price.data)
+			if form.daterange.data:
+				if filter_path != "":
+					filter_path += "--"
+				daterange = form.get_daterange()
+				if daterange and daterange[0] and daterange[1]:
+					filter_path += "d%{}&{}".format(daterange[0], daterange[1])
 			
-		return redirect(url_for('browse', filter_path=filter_path, searchTerm=searchTerm))
+		if searchTerm:
+			return redirect(url_for('browse', filter_path=filter_path, searchTerm=searchTerm))
+		else:
+			return redirect(url_for('browse', filter_path=filter_path))
 
 	searchTerm = request.args.get('searchTerm')
 	form.searchTerm.data = searchTerm
@@ -516,6 +534,13 @@ def get_event(id):
 			if retlen == 0:
 				cursor.execute("INSERT INTO HasRegisteredViews(uid, eid) VALUES ({}, {})".format(uid, id)) 
 				connection.commit()
+	else:
+		retlen = cursor.execute("SELECT nonUserViews FROM Event WHERE eid = {}".format(id))
+		if retlen > 0:
+			nonUserViews = cursor.fetchall()[0][0]
+			nonUserViews += 1
+			cursor.execute("UPDATE Event SET nonUserViews = {} WHERE eid = {}".format(nonUserViews, id))
+			connection.commit()
 
 	editPermission = False
 	already_interested = None
@@ -560,8 +585,6 @@ def get_event(id):
 def delete_event(eid=None, next = None):
 	eid = request.args.get('eid')
 	next = request.args.get('next')
-	print('eid', eid)
-	print('next', next)
 	if eid and next:
 		connection = mysql.get_db()
 		cursor = connection.cursor()
@@ -585,8 +608,6 @@ def is_interested(id):
 		curr_url = request.referrer
 		curr = curr_url.split('/')[-1]
 		new_url = curr_url.split('//')[1]
-		print("NEW URL:")
-		print(new_url)
 		cursor.execute("INSERT INTO IsInterestedIn(uid, eid) VALUES({}, {})".format(uid, curr))
 		connection.commit()
 		return redirect(url_for('get_event', id=id))
@@ -628,6 +649,69 @@ def googlelocfilter():
 		return mapstr
 	return dict(googlelocfilter=_googlelocfilter)
 
+@app.context_processor
+def peopleCount():
+	def _peopleCount(members):
+		counter = 0
+		for m in members:
+			counter += 1
+		return counter
+	return dict(peopleCount= _peopleCount)
+
+@app.route('/eventsnearme', methods=['get','post'])
+def events_near_me():
+	if not session.get('username'):
+		return redirect(url_for("signin", next=request.url_rule))
+	
+	form = EventsNearMeForm(request.form)
+
+	if request.args.get('radius'):
+		form.radius.data = request.args.get('radius')
+	if request.args.get('limit'):
+		form.limit.data = request.args.get('limit')
+	
+	if request.method=='post':
+		return redirect(url_for('events_near_me', radius=form.radius.data, limit=form.limit.data))
+		
+
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	
+	# get latitude and longitude of user's ip address
+	user_loc_tup = None
+	user_loc = None
+
+	provided_ips = request.headers.getlist("X-Forwarded-For")
+	ip = provided_ips[0] if len(provided_ips) > 0 else 'me'
+	g = ipinfo(ip)
+	if g and g.latlng and len(g.latlng) > 0:
+		user_loc_tup = tuple(g.latlng)
+
+	if user_loc_tup == None or len(user_loc_tup) == 0:
+		user_loc_tup = (40.1164, -88.2434) # lat/lng of Champaign
+	user_loc = {"lat": user_loc_tup[0], "lng": user_loc_tup[1]}
+
+	# calculate distances
+	locs = []
+	attrs = "eid, title, lat, lng"
+	retlen = cursor.execute("SELECT {} FROM Event".format(attrs))
+	if retlen > 0:
+		for row in cursor.fetchall():
+			eid = row[0]
+			title = row[1]
+			event_loc = (row[2], row[3])
+
+			if event_loc and event_loc[0] and event_loc[1]:
+				dist = haversine(user_loc_tup, event_loc, miles=True)
+				if dist <= float(form.radius.data):
+					dict = {"eid": eid, "title": title, "dist": dist, "loc": {"lat": event_loc[0], "lng": event_loc[1]}}
+					locs.append(dict)
+		locs.sort(key=lambda loc: loc["dist"])
+		end_row = int(form.limit.data) if len(locs) >= int(form.limit.data) else len(locs)
+		markers = locs[0:end_row]
+
+	return render_template('events_near_me.html', user_loc=user_loc, markers=markers, form=form, key=GMAPS_KEY)
+
 def update_locs():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -647,6 +731,13 @@ def update_locs():
 			lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
 
 			cursor.execute("UPDATE Event SET lat = {}, lng = {} WHERE eid={}".format(lat, lng, eid))
-			print(lat, lng)
 		connection.commit()
+
+@app.route('/autocomplete')
+def autocomplete():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT title FROM Event")
+	all_events = [tup[0] for tup in cursor.fetchall()]
+	return jsonify(json_list=all_events) 
 

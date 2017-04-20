@@ -3,54 +3,56 @@
 {% block title %} - Home{% endblock %}
 
 {% block stylesheets %}
-<!--
-<link rel = "stylesheet" type = "text/css" href = ../static/styles/Style.css>
-<link href="https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> 
--->
+
 <link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/index.css') }}"> 
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 {% endblock %}
 
 {% block content %}
 
-<!-- 
-<head>
-	<title>CU-EVENTS</title>
-</head>
--->
-
 <div class="container">
 	<div class="row">
-		<div class="col-sm-6 col-centered">
-			<p id = "description"> Search for, discover, and create events in the Champaign-Urbana area</p>
-		</div>
+		<!-- <div class="col-sm-6 col-centered"> -->
+			<p id = "description" style="text-align: center; padding-top: 45px; font-size: 16px;"> Search for, discover, and create events in the Champaign-Urbana area</p>
+		<!-- </div> -->
 	</div>
 	<div class="row">
-		<div class="input-group col-sm-6 col-centered">
-			<!-- <input id = "autocomplete" type="text" name="search" placeholder="Search for.."> -->
-			<div class="form-group">
-        		<input type="text" id="autocomplete" class="form-control" placeholder="Search">
+		<form action="{{ url_for('browse') }}", method="post">
+			<div class="input-group col-sm-6 col-centered" style= "width: 600px">
+				<!-- <input id = "autocomplete" type="text" name="search" placeholder="Search for.."> -->
+				<div class="form-group">
+        			<input type="text" id="homeSearch" name="homeSearch" class="form-control" placeholder="Search" style = "height: 45px;">
+    			</div>
+				<span class="input-group-btn";> 
+    				<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search" aria-hidden="true" style="height: 31px"></span></button>
+    			</span>
     		</div>
-			<span class="input-group-btn"> 
-    			<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
-    		</span>
-    	</div>
+    	</form>
 	</div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
-<!-- 
-<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="js/jquery.autocomplete.js"></script>
--->
-<script type="text/javascript">
-      var auto_event = $( "#autocomplete" ).autocomplete({
-      source: ["hello", "this", "is", "a", "test"]
-      messages: {
-        noResults: '',
-      }
-      });
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script> 
+	
+<script>
+
+  $(function() {
+  	$.ajax({
+  		url: '{{url_for("autocomplete")}}'
+  	}).done(function (data) {	  		
+	    $("#homeSearch").autocomplete({
+	      source: function(request, response){
+	      	var results = $.ui.autocomplete.filter(data.json_list, request.term);
+	     	response(results.slice(0, 22));
+		   }
+		 
+	    });
+	  });
+  });
  </script>
+
 {% endblock %}
