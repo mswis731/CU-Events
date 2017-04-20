@@ -520,6 +520,30 @@ def community_member_list(id):
 	cname = cursor.fetchall()[0][0];
 	return render_template("community_members.html", cid=id, members=members, cname=cname)
 
+@app.route('/communities/addfromlist/<id>')
+def add_community_member_from_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+	cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, id))
+	connection.commit()
+	cursor.close()
+	return redirect(url_for('communities'))
+
+@app.route('/communities/deletefromlist/<id>')
+def delete_community_member_from_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+	cursor.execute("DELETE FROM isCommunityMember WHERE uid = '{}' AND cid = '{}'".format(uid, id))
+	connection.commit()
+	cursor.close()
+	return redirect(url_for('communities'))
+
+
 @app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
 	connection = mysql.get_db()

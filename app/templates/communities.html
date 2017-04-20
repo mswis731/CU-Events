@@ -32,7 +32,7 @@
 			<ul class="community-list">
 				{% for mycommunity in my_communities %}
 					<a href="/communities/communityid/{{mycommunity.cid}}" class="list-group-item">{{mycommunity.name}}</a>
-					
+					<a class="btn btn-primary btn-sm" href="/communities/deletefromlist/{{mycommunity.cid}}">Leave Community</a>
 					<p></p>
 				{% endfor %}
 			</ul>
@@ -51,7 +51,7 @@
 			<ul class="community-list">
 				{% for notcommunity in notmycommunities %}
 					<a href="/communities/communityid/{{notcommunity.cid}}" class="list-group-item">{{notcommunity.name}}</a>
-					
+					<a class="btn btn-primary btn-sm" href="/communities/addfromlist/{{notcommunity.cid}}">Join Community</a>
 					<p></p>
 				{% endfor %}
 			</ul>
