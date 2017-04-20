@@ -1,0 +1,30 @@
+{% extends 'navbar.html' %}
+
+{% block title %} Account settings {% endblock %}
+
+{% block content %}
+<h3 style="text-align: center; padding-left: 30px" > {{session.username}}'s Settings </h3>
+<h4 style="padding-left: 30px"> manage interests </h4>
+
+<form action='', method='POST'>
+	<div class="form-group row" style="padding-left: 30px">
+		<div class="col-sm-4">
+			{{ form.categories(class="selectpicker") }}
+		</div>
+	</div>
+
+	<div class="form-group row" style="padding-left: 30px">
+		<div class="offset-sm-2 col-sm-10">
+			{{ form.submit(class="btn btn-primary",value="update") }}
+		</div>
+	</div>
+</form>
+
+{% if admin is not none %}
+<button> <a href = "/recommend_file"> Generate file for recommendations</a></button>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}
