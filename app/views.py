@@ -11,7 +11,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 from app.crawlers.mappings import *
 from collections import Counter
-
+import random
 
 @app.route('/')
 @app.route('/index')
@@ -92,16 +92,8 @@ def settings():
 	pre_selected = [ tup[0] for tup in cursor.fetchall()]
 
 	form.categories.data = pre_selected
-
-	# cursor.execute("SELECT eid FROM IsInterestedIn WHERE uid = {}" .format(uid))
-	# all_events = [row[0] for row in cursor.fetchall()]
-	# for (event in all_events):
-
-	admin = None
-	if session['username'] == 'admin':
-		admin = True
 	 
-	return render_template('settings.html', form=form, admin=admin)
+	return render_template('settings.html', form=form)
 
 @app.route('/profile')
 def profile():
@@ -122,7 +114,6 @@ def profile():
                    lowPrice=row[4],
                    highPrice=row[5]) for row in cursor.fetchall()]
 
-
 	cursor.execute("SELECT Event.eid, title, startDate, building, lowPrice, highPrice FROM IsInterestedIn, User, Event WHERE IsInterestedIn.uid = User.uid AND User.username = '{}' AND Event.eid = IsInterestedIn.eid".format(session['username']))
 	events = [dict(eid=row[0],
                    title=row[1],
@@ -133,10 +124,12 @@ def profile():
 
 	user = cursor.execute("SELECT uid From User Where username = '{}'".format(session['username']))
 
+	recommended_events = kmeans_recommend();
+
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
-		return render_template('profile.html', events=events, created_events=created_events)
+		return render_template('profile.html', events=events, created_events=created_events,  recommended_events=recommended_events)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def eventcreate():
@@ -737,5 +730,24 @@ def kmeans_recommend():
 			potential_events.append(X[j])
 		j = j+1
 
-	print(potential_events)
-	return redirect(url_for('settings'))
+	random_choice = [None] * 10
+	for num in range(0,10):
+		random_choice[num] = (random.choice(potential_events))
+	# print(random_choice)
+
+	eids = []
+	for choice in random_choice:
+		eids.append(choice[2])
+
+	print(eids)
+
+	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {}" .format(eids[0], eids[1], eids[2], eids[3], eids[4], eids[5], eids[6], eids[7], eids[8], eids[9]))
+	recommended_events = [dict(eid=row[0],
+               title=row[1],
+               startDate=row[2],
+               building=row[3],
+               lowPrice=row[4],
+               highPrice=row[5]) for row in cursor.fetchall()]
+
+	return recommended_events
+	
