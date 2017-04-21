@@ -1,5 +1,5 @@
 from app import app, mysql, GMAPS_KEY
-from app.crawlers.mappings import map_months, map_categories, map_event_types 
+from app.crawlers.mappings import *
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import re
@@ -127,6 +127,10 @@ def individual_event(driver, connection, cursor, event_url, update):
 				end_date = start_date
 	except:
 		pass
+	
+	if end_date == None:
+		end_time = None
+
 	# skip if starting time is not found
 	if not title or not start_date:
 		print("Event skipped: {}".format(event_url))

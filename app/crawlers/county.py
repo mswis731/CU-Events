@@ -1,16 +1,12 @@
-"""
-import sys
-#goes back two levels so that we can import app 
-sys.path.append('../../')
-"""
-
 from app import app, mysql, GMAPS_KEY
-from app.crawlers.mappings import map_months, map_times, map_categories, map_event_types
+from app.crawlers.mappings import *
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait 
 import re
 import googlemaps
+from datetime import datetime
+from decimal import Decimal
 
 def crawl():
 	connection = mysql.get_db()
@@ -30,17 +26,13 @@ def crawl():
 	for url in urls:
 		driver.get(url)
 		soup = BeautifulSoup(driver.page_source, 'html.parser')
-		#events = soup.find_all("div", class_="col-sm-2")
-		#print(len(events))
 
 		lists = soup.find_all("div", class_="event-detail-box")
 		for list_ in lists:
 			title = list_.find("a").contents[0]
-			print(title)
 			event_urls = list_.find("a")["href"]  
 			driver.get("http://www.visitchampaigncounty.org/" + event_urls)
 			event_soup = BeautifulSoup(driver.page_source, "html.parser")
-			#print(event_soup.find("h4"))
 			location_general = event_soup.find("li", class_="box place border-right").getText() 
 			building = location_general.split('\n')[2]
 			addrAndStreet = location_general.split('\n')[3] 
@@ -77,69 +69,104 @@ def crawl():
 					lat = "{0:.7f}".format(ret[0]['geometry']['location']['lat'])
 					lng = "{0:.7f}".format(ret[0]['geometry']['location']['lng'])
 
-			print(addrAndStreet, city, zipcode, lat, lng)
-
-			time_general = event_soup.find("li", class_="box date border-right").getText()
-			#print((time_general).split('\n'))
-			year = time_general.split('\n')[2].split(" ")[3]
-			month =time_general.split('\n')[2].split(" ")[1]
-      
-			month = map_months[month]
-
-			date = time_general.split('\n')[2].split(" ")[2][:-1]
-
-			full_date = "{}-{}-{}".format(year, month, date) 
-			print(full_date)
-  
-			start_time = "00:00:00"
-			end_time = "23:59:00"
-			start_t = start_time
-			end_t = end_time
-			if "Starts" in time_general.split('\n')[3]:
-				start_time = time_general.split('\n')[3].split(" ")[2]
-				#print("start_time" +start_time)
-  
-				start_t = map_times[start_time]
-				#print("start_t:" + start_t)
+			time_general = event_soup.find("li", class_="box date border-right").getText().strip()
+			date_str, time_str = time_general.split('\n')
+			dt = datetime.strptime(date_str, '%A, %B %d, %Y')
+			s_dt = None
+			e_dt = None
+			if 'Starts' in time_str:
+				s_dt = datetime.strptime(time_str.split(' ')[2], '%I:%M%p')
 			else:
-				start_time = time_general.split('\n')[3].split(" ")[0]
-				start_t = map_times[start_time]
-				#print("start_t: " + start_t)
-				end_time = time_general.split('\n')[3].split(" ")[2]
-				end_t = map_times[end_time]
-				#print("end_t: " + end_t)
+				s_dt = datetime.strptime(time_str.split(' ')[0], '%I:%M%p')
+				e_dt = datetime.strptime(time_str.split(' ')[2], '%I:%M%p')
 
-			#add a check to see if start date and end date are different
-			start_date = "{} {}".format(full_date, start_t)
-			end_date = "{} {}".format(full_date, end_t)
-			print(start_date)
-			print(end_date)
+			start_date = None
+			end_date = None
+			start_time = None
+			end_time = None
 
+			full_date = "{}-{}-{}".format(dt.year, dt.month, dt.day) 
+			start_date = full_date
+			if s_dt:
+				start_time = "{}:{}:00".format(s_dt.hour, s_dt.minute)
+			if e_dt:
+				end_date = full_date
+				end_time = "{}:{}:00".format(e_dt.hour, e_dt.minute)
+				
 			event_type = None
 			category = None
   
-			low_price = 0;
-			high_price = 0;
-			price_general =  event_soup.find("li", class_="box tickte border-right").getText()
-			price_split = (price_general.split('\n'))[2]
-			print(low_price, high_price)
+			low_price = None;
+			high_price = None;
+			price_general =  event_soup.find("li", class_="box tickte border-right").getText().strip().lower()
+
+			if price_general == 'free':
+				low_price = 0
+				high_price = 0
+			else:
+				prices = []
+				s = None
+				for i in range(len(price_general)):
+					c = price_general[i]
+					if s != None:
+						if not (c.isdigit() or c == '.'):
+							prices.append(Decimal(price_general[s+1:i]))
+							s = None
+					if s == None:
+						if c == '$':
+							s = i 
+				if s != None:
+					prices.append(Decimal(price_general[s+1:]))
+				if len(prices) > 0:
+					prices.sort()
+					low_price = prices[0]
+					high_price= prices[-1]
+
+			"""
 			if 'Buy Tickets' in price_split:
 				ticket_url = event_soup.find("li", class_="box tickte border-right").find("span", class_="site-link").find("a")["href"]
+			"""
          
 			if (url == "http://www.visitchampaigncounty.org/events/category/22/exhibits") or (url == "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs"):
 				event_type = map_event_types[url]
 				category = "Other"
-				print (event_type)
 			else:
 				category = map_categories[url]
 				event_type = "Other"
-				print(category)
 
-			#fix description to get rid of including unneccesary css properties 
-			description =  event_soup.find("div", class_="panel-body").getText()
-			print(description)
+			description = "" 
+			overview_h4 = event_soup.find("h4", class_="panel-title")
+			panel_default = overview_h4.parent.parent
+			try:
+				panel_body = panel_default.findAll("div", class_="panel-body")[0]
+				desc_p_tags = panel_body.findAll("p")
+				for p_tag in desc_p_tags:
+					text = p_tag.text.strip().replace('\n', '')
+					ignore = '{' in text
+					if not ignore and len(text) > 0:
+						if description != "":
+							description += "\n"
+						description += text
+			except:
+				pass
+			if description == "":
+				description = None
 
 			event_url = "http://www.visitchampaigncounty.org/" + event_urls
+
+			"""
+			print()
+			print("url: {}".format(event_url))
+			print("Title: {}".format(title))
+			#print("Desc: {}".format(description))
+			print("Location: {} {} {}\t({}, {})".format(addrAndStreet, city, zipcode, lat, lng))
+			print("Start Date: {}\t Start Time: {}".format(start_date, start_time))
+			print("End Date: {}\t End Time: {}".format(end_date, end_time))
+			print("Price Range: ({}, {})".format(low_price, high_price))
+			print("Category: {}\t Event Type: {}".format(category, event_type))
+			print()
+			"""
+
 			cursor.callproc('CreateCrawledEvent', (title,
       										 	   description,
       										  	   building,
@@ -148,10 +175,10 @@ def crawl():
       										 	   zipcode,
       										 	   lat,
       										 	   lng,
-      										 	   full_date,
-                           						   start_t,
-      										 	   full_date,
-                           						   end_t,
+      										 	   start_date,
+                           						   start_time,
+      										 	   end_date,
+                           						   end_time,
       										 	   low_price,
       										 	   high_price,
       										 	   event_url,
@@ -159,6 +186,8 @@ def crawl():
       										 	   category,
       										 	   event_type))
 			connection.commit()
+
+			print(event_url)
 
 
 if __name__ == "__main__":
