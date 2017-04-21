@@ -95,10 +95,12 @@ def settings():
 	 
 	return render_template('settings.html', form=form)
 
-@app.route('/profile')
+@app.route('/profile', methods = ["GET", "POST"])
 def profile():
 	if not session['username']:
 		return redirect(url_for('signin'))
+
+	recommended_events = []
 
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -124,12 +126,14 @@ def profile():
 
 	user = cursor.execute("SELECT uid From User Where username = '{}'".format(session['username']))
 
-	recommended_events = kmeans_recommend();
+	if request.method == "POST":
+		recommended_events = kmeans_recommend();
+		print("REACHED KMEAN'S")
 
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
-		return render_template('profile.html', events=events, created_events=created_events,  recommended_events=recommended_events)
+		return render_template('profile.html', events=events, created_events=created_events, recommended_events=recommended_events)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def eventcreate():
@@ -661,7 +665,7 @@ def autocomplete():
 	return jsonify(json_list=all_events) 
 
 
-@app.route('/recommend_file')
+# @app.route('/recommend_events')
 def kmeans_recommend():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -708,7 +712,6 @@ def kmeans_recommend():
 
 	#generate kmeans clustering
 	x = np.array(KM)
-	global kmeans
 	kmeans = KMeans(n_clusters=5, random_state=0).fit(x)
 	all_kmeans_labels = kmeans.labels_
 	print(all_kmeans_labels)

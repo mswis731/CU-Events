@@ -96,7 +96,9 @@
 
 <div class="col-md-2" style="position:relative; top: 400px; right: 300px" >
 <h2 style="padding-left: 0px; width: 500px; margin: 3px" > My Recommended Events </h2>
-
+<form method="POST">
+	<button style = "width: 300px; " type = "submit"> generate recommended events </button>
+</form>
 <div id="" style="overflow:scroll; height:250px; width: 520px;   border: 3px; border-style: solid; padding-top: 0px">
 	{% if recommended_events|length > 0 %}
 			<ul class="event-list" style = "width: 500px">
