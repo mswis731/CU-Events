@@ -110,9 +110,6 @@ Parts of the script below is taken from the demos found here: https://github.com
     		// change the center of the map
     		newCenter({{ marker.loc.lat }}, {{ marker.loc.lng }});
     		// update the bounds of the map
-    		var bounds = new google.maps.LatLngBounds();
-    		bounds.extend(new google.maps.LatLng({{ marker.loc.lat }}, {{ marker.loc.lng }}));
-    		map.fitBounds(bounds);
     	});
     	{% endfor %}
     });

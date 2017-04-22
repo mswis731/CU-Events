@@ -325,6 +325,8 @@ def browse(filter_path = None):
 	else:
 		query = "SELECT {} FROM Event".format(attrs)
 	
+	query += " ORDER BY startDate DESC"
+	
 	res_len = cursor.execute(query)
 
 	start_row = MAX_PER_PAGE*(page-1)

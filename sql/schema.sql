@@ -7,13 +7,6 @@ CREATE TABLE User (
 	email				VARCHAR(50) NOT NULL UNIQUE,
 	PRIMARY KEY(uid)
 );
-CREATE TABLE Message (
-	timestamp			DATETIME,
-	text				VARCHAR(300),
-	uid					INTEGER,
-	FOREIGN KEY(uid) REFERENCES User(uid) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(timestamp, uid)
-);
 CREATE TABLE Community (
 	cid					INTEGER NOT NULL AUTO_INCREMENT,
 	name				VARCHAR(40),
