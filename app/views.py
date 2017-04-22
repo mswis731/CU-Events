@@ -787,14 +787,21 @@ def kmeans_recommend():
 	all_kmeans_labels = kmeans.labels_
 	print(all_kmeans_labels)
 
-	#display which cluster each of the events belong to that the current user is interested in 
-	values = kmeans.predict(my_event_arrays)
-	print(kmeans.predict(my_event_arrays))
 
-	#getting the most common cluster for current user
-	counter = Counter(values)
-	max_count = max(counter.values())
-	mode = [k for k,v in counter.items() if v == max_count]
+	if len(interested_events) == 0:
+		all_values = Counter(all_kmeans_labels)
+		maxCount = max(all_values.values())
+		mode = [k for k,v in all_values.items() if v == maxCount]
+
+	else:
+		#display which cluster each of the events belong to that the current user is interested in 
+		values = kmeans.predict(my_event_arrays)
+		print(kmeans.predict(my_event_arrays))
+
+		#getting the most common cluster for current user
+		counter = Counter(values)
+		max_count = max(counter.values())
+		mode = [k for k,v in counter.items() if v == max_count]
 
 	#find events in the clusters belonging to mode
 	potential_events = []
