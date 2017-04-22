@@ -9,3 +9,5 @@ flask-paginate
 googlemaps
 haversine
 geocoder
+numpy 
+scikit-learn

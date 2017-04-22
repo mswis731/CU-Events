@@ -27,7 +27,7 @@ map_categories = {
     "science" : "Academic",
     "education" : "Academic",
     "literary & books" : "Academic",
-    "holiday" : "Holiday",
+    "holiday" : "Music",
     "concerts & tour dates" : "Music", 
 
     "http://www.visitchampaigncounty.org/events/category/14/arts-and-theater" : "Arts and Theatre",
@@ -54,4 +54,32 @@ map_event_types = {
     "http://www.visitchampaigncounty.org/events/category/16/festivals-and-fairs" : "Festivals and Fairs"
 
      #"" : "Talks",
+}
+
+map_cat_to_num = {
+   'Music' : 10,
+   'Sports' : 5,
+   'Academic' : 1,
+   'Technology' : 3,
+   'Family' : 8,
+   'Health and Wellness' : 4,
+   'Outdoors' : 6,
+   'University' : 2,
+   'Arts and Theatre' : 11,
+   'Holiday' : 9,
+   'Government' : 12,
+   'Home and Lifestyle' : 14,
+   'Food and Drink' : 7,
+   'Other' : 13 
+}
+
+map_type_to_num = {
+   'Concerts' : 1,
+   'Conferences' : 2,
+   'Talks' : 3,
+   'Networking and Career Fairs' : 4,
+   'Galleries and Exhibits' : 5,
+   'Charity' : 6,
+   'Festivals and Fairs' : 7,
+   'Other' : 8 
 }

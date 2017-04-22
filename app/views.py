@@ -11,6 +11,11 @@ from urllib.request import urlopen
 from haversine import haversine
 from geocoder import ipinfo
 import sys
+import numpy as np
+from sklearn.cluster import KMeans
+from app.crawlers.mappings import *
+from collections import Counter
+import random
 
 @app.route('/')
 @app.route('/index')
@@ -91,15 +96,15 @@ def settings():
 	pre_selected = [ tup[0] for tup in cursor.fetchall()]
 
 	form.categories.data = pre_selected
-
-		# return render_template('settings.html', form=form, pre_selected=pre_selected)
-
+	 
 	return render_template('settings.html', form=form)
 
-@app.route('/profile')
+@app.route('/profile', methods = ["GET", "POST"])
 def profile():
 	if not session['username']:
 		return redirect(url_for('signin'))
+
+	recommended_events = []
 
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -115,7 +120,6 @@ def profile():
                    lowPrice=row[4],
                    highPrice=row[5]) for row in cursor.fetchall()]
 
-
 	cursor.execute("SELECT Event.eid, title, startDate, building, lowPrice, highPrice FROM IsInterestedIn, User, Event WHERE IsInterestedIn.uid = User.uid AND User.username = '{}' AND Event.eid = IsInterestedIn.eid".format(session['username']))
 	events = [dict(eid=row[0],
                    title=row[1],
@@ -125,10 +129,15 @@ def profile():
                    highPrice=row[5]) for row in cursor.fetchall()]
 
 	user = cursor.execute("SELECT uid From User Where username = '{}'".format(session['username']))
+
+	if request.method == "POST":
+		recommended_events = kmeans_recommend();
+		print("REACHED KMEAN'S")
+
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
-		return render_template('profile.html', events=events, created_events=created_events)
+		return render_template('profile.html', events=events, created_events=created_events, recommended_events=recommended_events)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def eventcreate():
@@ -726,3 +735,93 @@ def autocomplete():
 	all_events = [tup[0] for tup in cursor.fetchall()]
 	return jsonify(json_list=all_events) 
 
+
+# @app.route('/recommend_events')
+def kmeans_recommend():
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT uid FROM User WHERE username = '{}'" .format(session['username']))
+	uid = cursor.fetchall()[0][0]
+
+	#get all interested events of current user 
+	cursor.execute("SELECT eid from IsInterestedIn WHERE uid = {}" .format(uid))
+	interested_events = [row[0] for row in cursor.fetchall()]
+
+	#for all events, add the event-category and event-type integer values to an array for processing by the kmeans algorithm  
+	cursor.execute("SELECT eid FROM Event")
+	all_events = [tup[0] for tup in cursor.fetchall()]
+	X = []
+	KM = []
+	i = 0
+	my_cluster_count = [None] * 5
+	my_event_arrays = []
+	for event in all_events:
+
+		info = [None] * 3
+		arrayy = [None] * 2
+		info[2] = event
+
+		cursor.execute("SELECT categoryName FROM HasCategory WHERE eid = {} LIMIT 1" .format(event))
+		category = cursor.fetchall()[0][0]
+
+		arrayy[0] = map_cat_to_num[category]
+		info[0] = arrayy[0]
+
+		cursor.execute("SELECT eventType FROM HasEventType WHERE eid = {} LIMIT 1" .format(event))
+		type_ = cursor.fetchall()[0][0]
+		arrayy[1] = map_type_to_num[type_]
+		info[1] = arrayy[1]
+
+		#if the current event is one the current user is interested, keep track of the event integer values, to use in predictions later
+		if event in interested_events:
+			my_event_arrays.append(arrayy)
+
+		X.append(info)
+		KM.append(arrayy)
+		i = i+1
+
+	#generate kmeans clustering
+	x = np.array(KM)
+	kmeans = KMeans(n_clusters=5, random_state=0).fit(x)
+	all_kmeans_labels = kmeans.labels_
+	print(all_kmeans_labels)
+
+	#display which cluster each of the events belong to that the current user is interested in 
+	values = kmeans.predict(my_event_arrays)
+	print(kmeans.predict(my_event_arrays))
+
+	#getting the most common cluster for current user
+	counter = Counter(values)
+	max_count = max(counter.values())
+	mode = [k for k,v in counter.items() if v == max_count]
+
+	#find events in the clusters belonging to mode
+	potential_events = []
+	j = 0 
+	for kmean_num in all_kmeans_labels:
+		if kmean_num in mode:
+			potential_events.append(X[j])
+		j = j+1
+
+	random_choice = [None] * 10
+	for num in range(0,10):
+		random_choice[num] = (random.choice(potential_events))
+	# print(random_choice)
+
+	eids = []
+	for choice in random_choice:
+		eids.append(choice[2])
+
+	print(eids)
+
+	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {} OR eid = {}" .format(eids[0], eids[1], eids[2], eids[3], eids[4], eids[5], eids[6], eids[7], eids[8], eids[9]))
+	recommended_events = [dict(eid=row[0],
+               title=row[1],
+               startDate=row[2],
+               building=row[3],
+               lowPrice=row[4],
+               highPrice=row[5]) for row in cursor.fetchall()]
+
+	return recommended_events
+	
