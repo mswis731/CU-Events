@@ -10,4 +10,5 @@ googlemaps
 haversine
 geocoder
 numpy 
+scipy
 scikit-learn
