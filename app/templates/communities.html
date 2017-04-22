@@ -21,55 +21,13 @@
 			{{ form.category(class="selectpicker") }}
 		</div>
 	</div>
+	<div class="form-group row" style="padding: 0; margin: 0">
+		<div class="offset-sm-2 col-sm-10" style="padding: 0; margin-top: 10px">
+		{{ form.submit(class="btn btn-primary") }}
+		</div>
+	</div>
   </div>
 </form>
-
-{% if logged_in == 1 %}
-
-<div class="container">
-	<h2 class="text-center">Your Communities</h2>
-	{% if my_communities|length > 0 %}
-	<div class="row">
-		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
-			<table class="community-list">
-				{% for mycommunity in my_communities %}
-					<tr class="info">
-						<tb>
-							<a href="/communities/communityid/{{mycommunity.cid}}" class="list-group-item">{{mycommunity.name}}</a>
-						</tb>
-						<tb>
-							<a class="btn btn-primary btn-sm" href="/communities/deletefromlist/{{mycommunity.cid}}">Leave Community</a>
-						</tb>
-					</tr>
-				{% endfor %}
-			</table>
-		</div>
-	</div>
-	{% else %}
-	<p style="text-align: center; font-family: 'Lato', sans-serif; font-size: 200%; font-weight: bold;"> No Community Found</p>
-	{% endif %}
-</div>
-
-<div class="container">
-	<h2 class="text-center">Communities that you can join</h2>
-	{% if notmycommunities|length > 0 %}
-	<div class="row">
-		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
-			<ul class="community-list">
-				{% for notcommunity in notmycommunities %}
-					<a href="/communities/communityid/{{notcommunity.cid}}" class="list-group-item">{{notcommunity.name}}</a>
-					<a class="btn btn-primary btn-sm" href="/communities/addfromlist/{{notcommunity.cid}}">Join Community</a>
-					<p></p>
-				{% endfor %}
-			</ul>
-		</div>
-	</div>
-	{% else %}
-	<p style="text-align: center; font-family: 'Lato', sans-serif; font-size: 200%; font-weight: bold;"> No Community Found</p>
-	{% endif %}
-</div>
-
-{% else %}
 
 <div class="container">
 	<h2 class="text-center">Communities</h2>
@@ -89,5 +47,5 @@
 	<p style="text-align: center; font-family: 'Lato', sans-serif; font-size: 200%; font-weight: bold;"> No Community Found</p>
 	{% endif %}
 </div>
-{% endif %}
+
 {% endblock %}
