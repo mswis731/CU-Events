@@ -340,12 +340,61 @@ def browse(filter_path = None):
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
 	return render_template('events.html', events=events, pagination=pagination, form=form)
 
-@app.route('/communities')
-def communities():
+@app.route('/communities', methods=['GET', 'POST'])
+@app.route('/browse/<filter_path>', methods=['GET', 'POST'])
+def communities(filter_path=None):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
-	cursor.execute("SELECT cid, name, uid FROM Community")
+	form = searchCommunityBy(request.form)
+	if request.method == 'POST':
+		filter_path = ""
+		searchTerm = None
+		if request.form.get('homeSearch'):
+			searchTerm = request.form.get('homeSearch')
+		else:
+			searchTerm = form.searchTerm.data
+			if form.category.data and form.category.data != 'All Categories':
+				if filter_path != "":
+					filter_path += "--"
+				filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
+		print("THis is the filter path")
+		print(filter_path)
+		if searchTerm:
+			searchTerm = searchTerm.replace('\'', '/')
+			return redirect(url_for('communities', filter_path=filter_path, searchTerm=searchTerm))
+		else:
+			return redirect(url_for('communities', filter_path=filter_path))
+
+	
+	searchTerm = request.args.get('searchTerm')
+	form.searchTerm.data = searchTerm
+	# parse filter path
+	category = None
+	
+	if filter_path:
+		for filter_str in filter_path.split('--'):
+			key, val = filter_str.split('%')
+			# category
+			if key == 'c':
+				category = url_to_cat_filter(val)
+				form.category.data = category
+
+	if not category:
+		form.category.data = 'All Categories'
+
+	where_clause = ""
+	if searchTerm or category:
+		if searchTerm:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "name LIKE '%{}%'".format(searchTerm)
+		if category:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "Community.cid IN (SELECT Community.cid FROM CommunityCategories WHERE categoryName='{}')".format(category)
+	print(where_clause)
+	cursor.execute("SELECT Community.cid, name, uid FROM Community WHERE {}".format(where_clause))
 	communities = [dict(cid=row[0],
                    name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
 
@@ -360,10 +409,10 @@ def communities():
 		cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
 		curr_uid = cursor.fetchall()[0][0]
 
-		cursor.execute("SELECT cid, name, uid FROM Community WHERE Community.cid IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(curr_uid))
+		cursor.execute("SELECT cid, name, uid FROM Community WHERE {} AND Community.cid IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(where_clause, curr_uid))
 		my_communities = [dict(cid=row[0],
                    name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
-		cursor.execute("SELECT cid, name, uid FROM Community WHERE Community.cid NOT IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(curr_uid))
+		cursor.execute("SELECT cid, name, uid FROM Community WHERE {} AND Community.cid NOT IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(where_clause, curr_uid))
 		notmycommunities = [dict(cid=row[0],
                    name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
 		cursor.close()
