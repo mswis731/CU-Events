@@ -357,7 +357,7 @@ def communities(filter_path=None):
 			filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
 
 		if searchTerm:
-			#searchTerm = searchTerm.replace('\'', '/')
+			searchTerm = searchTerm.replace('\'', '/')
 			return redirect(url_for('communities', filter_path=filter_path, searchTerm=searchTerm))
 		else:
 			return redirect(url_for('communities', filter_path=filter_path))
