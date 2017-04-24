@@ -358,7 +358,7 @@ def browse(filter_path = None):
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
 	return render_template('events.html', events=events, pagination=pagination, form=form)
 
-@app.route('/communities')
+@app.route('/communities/')
 def communities():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
