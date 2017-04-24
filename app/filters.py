@@ -35,3 +35,8 @@ def cat_to_url_filter(val):
 		return val.replace(' ', '-').lower()
 	except:
 		return ""
+
+@app.template_filter('list_to_str')
+def list_to_str_filter(vals):
+	return ", ".join(vals)
+	

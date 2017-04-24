@@ -418,26 +418,6 @@ def communities(filter_path=None):
                    		name=row[1].replace('/', '\''),
                    		uid=row[2]) for row in cursor.fetchall()]
 
-	"""
-
-	if not session.get('username'):
-		cursor.close()
-		return render_template('communities.html', communities=communities, logged_in=logged_in)
-
-	else:
-		logged_in = 1
-		cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
-		curr_uid = cursor.fetchall()[0][0]
-
-		cursor.execute("SELECT cid, name, uid FROM Community WHERE {} AND Community.cid IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(where_clause, curr_uid))
-		my_communities = [dict(cid=row[0],
-                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
-		cursor.execute("SELECT cid, name, uid FROM Community WHERE {} AND Community.cid NOT IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(where_clause, curr_uid))
-		notmycommunities = [dict(cid=row[0],
-                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
-		cursor.close()
-	"""
-
 	return render_template('communities.html', communities=communities, form=form)
 
 @app.route('/communitycreate', methods=['GET','POST'])
@@ -468,29 +448,11 @@ def create_community():
 			cursor.execute("SELECT cid FROM Community WHERE name='{}'".format(form.name.data.replace('\'', '/')))
 			cid = cursor.fetchall()[0][0]
 			cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, cid))
-			cursor.close()
 			connection.commit()
-			return redirect(url_for('communities'))
+			return redirect(url_for('community', id=cid))
  
 	elif request.method == 'GET':
     		return render_template('community_create.html', form=form, categories=categories)
-
-@app.route('/communities/category/<category>', methods=['GET','POST'])
-def community_(category):
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-
-	page = request.args.get('page', type=int, default=1)
-	category = ",".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
-	res_len = cursor.execute("SELECT cid, name, uid FROM Community WHERE (cid) IN (SELECT cid FROM CommunityCategories WHERE categoryName='{}')".format(category))
-	start_row = MAX_PER_PAGE*(page-1)
-	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
-	communities = [dict(cid=row[0],
-                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()[start_row:end_row]]
-	cursor.close()
-
-	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
-	return render_template('communities.html', communities=communities, pagination=pagination)
 
 @app.route('/communities/communityid/<id>', methods=['GET','POST'])
 def community(id):
@@ -655,9 +617,15 @@ def get_event(id):
 		if reslen > 0:
 			already_interested = 1
 
+	cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(id))
+	cats = [ row[0] for row in cursor.fetchall() ]
+	cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(id))
+	types = [ row[0] for row in cursor.fetchall() ]
+
 	attrs = "eid, title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice, nonUserViews"
 	cursor.execute("SELECT {} FROM Event WHERE eid='{}'".format(attrs, id))
-	events = [dict(eid=row[0],
+	row = cursor.fetchall()[0]
+	event = dict(eid=row[0],
 				   title=row[1],
                    description=row[2],
                    building=row[3],
@@ -670,10 +638,13 @@ def get_event(id):
                    endTime=row[10],
                    lowPrice=row[11],
                    highPrice=row[12],
-                   nonUserViews=row[13]) for row in cursor.fetchall()]
+                   nonUserViews=row[13],
+                   cats=cats,
+                   types=types)
+
 	cursor.close()
 
-	return render_template('event.html', event=events, editPermission=editPermission, already_interested=already_interested)
+	return render_template('event.html', e=event, editPermission=editPermission, already_interested=already_interested)
 
 @app.route('/deleteevent')
 def delete_event(eid=None, next = None):
@@ -761,14 +732,13 @@ def events_near_me():
 	
 	form = EventsNearMeForm(request.form)
 
+	if request.method=='POST':
+		return redirect(url_for('events_near_me', radius=form.radius.data, limit=form.limit.data))
+
 	if request.args.get('radius'):
 		form.radius.data = request.args.get('radius')
 	if request.args.get('limit'):
 		form.limit.data = request.args.get('limit')
-	
-	if request.method=='post':
-		return redirect(url_for('events_near_me', radius=form.radius.data, limit=form.limit.data))
-		
 
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -838,7 +808,6 @@ def autocomplete():
 	return jsonify(json_list=all_events) 
 
 
-# @app.route('/recommend_events')
 def kmeans_recommend():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
