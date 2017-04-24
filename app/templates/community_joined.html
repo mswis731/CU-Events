@@ -17,6 +17,7 @@
 	<div class="row panel">
 		<div class="col-md-4 bg_blur ">
     	    <a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/unjoined" style="margin-top: 20px; margin-left: 20px"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Leave the community</a>
+          <a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/browse" style="margin-top: 20px; margin-left: 20px"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Add events</a>
 		</div>
         <div class="col-md-8  col-xs-12">
            <img src="http://www.clker.com/cliparts/a/r/C/L/q/z/green-box-hi.png" class="img-thumbnail picture hidden-xs" />
@@ -37,7 +38,11 @@
             {% else %}
             <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><button type="button" class="btn btn-primary btn-md" id="myBtn"><i class="fa fa-user" aria-hidden="true"></i></a> 0</div>
             {% endif %}
-            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><i class="fa fa-thumbs-o-up fa-lg"></i> 26</div>
+            {% if shared_events|length > 0 %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/events"><i class="fa fa-calendar" aria-hidden="true"></i></a> {{ eventCount(shared_events) }}</div>
+            {% else %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/events"><i class="fa fa-calendar" aria-hidden="true"></i></a> 0 </div>
+            {% endif %}
         </div>
     </div>
 </div>

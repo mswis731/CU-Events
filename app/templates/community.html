@@ -19,6 +19,8 @@
 	<div class="row panel">
 		<div class="col-md-4 bg_blur ">
     	    <a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/joined" style="margin-top: 20px; margin-left: 20px"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Join the community</a>
+          <a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/browse" style="margin-top: 20px; margin-left: 20px"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Add events</a>
+
 		</div>
         <div class="col-md-8  col-xs-12">
            <img src="http://www.clker.com/cliparts/a/r/C/L/q/z/green-box-hi.png" class="img-thumbnail picture hidden-xs" />
@@ -31,15 +33,19 @@
         </div>
     </div>   
     
-	<div class="row nav">    
+<div class="row nav">    
         <div class="col-md-4"></div>
         <div class="col-md-8 col-xs-12" style="margin: 0px;padding: 0px;">
-        	{% if members|length > 0 %}
-            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><button type="button" class="btn btn-primary btn-md" id="myBtn"><i class="fa fa-user" aria-hidden="true"></i></button> {{ peopleCount(members) }}</div>
+          {% if members|length > 0 %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><button type="button" class="btn btn-primary btn-md" id="myBtn"><i class="fa fa-user" aria-hidden="true"></i></a> {{ peopleCount(members) }}</div>
             {% else %}
-            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><button type="button" class="btn btn-primary btn-md" id="myBtn"><i class="fa fa-user" aria-hidden="true"></i></button> 0</div>
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><button type="button" class="btn btn-primary btn-md" id="myBtn"><i class="fa fa-user" aria-hidden="true"></i></a> 0</div>
             {% endif %}
-            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><i class="fa fa-thumbs-o-up fa-lg"></i> 26</div>
+            {% if shared_events|length > 0 %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/events"><i class="fa fa-calendar" aria-hidden="true"></i></a> {{ eventCount(shared_events) }}</div>
+            {% else %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/events"><i class="fa fa-calendar" aria-hidden="true"></i></a> 0 </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -47,20 +53,62 @@
 <div id="myModal" class="modal">
   <div class="modal-content">
     <span class="close">&times;</span>
-	<p style="font-family:Courier; color:Black; font-size: 24px; font-weight:bold;"> Members in this community:</p>
-	{% if members|length > 0 %}
-	<div class="row">
-		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
-			<ul class="member-list">
-				{% for member in members %}
-					<p style="font-family:Courier; color:Black; font-size: 20px;">{{ member }}</p>
-				{% endfor %}
-			</ul>
-		</div>
-	</div>
-	{% else %}
-	<p style="font-family:Courier; color:Black; font-size: 21px; font-weight:bold;"> No Community Member Found</p>
-	{% endif %}
+  <p style="font-family:Courier; color:Black; font-size: 24px; font-weight:bold;"> Members in this community:</p>
+  {% if members|length > 0 %}
+  <div class="row">
+    <div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+      <ul class="member-list">
+        {% for member in members %}
+          <p style="font-family:Courier; color:Black; font-size: 20px;">{{ member }}</p>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% else %}
+  <p style="font-family:Courier; color:Black; font-size: 21px; font-weight:bold;"> No Community Member Found</p>
+  {% endif %}
+  </div>
+
+</div>
+
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+  <p style="font-family:Courier; color:Black; font-size: 24px; font-weight:bold;"> Events in this community:</p>
+  {% if shared_events|length > 0 %}
+  <div class="row">
+    <div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+      <ul class="event-list" style = "width: 500px">
+                {% for event in shared_events %}
+                <li onclick="location.href='/browse/eventid/{{event.eid}}';">
+                    <time datetime="{{ event.startDate }}">
+                        <span class="day">{{ event.startDate.day }}</span>
+                        <span class="month">{{ event.startDate.month|month }}</span>
+                        <span class="year">{{ event.startDate.year }}</span>
+                        <!-- <span class="time"></span> -->
+                    </time>
+                    <div class="info">
+                        <h2 class="title">{{ event.title }}</h2>
+                        <p class="desc">{% if event.building %}{{ event.building }}{% endif %}</p>
+                        {% if event.lowPrice and event.highPrice %}
+                        <ul>
+                            {% if event.lowPrice < event.highPrice %}
+                            <li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}} - {{event.highPrice|money}}</li>
+                            {% else %}
+                            <li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}}</li>
+                            {% endif %}
+                             
+                        </ul>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+    </div>
+  </div>
+  {% else %}
+  <p style="font-family:Courier; color:Black; font-size: 21px; font-weight:bold;"> No Community Events Found</p>
+  {% endif %}
   </div>
 
 </div>

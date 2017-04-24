@@ -1,0 +1,82 @@
+{% extends 'navbar.html' %}
+
+{% block title %} - Browse Events{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+	{% if events|length > 0 %}
+	<div class="row">
+		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+			<ul class="event-list">
+				{% for event in events %}
+				<li>
+					<time datetime="{{ event.startDate }}">
+						<span class="day">{{ event.startDate.day }}</span>
+						<span class="month">{{ event.startDate.month|month }}</span>
+						<span class="year">{{ event.startDate.year }}</span>
+						<!-- <span class="time"></span> -->
+					</time>
+					<div class="info">
+						<h2 class="title">{{ event.title }}</h2>
+						 <p class="desc">{% if event.building %}{{ event.building }}{% endif %}</p>
+						 <a href="/communities/communityid/{{cid}}/browse/{{event.eid}}"><button type="button" class="btn btn-success btn-circle pull-right"><i class="glyphicon glyphicon-link"></i>+</button></a>
+						{% if event.lowPrice != None and event.highPrice != None %}
+						<ul>
+							{% if event.lowPrice == 0 and  event.highPrice == 0 %}
+							<li style="width:50%;"><span class="fa fa-money"></span> Free</li>
+							{% elif event.lowPrice < event.highPrice %}
+							<li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}} - {{event.highPrice|money}}</li>
+							{% else %}
+							<li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}}</li>
+							{% endif %}
+							 
+						</ul>
+						{% endif %}
+					</div>
+				</li>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	<div class="text-center">
+		{{ pagination.links }}
+	</div>
+	{% else %}
+	<p style="text-align: center; font-family: 'Amiko', sans-serif;; font-size: 200%; font-weight: bold;"> No Events Found</p>
+	{% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+<script type="text/javascript">
+$(function() {
+	$('input[name="daterange"]').daterangepicker({
+		autoUpdateInput: false,
+		locale: {
+			cancelLabel: 'Clear'
+		},
+    	ranges: {
+           'Today': [moment(), moment()],
+           'This Month': [moment().startOf('month'), moment().endOf('month')]
+    	},
+    	minDate: moment()
+	});
+
+	$('input[name="daterange"]').on('apply.daterangepicker', function(ev, picker) {
+		$(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
+	});
+
+	$('input[name="daterange"]').on('cancel.daterangepicker', function(ev, picker) {
+      $(this).val('');
+	});
+});
+</script>
+{% endblock %}

@@ -505,10 +505,19 @@ def community(id):
 	cursor.execute("SELECT categoryName FROM CommunityCategories WHERE cid='{}'".format(id))
 	categories_list = cursor.fetchall()
 	community_categories = ""
+	comm_cat = []
 	for row in categories_list:
 		community_categories += row[0]
+		comm_cat.append(row[0])
 		community_categories += ","
 	community_categories = community_categories[:-1]
+	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM IsSharedEvent WHERE cid = '{}')".format(id))
+	shared_events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
 
 	cursor.execute("SELECT username FROM User WHERE uid ='{}'".format(uid))
 	username = cursor.fetchall()[0][0]
@@ -525,9 +534,9 @@ def community(id):
 		length = cursor.execute("SELECT * FROM IsCommunityMember WHERE cid ='{}' AND uid='{}'".format(id,userid))
 		cursor.close()
 		if length:
-			return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members)
+			return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, shared_events=shared_events)
 	cursor.close()
-	return render_template("community.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members)
+	return render_template("community.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, shared_events=shared_events)
 
 @app.route('/communities/communityid/<id>/joined')
 def is_communitymember(id):
@@ -552,6 +561,13 @@ def is_communitymember(id):
 			community_categories += row[0]
 			community_categories += ","
 		community_categories = community_categories[:-1]
+		cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM IsSharedEvent WHERE cid = '{}')".format(id))
+		shared_events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
 
 		cursor.execute("SELECT username FROM User WHERE uid ='{}'".format(uid))
 		username = cursor.fetchall()[0][0]
@@ -562,7 +578,7 @@ def is_communitymember(id):
 		for row in member_list:
 			members.append(row[0])
 		connection.commit()
-		return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members)
+		return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, shared_events=shared_events)
 
 @app.route('/communities/communityid/<id>/unjoined')
 def is_not_communitymember(id):
@@ -934,3 +950,77 @@ def kmeans_recommend():
 
 	return recommended_events
 	
+@app.route('/communities/communityid/<id>/browse')
+def browse_community(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	form = searchBy(request.form)
+	page = request.args.get('page', type=int, default=1)
+	if not session.get('username'):
+		return redirect(url_for('signin'))
+	else:
+
+		cursor.execute("SELECT name, uid FROM Community WHERE cid='{}'".format(id))
+		info_tuple = cursor.fetchall()[0]
+		cname = info_tuple[0]
+		uid = info_tuple[1]
+	
+		cursor.execute("SELECT categoryName FROM CommunityCategories WHERE cid='{}'".format(id))
+		categories_list = cursor.fetchall()
+		community_categories = []
+		for row in categories_list:
+			community_categories.append(row[0])
+		events = []
+		
+		for i in range(len(community_categories)):
+			res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM EVENT WHERE eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}') AND eid NOT IN (SELECT eid FROM IsSharedEvent WHERE cid='{}')".format(community_categories[i],id))
+			start_row = MAX_PER_PAGE*(page-1)
+			end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
+			events.append([dict(eid = row[0],
+						title=row[1],
+                		startDate=row[2],
+                   		building=row[3],
+                   		lowPrice=row[4],
+                   		highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]])
+	# cursor.close()
+	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
+	return render_template('community_events.html', cid=id, events=events[0], pagination=pagination, form=form)
+
+@app.route('/communities/communityid/<id>/browse/<eventid>')
+def add_to_community(id, eventid):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	form = searchBy(request.form)
+	page = request.args.get('page', type=int, default=1)
+	cid = id
+	eid = eventid
+	cursor.execute("INSERT INTO IsSharedEvent(eid,cid) VALUES ({},{})".format(eid,cid))
+	connection.commit()
+
+	cursor.close()
+	return redirect(url_for('community', id=id))
+
+@app.route('/communities/communityid/<id>/events')
+def community_event_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM IsSharedEvent WHERE cid = '{}')".format(id))
+	shared_events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Community WHERE cid='{}'".format(id))
+	cname = cursor.fetchall()[0][0];
+	cursor.close()
+	return render_template("community_included_events.html", cid=id, cname=cname, shared_events=shared_events)
+
+@app.context_processor
+def eventCount():
+	def _eventCount(shared_events):
+		counter = 0
+		for m in shared_events:
+			counter += 1
+		return counter
+	return dict(eventCount= _eventCount)
