@@ -11,9 +11,11 @@
 
 <!--  col-sm-offset-2 col-sm-6
  -->
-<div class="col-md-2" style="position:relative;" >
-<h2 style="padding-left: 0px; width: 500px; margin: 3px" > My Interested Events </h2>
-<div id="" style="overflow:scroll; height:250px; width: 520px;   border: 3px; border-style: solid; padding-top: 0px">
+
+
+<div id="" style="overflow:scroll; height:350px; width: 48%; border: 3px; border-style: solid;  padding-top: 10px; padding-bottom: 30px; margin: 12px; float: left">
+
+	<h2 style="margin: 3px; padding-top: 10px; text-align: center; padding-bottom: 30px"> <b>My Interested Events </b> </h2>
 	{% if events|length > 0 %}
 	<!-- <div class="row"> -->
 		<!-- <div class="[ col-xs-2 col-sm-12 ]"> -->
@@ -32,7 +34,8 @@
 						{% if event.lowPrice and event.highPrice %}
 						<ul>
 							{% if event.lowPrice < event.highPrice %}
-							<li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}} - {{event.highPrice|money}}</li>
+							<li style="width:50%;"><span class="fa fa-money"></span> 
+							{{event.lowPrice|money}} - {{event.highPrice|money}}</li>	
 							{% else %}
 							<li style="width:50%;"><span class="fa fa-money"></span> {{event.lowPrice|money}}</li>
 							{% endif %}
@@ -43,18 +46,19 @@
 				</li>
 				{% endfor %}
 			</ul>
-		</div>
+		<!-- </div> -->
 		<!-- </div> -->
 	<!-- </div> -->
 	{% else %}
-	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; font-weight: bold; padding-top: 35px"> No Events Found</p>
-	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; font-weight: bold;"> <a href = "browse">Browse Events</a></p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; padding-top: 35px"> No Events Found</p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%;"> <a href = "browse">Browse Events</a></p>
 	{% endif %}
 </div>
 
-<div class="col-md-2" style="position:relative; top: 0px; left: 310px" >
-<h2 style="padding-left: 0px; width: 500px; margin: 3px" > My Created Events </h2>
-<div id="" style="overflow:scroll; height:250px; width: 520px; border: 3px; border-style: solid;">
+
+<div id="" style="overflow:scroll; height:350px; width: 48%; border: 3px; border-style: solid;  padding-top: 10px; padding-bottom: 30px; margin: 12px; float: left">
+
+	<h2 style=" margin-top: 10px; padding-top: 10px; text-align: center; padding-bottom: 30px" ><b> My Created Events</b> </h2>
 	{% if created_events|length > 0 %}
 	<!-- <div class="row"> -->
 		<!-- <div class="[ col-xs-2 col-sm-12 ]"> -->
@@ -84,22 +88,21 @@
 				</li>
 				{% endfor %}
 			</ul>
-		</div>
+		<!-- </div> -->
 		<!-- </div> -->
 	<!-- </div> -->
 	{% else %}
-	<p style="text-align: center; font-family: 'Amiko', sans-serif;; font-size: 200%; font-weight: bold; padding-top: 35px"> No Events Found</p>
-	<p style="text-align: center; font-family: 'Amiko', sans-serif;; font-size: 200%; font-weight: bold;"> <a href = "eventcreate">Create an Event</a></p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; padding-top: 35px"> No Events Found</p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; "> <a href = "eventcreate">Create an Event</a></p>
 	{% endif %}
 </div>
 
-
-<div class="col-md-2" style="position:relative; top: 400px; right: 300px" >
-<h2 style="padding-left: 0px; width: 500px; margin: 3px" > My Recommended Events </h2>
+<!-- 
 <form method="POST">
 	<button style = "width: 300px; " type = "submit"> generate recommended events </button>
-</form>
-<div id="" style="overflow:scroll; height:250px; width: 520px;   border: 3px; border-style: solid; padding-top: 0px">
+</form> -->
+<div id="" style="overflow:scroll; height:350px; width: 48%; border: 3px; border-style: solid;  padding-top: 10px; padding-bottom: 30px; margin: 12px; float: left">
+	<h2 style=" padding-top: 10px; text-align: center; padding-bottom: 30px" ><b> My Recommended Events</b> </h2>
 	{% if recommended_events|length > 0 %}
 			<ul class="event-list" style = "width: 500px">
 				{% for event in recommended_events %}
@@ -127,11 +130,35 @@
 				</li>
 				{% endfor %}
 			</ul>
-		</div>
+<!-- 		</div> -->
 	{% else %}
-	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; font-weight: bold; padding-top: 35px"> No Recommended Events Found</p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; padding-top: 35px"> No Recommended Events Found</p>
 	{% endif %}
+	<form method="POST" style=" padding-left: 110px">
+	<button style = "width: 300px; " type = "submit"> generate recommended events </button>
+	</form>
 </div>
+
+
+<div id="" style="overflow:scroll; height:350px; width: 48%; border: 3px; border-style: solid;  padding-top: 10px; padding-bottom: 30px; margin: 12px; float: left">
+	<h2 style=" margin-top: 10px; padding-top: 10px; text-align: center; padding-bottom: 30px" ><b> My Communities</b> </h2>
+	{% if communities|length > 0 %}
+		{% for community in communities %}
+		<ul>
+		<p style="font-size: 23px">
+		<a href = "/communities/communityid/{{community.cid}}" >
+		 {{community.name}} 
+		</a>
+		</p>
+		</ul>
+	{%endfor%}
+
+	{% else %}
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; padding-top: 35px"> No Communities Found </p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; "> <a href = "/communities" >Browse Communities</a></p>
+	{% endif %}	
+</div>	
+
 
 
 {% endblock %}

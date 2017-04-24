@@ -128,6 +128,13 @@ def profile():
                    lowPrice=row[4],
                    highPrice=row[5]) for row in cursor.fetchall()]
 
+	cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+
+	cursor.execute("SELECT name, community.cid FROM community, IsCommunityMember WHERE IsCommunityMember.uid = '{}' AND IsCommunityMember.cid = Community.cid".format(uid))
+	communities = [dict(name = row[0],
+						cid = row[1]) for row in cursor.fetchall()]
+
 	user = cursor.execute("SELECT uid From User Where username = '{}'".format(session['username']))
 
 	if request.method == "POST":
@@ -137,7 +144,7 @@ def profile():
 	if user is None:
 		return redirect(url_for('signin'))
 	else:
-		return render_template('profile.html', events=events, created_events=created_events, recommended_events=recommended_events)
+		return render_template('profile.html', events=events, created_events=created_events, recommended_events=recommended_events, communities=communities)
 
 @app.route('/eventcreate', methods=['GET','POST'])
 def eventcreate():
