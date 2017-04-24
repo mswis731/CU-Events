@@ -4,7 +4,6 @@
 {% endblock %}
 {% block content %}
 <div class="col-lg-12">
-    {% for e in event %}
     <div class="card hovercard">
         <div class="card-background">
             <img class="card-bkimg" alt="" src="http://wallpapercave.com/wp/6UaXRIr.jpg">
@@ -72,6 +71,9 @@
                 <p class = "desc" style="font-weight: bold; font-size: 16px"><br>Price:</p>
                 <p class = "desc">Not Available</p>
                 {% endif %}
+                <p></p>
+                <p><span style="font-weight: bold; font-size: 16px">Categories: </span>{{ e.cats|list_to_str }}</p>
+                <p><span style="font-weight: bold; font-size: 16px">Event Types: </span>{{ e.types|list_to_str }}</p>
             </div>
         </div>
       </div>
@@ -87,5 +89,4 @@
         </div>
     </div>
     </div>
-    {% endfor %}
 {% endblock %}
