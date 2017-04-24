@@ -358,17 +358,87 @@ def browse(filter_path = None):
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
 	return render_template('events.html', events=events, pagination=pagination, form=form)
 
-@app.route('/communities/')
-def communities():
+@app.route('/communities/', methods=['GET', 'POST'])
+@app.route('/communities/<filter_path>', methods=['GET', 'POST'])
+def communities(filter_path=None):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
-	cursor.execute("SELECT cid, name, uid FROM Community")
-	communities = [dict(cid=row[0],
-                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
-	cursor.close()
+	form = searchCommunityBy(request.form)
+	if request.method == 'POST':
+		filter_path = ""
+		searchTerm = None
+		searchTerm = form.searchTerm.data
+		if form.category.data and form.category.data != 'All Categories':
+			if filter_path != "":
+				filter_path += "--"
+			filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
 
-	return render_template('communities.html', communities=communities)
+		if searchTerm:
+			searchTerm = searchTerm.replace('\'', '/')
+			return redirect(url_for('communities', filter_path=filter_path, searchTerm=searchTerm))
+		else:
+			return redirect(url_for('communities', filter_path=filter_path))
+
+	
+	searchTerm = request.args.get('searchTerm')
+	form.searchTerm.data = searchTerm
+	# parse filter path
+	category = None
+	
+	if filter_path:
+		for filter_str in filter_path.split('--'):
+			key, val = filter_str.split('%')
+			# category
+			if key == 'c':
+				category = url_to_cat_filter(val)
+				form.category.data = category
+
+	if not category:
+		form.category.data = 'All Categories'
+
+	attrs = "cid, name, uid"
+	where_clause = ""
+	query = ""
+	if searchTerm or category:
+		if searchTerm:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "name LIKE '%{}%'".format(searchTerm)
+		if category:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "cid IN (SELECT cid FROM CommunityCategories WHERE categoryName='{}')".format(category)
+		query = "SELECT {} FROM Community WHERE {}".format(attrs, where_clause)
+	else:
+		query = "SELECT {} FROM Community".format(attrs)
+		
+	cursor.execute(query)
+	communities = [dict(cid=row[0],
+                   		name=row[1].replace('/', '\''),
+                   		uid=row[2]) for row in cursor.fetchall()]
+
+	"""
+
+	if not session.get('username'):
+		cursor.close()
+		return render_template('communities.html', communities=communities, logged_in=logged_in)
+
+	else:
+		logged_in = 1
+		cursor.execute("SELECT uid FROM User WHERE username='{}'".format(session['username']))
+		curr_uid = cursor.fetchall()[0][0]
+
+		cursor.execute("SELECT cid, name, uid FROM Community WHERE {} AND Community.cid IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(where_clause, curr_uid))
+		my_communities = [dict(cid=row[0],
+                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
+		cursor.execute("SELECT cid, name, uid FROM Community WHERE {} AND Community.cid NOT IN (SELECT IsCommunityMember.cid FROM IsCommunityMember WHERE uid={})".format(where_clause, curr_uid))
+		notmycommunities = [dict(cid=row[0],
+                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
+		cursor.close()
+	"""
+
+	return render_template('communities.html', communities=communities, form=form)
 
 @app.route('/communitycreate', methods=['GET','POST'])
 def create_community():
@@ -376,6 +446,7 @@ def create_community():
 	cursor = connection.cursor()
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
 
 	if not session.get('username'):
 		return redirect("/signin")
@@ -518,6 +589,30 @@ def community_member_list(id):
 	cursor.execute("SELECT name FROM Community WHERE cid='{}'".format(id))
 	cname = cursor.fetchall()[0][0];
 	return render_template("community_members.html", cid=id, members=members, cname=cname)
+
+@app.route('/communities/addfromlist/<id>')
+def add_community_member_from_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+	cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, id))
+	connection.commit()
+	cursor.close()
+	return redirect(url_for('communities'))
+
+@app.route('/communities/deletefromlist/<id>')
+def delete_community_member_from_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+	cursor.execute("DELETE FROM isCommunityMember WHERE uid = '{}' AND cid = '{}'".format(uid, id))
+	connection.commit()
+	cursor.close()
+	return redirect(url_for('communities'))
+
 
 @app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
