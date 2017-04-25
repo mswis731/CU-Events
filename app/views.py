@@ -945,18 +945,23 @@ def browse_community(id):
 		events = []
 		
 		for i in range(len(community_categories)):
-			res_len = cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM EVENT WHERE eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}') AND eid NOT IN (SELECT eid FROM IsSharedEvent WHERE cid='{}')".format(community_categories[i],id))
-			start_row = MAX_PER_PAGE*(page-1)
-			end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
-			events.append([dict(eid = row[0],
+			query = "SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}') AND eid NOT IN (SELECT eid FROM IsSharedEvent WHERE cid='{}')".format(community_categories[i],id)
+			res_len = cursor.execute(query)
+
+			for row in cursor.fetchall():
+				events.append(dict(eid = row[0],
 						title=row[1],
                 		startDate=row[2],
                    		building=row[3],
                    		lowPrice=row[4],
-                   		highPrice=row[5]) for row in cursor.fetchall()[start_row:end_row]])
+                   		highPrice=row[5]))
+		res_len = len(events)
+		start_row = MAX_PER_PAGE*(page-1)
+		end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
+		events = events[start_row:end_row]
 	# cursor.close()
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
-	return render_template('community_events.html', cid=id, events=events[0], pagination=pagination, form=form)
+	return render_template('community_events.html', cid=id, events=events, pagination=pagination, form=form)
 
 @app.route('/communities/communityid/<id>/browse/<eventid>')
 def add_to_community(id, eventid):
