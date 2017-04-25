@@ -320,7 +320,10 @@ def browse(filter_path = None):
 		if category:
 			if where_clause:
 				where_clause += " AND "
-			where_clause += "eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category)
+			if category != 'User Created':
+				where_clause += "eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category)
+			else:
+				where_clause += "eid IN (SELECT eid FROM EventCreated)"
 		if eventType:
 			if where_clause:
 				where_clause += " AND "
