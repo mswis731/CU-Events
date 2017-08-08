@@ -4,6 +4,7 @@ from app import app
 from app.crawlers.eventful import crawl as eventful_crawl, update_crawled_events as eventful_update
 from app.crawlers.county import crawl as county_crawl
 from app.crawlers.clean_events import clean_events
+from recommend import get_recommendations
 
 manager = Manager(app)
 
@@ -27,6 +28,10 @@ def update(site):
 @manager.command
 def clean():
 	clean_events()
+
+@manager.command
+def recommend():
+	get_recommendations()
 
 if __name__ == "__main__":
 	manager.run()
