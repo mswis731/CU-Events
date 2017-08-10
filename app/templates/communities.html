@@ -4,31 +4,40 @@
 
 {% block stylesheets %}
 <link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+
 {% endblock %}
 
 
 {% block content %}
 
-
-<ul class="nav navbar-nav">
-        	<li class="dropdown">
-          	<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Categories <span class="caret"></span></a>
-          	<ul class="dropdown-menu">
-            	{% for category,url in categories %}
-            	<li><a href="/communities/category/{{ url }}">{{ category }}</a></li>
-            	{% endfor %}
-          	</ul>
-        	</li>
-      	</ul>
-
+<form action="", method="post">
+  <div class="col-md-2" >
+    <div class="form-group row" style="padding: 0; margin: 0">
+    	{{ form.searchTerm(class="form-control", placeholder="Search") }}
+    </div>
+	<div class="form-group row" style="padding: 0; margin: 0">
+		<h6 style="padding-left: 4px"> Categories </h6>
+		<div class="col-sm-4" id = "search" style="padding-left: 0px">
+			{{ form.category(class="selectpicker") }}
+		</div>
+	</div>
+	<div class="form-group row" style="padding: 0; margin: 0">
+		<div class="offset-sm-2 col-sm-10" style="padding: 0; margin-top: 10px">
+		{{ form.submit(class="btn btn-primary") }}
+		</div>
+	</div>
+  </div>
+</form>
 
 <div class="container">
+	<h2 class="text-center">Communities</h2>
 	{% if communities|length > 0 %}
 	<div class="row">
 		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
 			<ul class="community-list">
 				{% for community in communities %}
-					<a href="/communities/communityid/{{community.cid}}">{{ community.name }}</a>
+					<a href="/communities/communityid/{{community.cid}}" class="list-group-item">{{community.name}}</a>
+					
 					<p></p>
 				{% endfor %}
 			</ul>
@@ -38,4 +47,5 @@
 	<p style="text-align: center; font-family: 'Lato', sans-serif; font-size: 200%; font-weight: bold;"> No Community Found</p>
 	{% endif %}
 </div>
+
 {% endblock %}

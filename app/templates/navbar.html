@@ -47,6 +47,7 @@
 			{% if not session.username %}
 			<li><a href='/signup' class = "header-link" style = "color: black">SIGN UP </a></li>
 			<li><a href='{{ url_for('signin', next=request.url) }}' class = "header-link" style = "color: black">SIGN IN </a></li>
+
 			{% else %}
         	<li class="dropdown">
           	<a href="#" class="dropdown-toggle header-link" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" style = "color: black">{{ session.username }} <span class="caret"></span></a>

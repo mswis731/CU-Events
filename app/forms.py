@@ -253,6 +253,28 @@ class searchBy(Form):
 		except:
 			pass
 
+class searchCommunityBy(Form):
+	searchTerm = TextField(id = 'searchTerm')
+	category = SelectField(id ='category', label='Category')
+	
+	submit = SubmitField("Search") 
+
+	def __init__(self, form):
+		Form.__init__(self, form)
+
+		self.connection = mysql.get_db()
+		self.cursor = self.connection.cursor()
+
+		# set category choices
+		self.cursor.execute("SELECT name FROM Category")
+		categories = [row[0] for row in self.cursor.fetchall()]
+		categories.insert(0, 'All Categories')
+		
+		self.category.choices = [ (c, c) for c in categories ]
+
+	def validate(self):
+		return True
+
 class interest_form(Form):
 	categories = SelectMultipleField(id ='category', label='Categories')
 	submit = SubmitField("update")
@@ -292,7 +314,7 @@ class CreateCommunityForm(Form):
 
 		connection = mysql.get_db()
 		cursor = connection.cursor() 
-		print(self.name.data.replace('\'', '/'))
+		#print(self.name.data.replace('\'', '/'))
 		result_length = cursor.execute("SELECT name FROM Community Where name = '{}' ".format(self.name.data.replace('\'', '/')))
 		if result_length:
 			self.name.errors.append("This group name has already been created!")

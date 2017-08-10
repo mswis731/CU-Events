@@ -345,7 +345,10 @@ def browse(filter_path = None):
 		if category:
 			if where_clause:
 				where_clause += " AND "
-			where_clause += "eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category)
+			if category != 'User Created':
+				where_clause += "eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}')".format(category)
+			else:
+				where_clause += "eid IN (SELECT eid FROM EventCreated)"
 		if eventType:
 			if where_clause:
 				where_clause += " AND "
@@ -383,17 +386,67 @@ def browse(filter_path = None):
 	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
 	return render_template('events.html', events=events, pagination=pagination, form=form)
 
-@app.route('/communities')
-def communities():
+@app.route('/communities/', methods=['GET', 'POST'])
+@app.route('/communities/<filter_path>', methods=['GET', 'POST'])
+def communities(filter_path=None):
 	connection = mysql.get_db()
 	cursor = connection.cursor()
 
-	cursor.execute("SELECT cid, name, uid FROM Community")
-	communities = [dict(cid=row[0],
-                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()]
-	cursor.close()
+	form = searchCommunityBy(request.form)
+	if request.method == 'POST':
+		filter_path = ""
+		searchTerm = None
+		searchTerm = form.searchTerm.data
+		if form.category.data and form.category.data != 'All Categories':
+			if filter_path != "":
+				filter_path += "--"
+			filter_path += "c%{}".format(cat_to_url_filter(form.category.data))
 
-	return render_template('communities.html', communities=communities)
+		if searchTerm:
+			searchTerm = searchTerm.replace('\'', '/')
+			return redirect(url_for('communities', filter_path=filter_path, searchTerm=searchTerm))
+		else:
+			return redirect(url_for('communities', filter_path=filter_path))
+
+	
+	searchTerm = request.args.get('searchTerm')
+	form.searchTerm.data = searchTerm
+	# parse filter path
+	category = None
+	
+	if filter_path:
+		for filter_str in filter_path.split('--'):
+			key, val = filter_str.split('%')
+			# category
+			if key == 'c':
+				category = url_to_cat_filter(val)
+				form.category.data = category
+
+	if not category:
+		form.category.data = 'All Categories'
+
+	attrs = "cid, name, uid"
+	where_clause = ""
+	query = ""
+	if searchTerm or category:
+		if searchTerm:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "name LIKE '%{}%'".format(searchTerm)
+		if category:
+			if where_clause:
+				where_clause += " AND "
+			where_clause += "cid IN (SELECT cid FROM CommunityCategories WHERE categoryName='{}')".format(category)
+		query = "SELECT {} FROM Community WHERE {}".format(attrs, where_clause)
+	else:
+		query = "SELECT {} FROM Community".format(attrs)
+		
+	cursor.execute(query)
+	communities = [dict(cid=row[0],
+                   		name=row[1].replace('/', '\''),
+                   		uid=row[2]) for row in cursor.fetchall()]
+
+	return render_template('communities.html', communities=communities, form=form)
 
 @app.route('/communitycreate', methods=['GET','POST'])
 def create_community():
@@ -401,6 +454,7 @@ def create_community():
 	cursor = connection.cursor()
 	cursor.execute("SELECT name FROM Category")
 	categories = [(row[0], row[0].replace(' ', '-').lower()) for row in cursor.fetchall()]
+
 
 	if not session.get('username'):
 		return redirect("/signin")
@@ -422,29 +476,11 @@ def create_community():
 			cursor.execute("SELECT cid FROM Community WHERE name='{}'".format(form.name.data.replace('\'', '/')))
 			cid = cursor.fetchall()[0][0]
 			cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, cid))
-			cursor.close()
 			connection.commit()
-			return redirect(url_for('communities'))
+			return redirect(url_for('community', id=cid))
  
 	elif request.method == 'GET':
     		return render_template('community_create.html', form=form, categories=categories)
-
-@app.route('/communities/category/<category>', methods=['GET','POST'])
-def community_(category):
-	connection = mysql.get_db()
-	cursor = connection.cursor()
-
-	page = request.args.get('page', type=int, default=1)
-	category = ",".join([ (word.capitalize() if word != 'and' else word) for word in category.split('-') ])
-	res_len = cursor.execute("SELECT cid, name, uid FROM Community WHERE (cid) IN (SELECT cid FROM CommunityCategories WHERE categoryName='{}')".format(category))
-	start_row = MAX_PER_PAGE*(page-1)
-	end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
-	communities = [dict(cid=row[0],
-                   name=row[1].replace('/', '\''), uid=row[2]) for row in cursor.fetchall()[start_row:end_row]]
-	cursor.close()
-
-	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
-	return render_template('communities.html', communities=communities, pagination=pagination)
 
 @app.route('/communities/communityid/<id>', methods=['GET','POST'])
 def community(id):
@@ -459,10 +495,19 @@ def community(id):
 	cursor.execute("SELECT categoryName FROM CommunityCategories WHERE cid='{}'".format(id))
 	categories_list = cursor.fetchall()
 	community_categories = ""
+	comm_cat = []
 	for row in categories_list:
 		community_categories += row[0]
+		comm_cat.append(row[0])
 		community_categories += ","
 	community_categories = community_categories[:-1]
+	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM IsSharedEvent WHERE cid = '{}')".format(id))
+	shared_events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
 
 	cursor.execute("SELECT username FROM User WHERE uid ='{}'".format(uid))
 	username = cursor.fetchall()[0][0]
@@ -479,9 +524,9 @@ def community(id):
 		length = cursor.execute("SELECT * FROM IsCommunityMember WHERE cid ='{}' AND uid='{}'".format(id,userid))
 		cursor.close()
 		if length:
-			return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members)
+			return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, shared_events=shared_events)
 	cursor.close()
-	return render_template("community.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members)
+	return render_template("community.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, shared_events=shared_events)
 
 @app.route('/communities/communityid/<id>/joined')
 def is_communitymember(id):
@@ -506,6 +551,13 @@ def is_communitymember(id):
 			community_categories += row[0]
 			community_categories += ","
 		community_categories = community_categories[:-1]
+		cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM IsSharedEvent WHERE cid = '{}')".format(id))
+		shared_events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
 
 		cursor.execute("SELECT username FROM User WHERE uid ='{}'".format(uid))
 		username = cursor.fetchall()[0][0]
@@ -516,7 +568,7 @@ def is_communitymember(id):
 		for row in member_list:
 			members.append(row[0])
 		connection.commit()
-		return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members)
+		return render_template("community_joined.html", cid=id, cname=cname, community_categories=community_categories, username=username, members=members, shared_events=shared_events)
 
 @app.route('/communities/communityid/<id>/unjoined')
 def is_not_communitymember(id):
@@ -543,6 +595,30 @@ def community_member_list(id):
 	cursor.execute("SELECT name FROM Community WHERE cid='{}'".format(id))
 	cname = cursor.fetchall()[0][0];
 	return render_template("community_members.html", cid=id, members=members, cname=cname)
+
+@app.route('/communities/addfromlist/<id>')
+def add_community_member_from_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+	cursor.execute("INSERT INTO IsCommunityMember(uid, cid) VALUES({}, {})".format(uid, id))
+	connection.commit()
+	cursor.close()
+	return redirect(url_for('communities'))
+
+@app.route('/communities/deletefromlist/<id>')
+def delete_community_member_from_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT uid FROM User where username = '{}' LIMIT 1".format(session['username']))
+	uid = cursor.fetchall()[0][0]
+	cursor.execute("DELETE FROM isCommunityMember WHERE uid = '{}' AND cid = '{}'".format(uid, id))
+	connection.commit()
+	cursor.close()
+	return redirect(url_for('communities'))
+
 
 @app.route('/browse/eventid/<id>', methods=['get','post'])
 def get_event(id):
@@ -585,9 +661,15 @@ def get_event(id):
 		if reslen > 0:
 			already_interested = 1
 
+	cursor.execute("SELECT categoryName FROM HasCategory WHERE eid={}".format(id))
+	cats = [ row[0] for row in cursor.fetchall() ]
+	cursor.execute("SELECT eventType FROM HasEventType WHERE eid={}".format(id))
+	types = [ row[0] for row in cursor.fetchall() ]
+
 	attrs = "eid, title, description, building, addrAndStreet, city, zipcode, startDate, startTime, endDate, endTime, lowPrice, highPrice, nonUserViews"
 	cursor.execute("SELECT {} FROM Event WHERE eid='{}'".format(attrs, id))
-	events = [dict(eid=row[0],
+	row = cursor.fetchall()[0]
+	event = dict(eid=row[0],
 				   title=row[1],
                    description=row[2],
                    building=row[3],
@@ -600,10 +682,13 @@ def get_event(id):
                    endTime=row[10],
                    lowPrice=row[11],
                    highPrice=row[12],
-                   nonUserViews=row[13]) for row in cursor.fetchall()]
+                   nonUserViews=row[13],
+                   cats=cats,
+                   types=types)
+
 	cursor.close()
 
-	return render_template('event.html', event=events, editPermission=editPermission, already_interested=already_interested)
+	return render_template('event.html', e=event, editPermission=editPermission, already_interested=already_interested)
 
 @app.route('/deleteevent')
 def delete_event(eid=None, next = None):
@@ -691,14 +776,13 @@ def events_near_me():
 	
 	form = EventsNearMeForm(request.form)
 
+	if request.method=='POST':
+		return redirect(url_for('events_near_me', radius=form.radius.data, limit=form.limit.data))
+
 	if request.args.get('radius'):
 		form.radius.data = request.args.get('radius')
 	if request.args.get('limit'):
 		form.limit.data = request.args.get('limit')
-	
-	if request.method=='post':
-		return redirect(url_for('events_near_me', radius=form.radius.data, limit=form.limit.data))
-		
 
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -768,7 +852,6 @@ def autocomplete():
 	return jsonify(json_list=all_events) 
 
 
-# @app.route('/recommend_events')
 def kmeans_recommend():
 	connection = mysql.get_db()
 	cursor = connection.cursor()
@@ -864,3 +947,82 @@ def kmeans_recommend():
 
 	return recommended_events
 	
+@app.route('/communities/communityid/<id>/browse')
+def browse_community(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	form = searchBy(request.form)
+	page = request.args.get('page', type=int, default=1)
+	if not session.get('username'):
+		return redirect(url_for('signin'))
+	else:
+
+		cursor.execute("SELECT name, uid FROM Community WHERE cid='{}'".format(id))
+		info_tuple = cursor.fetchall()[0]
+		cname = info_tuple[0]
+		uid = info_tuple[1]
+	
+		cursor.execute("SELECT categoryName FROM CommunityCategories WHERE cid='{}'".format(id))
+		categories_list = cursor.fetchall()
+		community_categories = []
+		for row in categories_list:
+			community_categories.append(row[0])
+		events = []
+		
+		for i in range(len(community_categories)):
+			query = "SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE eid IN (SELECT eid FROM HasCategory WHERE categoryName='{}') AND eid NOT IN (SELECT eid FROM IsSharedEvent WHERE cid='{}')".format(community_categories[i],id)
+			res_len = cursor.execute(query)
+
+			for row in cursor.fetchall():
+				events.append(dict(eid = row[0],
+						title=row[1],
+                		startDate=row[2],
+                   		building=row[3],
+                   		lowPrice=row[4],
+                   		highPrice=row[5]))
+		res_len = len(events)
+		start_row = MAX_PER_PAGE*(page-1)
+		end_row = start_row+MAX_PER_PAGE if (start_row+MAX_PER_PAGE < res_len) else res_len
+		events = events[start_row:end_row]
+	# cursor.close()
+	pagination = Pagination(page=page, total=res_len, per_page=MAX_PER_PAGE, css_framework='bootstrap3')
+	return render_template('community_events.html', cid=id, events=events, pagination=pagination, form=form)
+
+@app.route('/communities/communityid/<id>/browse/<eventid>')
+def add_to_community(id, eventid):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	form = searchBy(request.form)
+	page = request.args.get('page', type=int, default=1)
+	cid = id
+	eid = eventid
+	cursor.execute("INSERT INTO IsSharedEvent(eid,cid) VALUES ({},{})".format(eid,cid))
+	connection.commit()
+
+	cursor.close()
+	return redirect(url_for('community', id=id))
+
+@app.route('/communities/communityid/<id>/events')
+def community_event_list(id):
+	connection = mysql.get_db()
+	cursor = connection.cursor()
+	cursor.execute("SELECT eid, title, startDate, building, lowPrice, highPrice FROM Event WHERE (eid) IN (SELECT eid FROM IsSharedEvent WHERE cid = '{}')".format(id))
+	shared_events = [dict(eid=row[0],
+                   title=row[1],
+                   startDate=row[2],
+                   building=row[3],
+                   lowPrice=row[4],
+                   highPrice=row[5]) for row in cursor.fetchall()]
+	cursor.execute("SELECT name FROM Community WHERE cid='{}'".format(id))
+	cname = cursor.fetchall()[0][0];
+	cursor.close()
+	return render_template("community_included_events.html", cid=id, cname=cname, shared_events=shared_events)
+
+@app.context_processor
+def eventCount():
+	def _eventCount(shared_events):
+		counter = 0
+		for m in shared_events:
+			counter += 1
+		return counter
+	return dict(eventCount= _eventCount)

@@ -17,6 +17,7 @@
 	<div class="row panel">
 		<div class="col-md-4 bg_blur ">
     	    <a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/unjoined" style="margin-top: 20px; margin-left: 20px"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Leave the community</a>
+          <a class="btn icon-btn btn-success" href="/communities/communityid/{{cid}}/browse" style="margin-top: 20px; margin-left: 20px"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Add events</a>
 		</div>
         <div class="col-md-8  col-xs-12">
            <img src="http://www.clker.com/cliparts/a/r/C/L/q/z/green-box-hi.png" class="img-thumbnail picture hidden-xs" />
@@ -33,13 +34,66 @@
         <div class="col-md-4"></div>
         <div class="col-md-8 col-xs-12" style="margin: 0px;padding: 0px;">
         	{% if members|length > 0 %}
-            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/members"><i class="fa fa-user" aria-hidden="true"></i></a> {{ peopleCount(members) }}</div>
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><button type="button" class="btn btn-primary btn-md" id="myBtn"><i class="fa fa-user" aria-hidden="true"></i></a> {{ peopleCount(members) }}</div>
             {% else %}
-            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/members"><i class="fa fa-user" aria-hidden="true"></i></a> 0</div>
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><button type="button" class="btn btn-primary btn-md" id="myBtn"><i class="fa fa-user" aria-hidden="true"></i></a> 0</div>
             {% endif %}
-            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><i class="fa fa-thumbs-o-up fa-lg"></i> 26</div>
+            {% if shared_events|length > 0 %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/events"><i class="fa fa-calendar" aria-hidden="true"></i></a> {{ eventCount(shared_events) }}</div>
+            {% else %}
+            <div class="col-md-4 col-xs-4 well" style="color: #0077B2"><a href="/communities/communityid/{{cid}}/events"><i class="fa fa-calendar" aria-hidden="true"></i></a> 0 </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+	<p style="font-family:Courier; color:Black; font-size: 24px; font-weight:bold;"> Members in this community:</p>
+	{% if members|length > 0 %}
+	<div class="row">
+		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+			<ul class="member-list">
+				{% for member in members %}
+					<p style="font-family:Courier; color:Black; font-size: 20px;">{{ member }}</p>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	{% else %}
+	<p style="font-family:Courier; color:Black; font-size: 21px; font-weight:bold;"> No Community Member Found</p>
+	{% endif %}
+  </div>
+
+</div>
+
+<script>
+// Get the modal
+var modal = document.getElementById('myModal');
+
+// Get the button that opens the modal
+var btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks the button, open the modal 
+btn.onclick = function() {
+    modal.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+    modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+</script>
 
 {% endblock %}

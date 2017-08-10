@@ -18,7 +18,7 @@
 					{{ form.submit(class="btn btn-primary") }}
 			</div>
 			<div class="form-group row">
-				<div class="list-group" style="overflow:scroll; height:460px; width: 400px">
+				<div id="events" class="list-group" style="overflow:scroll; height:460px; width: 400px">
 					{% for marker in markers %}
 					<li id="event{{ loop.index }}" class="list-group-item" style="cursor: pointer;">{{ loop.index }}. {{ marker.title }}<span class="pull-right">{{'%0.2f'| format(marker.dist|float)}} mi</span></a>
 					{% endfor %}
@@ -36,15 +36,22 @@
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true&key={{ key }}"></script>
 <script type="text/javascript" async defer src="https://cdnjs.cloudflare.com/ajax/libs/gmaps.js/0.4.25/gmaps.min.js"></script>
 <script type="text/javascript" async defer src="http://jawj.github.io/OverlappingMarkerSpiderfier/bin/oms.min.js"></script>
+<script type="text/javascript" async defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/2.1.2/jquery.scrollTo.js"></script>
 <! --
 Parts of the script below is taken from the demos found here: https://github.com/jawj/OverlappingMarkerSpiderfier
 -->
 <script>
 	var map;
+	var markers = {};
+	var iw = new google.maps.InfoWindow();
+
+    function iwClose() { iw.close(); }
+
 	function initialize() {
     	var mapElement = document.getElementById('map');
     	map = new google.maps.Map(mapElement, { center: { lat: {{ user_loc.lat }}, lng: {{ user_loc.lng }} } });
-    	var iw = new google.maps.InfoWindow();
+    	google.maps.event.addListener(map, 'click', iwClose);
+
     	var oms = new OverlappingMarkerSpiderfier(map, { 
     		markersWontMove: true,   // we promise not to move any markers, allowing optimizations
     		markersWontHide: true,   // we promise not to change visibility of any markers, allowing optimizations
@@ -60,11 +67,26 @@ Parts of the script below is taken from the demos found here: https://github.com
           											  	alert('hello');
           											  }
           											});  // markerData works here as a LatLngLiteral
+          		google.maps.event.addListener(marker, 'click', iwClose);
+          		var index = i+1;
 				google.maps.event.addListener(marker, 'spider_click', function(e) {  // 'spider_click', not plain 'click'
 					iw.setContent(markerData.text);
 					iw.open(map, marker);
+
+    				activeList = document.getElementsByClassName('active');
+    				if (activeList.length > 0) {
+    					activeList[0].classList.remove('active');
+    				}
+    				var eid = 'event' + index;
+    				var elem = document.getElementById(eid);
+    				elem.classList.add('active');
+
+    				// scroll to list item
+    				$("#events").scrollTop($("#events").scrollTop() + $("#"+eid).position().top
+    				    - $("#events").height()/2 + $("#"+eid).height()/2);
         		});
         		oms.addMarker(marker);  // adds the marker to the spiderfier _and_ the map
+        		markers[index] = marker;
 
     			bounds.extend(new google.maps.LatLng(markerData.lat, markerData.lng)); // update bounds
         	})();
@@ -107,9 +129,11 @@ Parts of the script below is taken from the demos found here: https://github.com
     			activeList[0].classList.remove('active');
     		}
     		this.classList.add('active');
-    		// change the center of the map
-    		newCenter({{ marker.loc.lat }}, {{ marker.loc.lng }});
-    		// update the bounds of the map
+    		newCenter({{ marker.loc.lat }}, {{ marker.loc.lng }}); // change the center of the map
+    		
+    		// open a text window
+    		iw.setContent(window.mapData[{{ loop.index }}-1].text);
+			iw.open(map, markers[{{ loop.index }}]);
     	});
     	{% endfor %}
     });
