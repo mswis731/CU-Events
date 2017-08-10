@@ -18,6 +18,7 @@ class CreateEventForm(Form):
 	highPrice = DecimalField(id = 'highPrice', places=2, validators=[validators.InputRequired("Upper bound on price range is invalid")])
 	categories = SelectMultipleField(id ='category', label='Categories', validators=[validators.Required("Select at least one category")])
 	eventTypes = SelectMultipleField(id ='eventtype', label='Event Types', validators=[validators.Required("Select at least one event type")])
+	# photo = FileField(label = 'Event image')
 	submit = SubmitField("Create Event") 
 
 	def __init__(self, form):
@@ -139,7 +140,7 @@ class SignupForm(Form):
 	confirm_password = PasswordField('Confirm Password', [validators.Required("Please confirm password.")])
 
 	email = TextField('Email')
-	submit = SubmitField("Create Account") 
+	submit = SubmitField("CREATE ACCOUNT") 
 
 	def __init__(self, *args, **kwargs):
 		Form.__init__(self, *args, **kwargs)
@@ -170,7 +171,7 @@ class SignupForm(Form):
 class SigninForm(Form):
 	my_username = TextField("Username", [validators.Required("Please enter your email address")])
 	my_password = PasswordField("Password", [validators.Required("please enter your password")])
-	sign_in_submit = SubmitField("Sign In")
+	sign_in_submit = SubmitField("SIGN IN")
 
 	def __init__(self, *args, **kwargs):
 		Form.__init__(self, *args, **kwargs)

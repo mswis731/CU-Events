@@ -4,6 +4,7 @@ from app.filters import *
 from app import app, mysql, GMAPS_KEY
 from datetime import datetime
 from werkzeug import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from flask_paginate import Pagination
 import googlemaps
 import json
@@ -16,6 +17,9 @@ from sklearn.cluster import KMeans
 from app.crawlers.mappings import *
 from collections import Counter
 import random
+from flask_uploads import UploadSet, configure_uploads, IMAGES
+
+photos = UploadSet('photos', IMAGES)
 
 @app.route('/')
 @app.route('/index')
@@ -26,6 +30,9 @@ def index():
 	all_events = [tup[0] for tup in cursor.fetchall()]
 
 	return render_template('index.html', all_events = all_events)
+
+
+
 
 @app.route('/signin', methods = ['GET', 'POST'])
 def signin():
@@ -38,10 +45,14 @@ def signin():
 			if request.form.get('next') != None:
 				return redirect(request.form.get('next'))
 			else:
-				return redirect(url_for('profile'))
-		# else fall through and render signin form again
+				# return redirect(url_for('profile'))
+				return "success"
+		else:
+			return "failure"
+	# else fall through and render signin form again
 
 	return render_template('signin.html', form=form, next=next)
+	# return "failure"
 
 @app.route('/signup', methods = ['GET', 'POST'])
 def sign_up():
@@ -51,8 +62,8 @@ def sign_up():
 	form = SignupForm(request.form)
 	if request.method == "POST":
 		if form.validate() == False:
-			flash('Fill in required fields')
-			return render_template('signup.html', form=form)
+			return jsonify(errors =  True, firstname_error = form.firstname.errors, lastname_error = form.lastname.errors, username_error = form.username.errors, password_error = form.password.errors, confirm_password_error = form.confirm_password.errors, email_error = form.email.errors) 
+			# return render_template('signup.html', form=form)
 		else:
 			password_hash = generate_password_hash(form.password.data)
 			attr = (form.firstname.data, form.lastname.data, form.email.data, form.username.data, password_hash)
@@ -60,10 +71,9 @@ def sign_up():
 			connection.commit()
 
 			session['username'] = form.username.data
-			return redirect(url_for('profile'))
+			return jsonify(errors = False)
 
-
-			return("thank you for signing up!")
+			# return("thank you for signing up!")
 	elif request.method == 'GET':
 		return render_template('signup.html', form=form)
 
@@ -193,6 +203,16 @@ def eventcreate():
 	if request.method == 'POST':
 		if form.validate():
 
+			print(request.files)
+			if 'photo' not in request.files:
+				print("WHAT THE FUCK IS WRONG")
+			else:
+				filename = photos.save(request.files['photo'])
+			# print(filename)
+			# file = request.files['photo']
+			# filename = secure_filename(file.filename)
+			# file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
 			attr_list = []
 			for field in form:
 				if (field.name == 'eid' and field.data == -1) or field.name=='submit':
@@ -205,6 +225,8 @@ def eventcreate():
 					attr_list.append(form.end[1])
 				elif field.name == 'categories' or field.name == 'eventTypes':
 					attr_list.append(','.join(map(str, field.data)))
+				elif field.name == 'photo':
+					continue
 				else:
 					attr_list.append(field.data)
 
@@ -229,7 +251,10 @@ def eventcreate():
 				
 			connection.commit()
 
-			return redirect(url_for('get_event', id=id))
+			# return redirect(url_for('get_event', id=id))
+			return jsonify(success = True, eid = id)
+		else:
+			return jsonify(success = False, a_title_error = form.title.errors, b_description_error = form.description.errors, c_building_error = form.building.errors, d_addrAndStreet_error = form.addrAndStreet.errors, e_city_error = form.city.errors, f_zipcode_error=form.zipcode.errors, g_startDate_error = form.startDate.errors, h_endDate_error = form.endDate.errors, i_lowPrice_error = form.lowPrice.errors, j_highPrice_error = form.highPrice.errors, k_categories_error = form.categories.errors, l_eventTypes_error = form.eventTypes.errors)
 
 	return render_template('eventcreate.html', form=form, error=error)
 
@@ -341,7 +366,7 @@ def browse(filter_path = None):
 	else:
 		query = "SELECT {} FROM Event".format(attrs)
 	
-	query += " ORDER BY startDate DESC"
+	query += " ORDER BY startDate ASC"
 	
 	res_len = cursor.execute(query)
 

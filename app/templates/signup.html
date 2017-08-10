@@ -1,85 +1,109 @@
 {% extends 'navbar.html' %}
 
-{% block title %} - Sign Up{% endblock %}
+{% block title %} Sign Up{% endblock %}
 
 {% block stylesheets %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css"/>
+ <link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/Style.css') }}"> 
+
 {% endblock %}
 
-{% block content %}
-	<!-- <h2 style="">Sign up</h2> -->
-     
-	{% for message in form.firstname.errors %}
-		<div class="flash">{{ message }}</div>
-	{% endfor %}
-
-	{% for message in form.lastname.errors %}
-		<div class="flash">{{ message }}</div>
-	{% endfor %}
-
-    {% for message in form.username.errors %}
-      <div class="flash">{{ message }}</div>
-    {% endfor %}
-
-    {% for message in form.email.errors %}
-      <div class="flash">{{ message }}</div>
-    {% endfor %}
-
-    {% for message in form.password.errors %}
-      <div class="flash">{{ message }}</div>
-    {% endfor %}
-
-
-    {% for message in form.confirm_password.errors %}
-      <div class="flash">{{ message }}</div>
-    {% endfor %}
+{% block content %} 
 
 	<div class="container">
-		<div id="legend">
-			<legend class="" style="text-align: center; padding-bottom: 40px; ">Sign Up</legend>
+		<div style = "padding-bottom: 40px; padding-top: 20px; text-align: center">
+			<h3 class="" style="padding-bottom: 10px;">Sign Up</h3>
+			<div class = "row">
+				<span class = "results" id = "firstname_result"></span>
+			</div>
+			<div class = "row">
+				<span class = "results" id = "lastname_result"></span>			
+			</div>
+			<div class = "row">
+				<span class = "results" id = "username_result"></span>
+			</div>
+			<div class = "row">
+				<span class = "results" id = "email_result"></span>
+			</div>
+			<div class = "row">
+				<span class = "results" id = "password_result"></span> 
+			</div>
+			<div class = "row">
+				<span class = "results" id = "confirm_password_result"></span>
+			</div>
 		</div>
-		<form action="{{ url_for('sign_up') }}" method=post>
-			<div class="form-group row">
-				{{ form.firstname.label(class="col-sm-2 col-form-label") }}
-				<div class="col-sm-6">
-					{{ form.firstname(class="form-control") }}
+		<form id = "signupform" action="{{ url_for('sign_up') }}" method=post>
+			<div class="form-group row required">
+				{{ form.firstname.label(class="col-sm-1 col-sm-offset-3 col-form-label form-field", style = "margin-right: 10px") }}
+				<div class="col-sm-5">
+					{{ form.firstname(class="form-control", style = "border-radius: 0; margin-bottom: 15px; margin-left: 20px") }}
+				</div>
+			</div>
+			<div class="form-group row required">
+				{{ form.lastname.label(class="col-sm-1 col-sm-offset-3 col-form-label form-field", style = "margin-right: 10px") }}
+				<div class="col-sm-5">
+					{{ form.lastname(class="form-control", style = "border-radius: 0; margin-bottom: 15px; margin-left: 20px") }}
+				</div>
+			</div>
+			<div class="form-group row required">
+				{{ form.username.label(class="col-sm-1 col-sm-offset-3 col-form-label form-field", style = "margin-right: 10px") }}
+				<div class="col-sm-5">
+					{{ form.username(class="form-control", style = "border-radius: 0; margin-bottom: 15px; margin-left: 20px") }}
 				</div>
 			</div>
 			<div class="form-group row">
-				{{ form.lastname.label(class="col-sm-2 col-form-label") }}
-				<div class="col-sm-6">
-					{{ form.lastname(class="form-control") }}
+				{{ form.email.label(class="col-sm-1 col-sm-offset-3 col-form-label form-field", style = "margin-right: 10px") }}
+				<div class="col-sm-5">
+					{{ form.email(class="form-control", style = "border-radius: 0; margin-bottom: 15px; margin-left: 20px") }}
 				</div>
 			</div>
-			<div class="form-group row">
-				{{ form.username.label(class="col-sm-2 col-form-label") }}
-				<div class="col-sm-6">
-					{{ form.username(class="form-control") }}
+			<div class="form-group row required">
+				{{ form.password.label(class="col-sm-1 col-sm-offset-3 col-form-label form-field", style = "margin-right: 10px") }}
+				<div class="col-sm-5">
+					{{ form.password(class="form-control", style = "border-radius: 0; margin-bottom: 15px; margin-left: 20px") }}
 				</div>
 			</div>
-			<div class="form-group row">
-				{{ form.email.label(class="col-sm-2 col-form-label") }}
-				<div class="col-sm-6">
-					{{ form.email(class="form-control") }}
+			<div class="form-group row required">
+				{{ form.confirm_password.label(class="col-sm-1 col-sm-offset-3 col-form-label form-field", style = "margin-right: 10px") }}
+				<div class="col-sm-5">
+					{{ form.confirm_password(class="form-control", style = "border-radius: 0; margin-bottom: 20px; margin-left: 20px") }}
 				</div>
 			</div>
-			<div class="form-group row">
-				{{ form.password.label(class="col-sm-2 col-form-label") }}
-				<div class="col-sm-6">
-					{{ form.password(class="form-control") }}
-				</div>
-			</div>
-			<div class="form-group row">
-				{{ form.confirm_password.label(class="col-sm-2 col-form-label") }}
-				<div class="col-sm-6">
-					{{ form.confirm_password(class="form-control") }}
-				</div>
-			</div>
-			<div class="form-group row">
-				<div class="offset-sm-2 col-sm-10">
-				{{ form.submit(class="btn btn-primary") }}
+			<div class="form-group row" style = "text-align: center;">
+				<div class="col-sm-offset-5 col-sm-2">
+				{{ form.submit(class="cu-button", style = "border-radius: 0; margin-left: 20px") }}
 				</div>
 			</div>
 	</form>
 	</div>
 {% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+	$(document).ready(function(){
+		$("#signupform").on('submit', function(e) {
+			e.preventDefault();
+			$.ajax({
+				type: "POST",
+				url: "/signup",
+				data: $("#signupform").serialize(),
+				success: function(res){
+					if (res['errors'] == false){
+						window.location = "/profile";
+					}
+					else {
+						displayResults('firstname_result', res['firstname_error']);
+						displayResults('lastname_result', res['lastname_error']);
+						displayResults('username_result', res['username_error']);
+						displayResults('email_result', res['email_error']);
+						displayResults('password_result', res['password_error']);
+						displayResults('confirm_password_result', res['confirm_password_error']);
+					}
+				}
+			});
+		});
+	});
+</script>
+{% endblock %}
+
+

@@ -4,43 +4,63 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css"/>
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/Style.css') }}"> 
+
+
 {% endblock %}
     
 {% block content %}
-  	<!-- <h2 style="">Sign up</h2> -->
 
-    	{% for message in form.my_username.errors %}
-      	<div class="flash">{{ message }}</div>
-    	{% endfor %}
-	
-    	{% for message in form.my_password.errors %}
-      	<div class="flash">{{ message }}</div>
-    	{% endfor %}
-	
 	<div class="container">
-    	<div id="legend">
-        	<legend class="" style="text-align: center; padding-bottom: 40px; ">Sign In</legend>
+    	<div style = "text-align: center; padding-top: 20px; padding-bottom: 40px">
+        	<h3 class="" style="text-align: center; margin-bottom: 15px">Sign In</h3>
+        	<span class = "results" id = "error"></span>
     	</div>
-  	<form action="{{ url_for('signin') }}" autocomplete="off" method=post>
-		<!-- <input type="password" style="display:none"> -->
+  	<form id = "signinform" action="{{ url_for('signin') }}" autocomplete="off" method="POST">
   		<input type="text" id="next" name="next" style="display:none" value={% if next %}{{ next }}{% endif %}>
-		<div class="form-group row">
-			{{ form.my_username.label(class="col-sm-2 col-form-label") }}
-			<div class="col-sm-6">
-				{{ form.my_username(class="form-control") }}
+		<div class="form-group row required">
+			{{ form.my_username.label(class="col-sm-1 col-form-label col-sm-offset-3 form-field", style = "margin-right: 10px;") }}
+			<div class="col-sm-5">
+				{{ form.my_username(class="form-control", style = "border-radius: 0; margin-bottom: 15px; margin-left: 20px") }}
 			</div>
 		</div>
-		<div class="form-group row">
-			{{ form.my_password.label(class="col-sm-2 col-form-label") }}
-			<div class="col-sm-6">
-				{{ form.my_password(class="form-control") }}
+		<div class="form-group row required">
+			{{ form.my_password.label(class="col-sm-1 col-form-label col-sm-offset-3 form-field", style = "margin-right: 10px") }}
+			<div class="col-sm-5">
+				{{ form.my_password(class="form-control", style = "border-radius: 0; margin-bottom: 20px; margin-left: 20px") }}
 			</div>
 		</div>
-		<div class="form-group row">
-			<div class="offset-sm-2 col-sm-10">
-			{{ form.sign_in_submit(class="btn btn-primary") }}
+		<div class="form-group row" style = "text-align: center">
+			<div class="col-sm-offset-5 col-sm-2">
+			{{ form.sign_in_submit(class="cu-button", style = "border-radius: 0; width: 150px; margin-left: 20px") }}
 			</div>
 		</div>
    	</form>
  	</div>
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+
+		$(document).ready(function(){
+			$('#signinform').on('submit', function(e) {
+				e.preventDefault();
+				$.ajax({
+					type: "POST",
+					url: "/signin",
+					data: $('#signinform').serialize(),
+					success: function(res){
+						if (res === "failure"){
+							displayResults("error", "The username or password you entered is incorrect");	
+						}
+						else {
+							window.location = "/profile";
+						}
+					}
+				});
+				e.preventDefault();
+			});
+		});
+
+	</script>
 {% endblock %}

@@ -5,6 +5,7 @@ CREATE TABLE User (
 	firstname			VARCHAR(30),
 	lastname			VARCHAR(30),
 	email				VARCHAR(50) NOT NULL UNIQUE,
+	confirmed 			tinyint(1) DEFAULT false,
 	PRIMARY KEY(uid)
 );
 CREATE TABLE Community (
@@ -39,6 +40,7 @@ CREATE TABLE Event (
 	lowPrice			REAL,
 	highPrice			REAL,
 	nonUserViews		INTEGER DEFAULT 0,
+	image_path 			varchar(1024),
 	PRIMARY KEY(eid)
 );
 CREATE TABLE EventCrawled (

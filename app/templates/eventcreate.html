@@ -4,15 +4,18 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css"/>
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/Style.css') }}"> 
+
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <div id="legend">
-      	<legend class="">{% if form.eid.data == -1 %}Create an Event{% else %}Update an Event{% endif %}</legend>
+    <div style = "text-align: center; margin-bottom: 40px">
+      	<h3 class="" style = "margin-bottom: 10px">{% if form.eid.data == -1 %}Create an Event{% else %}Update an Event{% endif %}</h3>
+      	<span class = "results" id = "createEventResults"></span>
     </div>
-	<form action='', method='POST'>
-		{% for field in form %}
+	<form id = "eventcreateform" action="", method="POST" enctype=multipart/form-data>
+<!-- 		{% for field in form %}
 		{% for error in field.errors %}
 		<div class="row">
 			<div class="col-sm-5">
@@ -23,42 +26,43 @@
 			</div>
 		</div>
 		{% endfor %}
-		{% endfor %}
+		{% endfor %} -->
 		<div style="visibility:hidden;position:absolute;">
 			{{ form.eid }}
 		</div>
-		<div class="form-group row">
-			{{ form.title.label(class="col-sm-2 col-form-label") }}
+		<div class="form-group row required">
+			{{ form.title.label(class="col-sm-2 col-form-label form-field") }}
 			<div class="col-sm-6">
 				{{ form.title(class="form-control") }}
 			</div>
 		</div>
+	
 		<div class="form-group row">
-			{{ form.description.label(class="col-sm-2 col-form-label") }}
+			{{ form.description.label(class="col-sm-2 col-form-label form-field") }}
 			<div class="col-sm-6">
 				{{ form.description(class="form-control", rows="5") }}
 			</div>
 		</div>
-		<div class="form-group row">
-			<label for="location" class="col-sm-2 col-form-label">Location</label>
+		<div class="form-group row required">
+			<label for="location" class="col-sm-2 col-form-label form-field">Location</label>
 			<div class="col-sm-2">
-				{{ form.building(class="form-control", placeholder="Building/Venue") }}
+				{{ form.building(class="form-control form-field", placeholder="Building/Venue") }}
 			</div>
 			<div class="col-sm-2">
-				{{ form.addrAndStreet(class="form-control", placeholder="Address") }}
+				{{ form.addrAndStreet(class="form-control form-field", placeholder="Address") }}
 			</div>
 			<div class="col-sm-2">
-				{{ form.city(class="form-control", placeholder="City") }}
+				{{ form.city(class="form-control form-field", placeholder="City") }}
 			</div>
 			<div class="col-sm-1">
-				<p class="form-control-static">Illinois</p>
+				<p class="form-control-static form-field">Illinois</p>
 			</div>
 			<div class="col-sm-2">
-				{{ form.zipcode(class="form-control", placeholder="Zipcode") }}
+				{{ form.zipcode(class="form-control form-field", placeholder="Zipcode") }}
 			</div>
 		</div>
-		<div class="form-group row">
-			{{ form.startDate.label(class="col-sm-2 col-form-label") }}
+		<div class="form-group row required">
+			{{ form.startDate.label(class="col-sm-2 col-form-label form-field") }}
     		<div class='col-sm-6'>
         		<div class='input-group date' id='datetimepicker1'>
             		{{ form.startDate(class="form-control", placeholder="Date and Time") }}
@@ -68,8 +72,8 @@
         		</div>
     		</div>
 		</div>
-		<div class="form-group row">
-			{{ form.endDate.label(class="col-sm-2 col-form-label") }}
+		<div class="form-group row required">
+			{{ form.endDate.label(class="col-sm-2 col-form-label form-field") }}
 			<div class='col-sm-6'>
         		<div class='input-group date' id='datetimepicker2'>
             		{{ form.endDate(class="form-control", placeholder="Date and Time") }}
@@ -79,33 +83,41 @@
         		</div>
     		</div>
 		</div>
-		<div class="form-group row">
-			<label for="title" class="col-sm-2 col-form-label">Price Range</label>
+		<div class="form-group row required">
+			<label for="title" class="col-sm-2 col-form-label form-field">Price Range</label>
 			<div class="col-sm-2">
-            	{{ form.lowPrice(class="form-control", placeholder="Low Price") }}
+            	{{ form.lowPrice(class="form-control form-field", placeholder="Low Price") }}
 			</div>
 			<div class="col-sm-2">
             	{{ form.highPrice(class="form-control", placeholder="High Price") }}
 			</div>
 		</div>
-		<div class="form-group row">
-			{{ form.categories.label(class="col-sm-2 col-form-label") }}
+		<div class="form-group row required">
+			{{ form.categories.label(class="col-sm-2 col-form-label form-field") }}
 			<div class="col-sm-4">
-				{{ form.categories(class="selectpicker") }}
+				{{ form.categories(class="selectpicker form-control") }}
+			</div>
+		</div>
+		<div class="form-group row required">
+			{{ form.eventTypes.label(class="col-sm-2 col-form-label form-field") }}
+			<div class="col-sm-4">
+				{{ form.eventTypes(class="selectpicker form-control") }}
 			</div>
 		</div>
 		<div class="form-group row">
-			{{ form.eventTypes.label(class="col-sm-2 col-form-label") }}
-			<div class="col-sm-4">
-				{{ form.eventTypes(class="selectpicker") }}
+			<div class = "col-sm-2 form-field">
+				<p> Event Image </p>
 			</div>
-		</div>
-		<div class="form-group row">
-			<div class="offset-sm-2 col-sm-10">
+			<div class = "col-sm-4">
+				<input type=file name=photo>
+			</div>
+			<div class = "col-sm-3 ">
+			</div>
+			<div class="col-sm-3" style = "float: right">
 				{% if form.eid.data == -1 %}
-				{{ form.submit(class="btn btn-primary",value="Create Event") }}
+				{{ form.submit(class="cu-button",value="Create Event") }}
 				{% else %}
-				{{ form.submit(class="btn btn-primary",value="Update Event") }}
+				{{ form.submit(class="cu-button",value="Update Event") }}
 				{% endif %}
 			</div>
 		</div>
@@ -125,5 +137,31 @@
 	$(function() {
         $('#datetimepicker2').datetimepicker();
     });
+</script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		$('#eventcreateform').on('submit', function(e){
+			e.preventDefault();
+			$.ajax({
+				type: "POST",
+				url: "/eventcreate",
+				data: $('#eventcreateform').serialize(),
+				success: function(res){
+					if (res['success'] == true){
+						window.location = "/browse/eventid/" + res['eid'];
+					}
+					else {
+						for (var i in res){
+							if (res[i].length > 0){
+								displayResults('createEventResults', res[i]);
+								break;
+							}
+						}						
+					}
+				}
+			});
+			e.preventDefault();
+		});
+	});
 </script>
 {% endblock %}

@@ -1,11 +1,12 @@
+/** {
+    border-radius: 0;
+}*/
+
 .col-centered {
     margin: 0 auto;
     float: none;
 }
 
-body{
-    font-family: 'Amiko', sans-serif;
-}
 /*
 .ui-autocomplete.ui-widget {
   font-family: 'Amiko', sans-serif;

@@ -6,6 +6,9 @@ db_user = None
 db_password = None
 db_name = None
 db_host = None
+
+# UPLOAD_FOLDER = "/project411/CU-Events/app/event_photos"
+
 try:
 	import app.secret
 	db_user = secret.user
@@ -30,6 +33,7 @@ app.config['MYSQL_DATABASE_USER'] = db_user
 app.config['MYSQL_DATABASE_PASSWORD'] = db_password
 app.config['MYSQL_DATABASE_DB'] = db_name
 app.config['MYSQL_DATABASE_HOST'] = db_host
+# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 mysql = MySQL()
 mysql.init_app(app)

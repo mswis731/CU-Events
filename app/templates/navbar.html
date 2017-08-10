@@ -1,6 +1,7 @@
 <!DOCTYPE html> 
 <html lang="en">
 <head>
+  <meta name="viewport" content="initial-scale=1">
 	<title>CU Events{% block title %}{% endblock %}</title>
 	<!-- Latest compiled and minified CSS -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -8,15 +9,18 @@
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 	<!-- Bootstrap Select -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css">
-
 	<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/navbar.css') }}"> 
 
 	<link href="https://fonts.googleapis.com/css?family=Amiko" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet">
+
 	{% block stylesheets %}{% endblock %}
 </head>
 
 <body>
-	<nav class="navbar navbar-default navbar-fixed-top" role="navigation" style="font-family:'Amiko', sans-serif; ">
+	<nav class="navbar navbar-default navbar-fixed-top" role="navigation"s >
 	<!--
 	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
 	-->
@@ -29,23 +33,23 @@
         	<span class="icon-bar"></span>
         	<span class="icon-bar"></span>
       	</button>
-      	<a class="navbar-brand" href="/">CU Events</a>
+      	<a class="navbar-brand header-link" href="/" style = "color: black">CU EVENTS</a>
     	</div>
 	
     	<!-- Collect the nav links, forms, and other content for toggling -->
     	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       	<ul class="nav navbar-nav navbar-right">
-			<li><a href="/browse">Browse Events</a></li>
-        	<li><a href="/communities">Browse Communities</a></li>
-        	<li><a href="/eventcreate">Create Event</a></li>
-			<li><a href="/communitycreate">Create Community</a></li>
-        	<li><a href="/eventsnearme">Events Near Me</a></li>
+			<li><a href="/browse" class = "header-link" style = "color: black">BROWSE EVENTS</a></li>
+        	<li><a href="/communities" class = "header-link" style = "color: black">BROWSE COMMUNITIES</a></li>
+        	<li><a href="/eventcreate" class = "header-link" style = "color: black">CREATE EVENT</a></li>
+			<li><a href="/communitycreate" class = "header-link" style = "color: black">CREATE COMMUNITY</a></li>
+        	<li><a href="/eventsnearme" class = "header-link" style = "color: black">EVENTS NEAR ME</a></li>
 			{% if not session.username %}
-			<li><a href='/signup'>Sign up </a></li>
-			<li><a href='{{ url_for('signin', next=request.url) }}'>Sign in </a></li>
+			<li><a href='/signup' class = "header-link" style = "color: black">SIGN UP </a></li>
+			<li><a href='{{ url_for('signin', next=request.url) }}' class = "header-link" style = "color: black">SIGN IN </a></li>
 			{% else %}
         	<li class="dropdown">
-          	<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ session.username }} <span class="caret"></span></a>
+          	<a href="#" class="dropdown-toggle header-link" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" style = "color: black">{{ session.username }} <span class="caret"></span></a>
           	<ul class="dropdown-menu">
 
             	<li><a href="/profile">My Profile</a></li>
@@ -70,7 +74,13 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <!-- Bootstrap Select -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/i18n/defaults-*.min.js"></script>
-{% block scripts %}{% endblock %}
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/i18n/defaults-*.min.js"></script>
+ -->{% block scripts %}
 
+{% endblock %}
+<script type = "text/javascript">
+  function displayResults(id, content){
+      document.getElementById(id).innerHTML = content;
+  }
+</script>
 </html>

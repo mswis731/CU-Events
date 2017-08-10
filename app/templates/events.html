@@ -5,14 +5,16 @@
 {% block stylesheets %}
 <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
 <link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/Style.css') }}"> 
 {% endblock %}
 
 {% block content %}
 
 <form action="", method="post">
-  <div class="col-md-2" >
+  <div class="col-md-2">
     <div class="form-group row" style="padding: 0; margin: 0">
-    	{{ form.searchTerm(class="form-control", placeholder="Search") }}
+    	{{ form.searchTerm(class="form-control", placeholder="Search", style = "border-radius: 0") }}
     </div>
 	<div class="form-group row" style="padding: 0; margin: 0">
 		<h6 style="padding-left: 4px"> Categories </h6>
@@ -50,18 +52,17 @@
    </div>
 </form>
 
-<div class="container">
-	{% if events|length > 0 %}
-	<div class="row">
-		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
-			<ul class="event-list">
+<!-- <div class="container">
+ -->	{% if events|length > 0 %}
+	<div class="col-md-10">
+<!-- 		<div class="[ col-xs-12 col-sm-offset-2 col-sm-8 ]">
+ -->			<ul class="event-list">
 				{% for event in events %}
-				<li onclick="location.href='/browse/eventid/{{event.eid}}';">
-					<time datetime="{{ event.startDate }}">
+<!-- 				<li onclick="location.href='/browse/eventid/{{event.eid}}';">
+					<time datetime="{{ event.startDate }}" style = "font-family: 'Roboto Mono', monospace;">
 						<span class="day">{{ event.startDate.day }}</span>
 						<span class="month">{{ event.startDate.month|month }}</span>
 						<span class="year">{{ event.startDate.year }}</span>
-						<!-- <span class="time"></span> -->
 					</time>
 					<div class="info">
 						<h2 class="title">{{ event.title }}</h2>
@@ -79,24 +80,45 @@
 						</ul>
 						{% endif %}
 					</div>
-				</li>
+				</li> -->
+				<div onclick="location.href='/browse/eventid/{{event.eid}}';" class = "container event-template col-sm-8 col-sm-offset-2" style = "height: 135px; overflow: hidden; margin-bottom: 30px; cursor:pointer;">
+					<div class = "row">
+						<div class = "picture" style = "height: 135px; width: 30%; float: left; background-image: url('https://umma.umaine.edu/wp-content/uploads/sites/96/2016/09/121314_AK_DSC_0807sized.jpg'); background-size: auto 135px">
+						</div>
+						<div class = "event-info" style = "height: 135px; width: 70%; float: right; padding-left: 10px; background-color: whitec">
+							<div class = "row">
+							<h4 class = "col-sm-10" style = "padding-bottom: 4px"> <b> {{ event.title }} </b> </h4>
+								<p class = "col-sm-2 col-xs-1" style="padding-top: 10px">{% if event.lowPrice == 0 and  event.highPrice == 0 %} free {%else%} {{event.lowPrice}} - {{event.highPrice}} {%endif%}</p>
+							</div>
+							<p style="line-height: 70%"> {{ event.startDate.day }} {{ event.startDate.month|month }} {{ event.startDate.year }} </p>
+							<p style="line-height: 70%"> {% if event.building %}{{ event.building }}{% endif %} </p>
+							<div style ="position: relative; top: 17px";>
+								<p style = "bottom: 0"> {{event.categories}} </p>
+							</div>
+						</div>
+					</div>
+				</div>
 				{% endfor %}
 			</ul>
-		</div>
-	</div>
+<!-- 		</div>
+ -->	</div>
 	<div class="text-center">
 		{{ pagination.links }}
 	</div>
 	{% else %}
-	<p style="text-align: center; font-family: 'Amiko', sans-serif;; font-size: 200%; font-weight: bold;"> No Events Found</p>
+	<p style="text-align: center; font-family: 'Amiko', sans-serif; font-size: 200%; font-weight: bold;"> No Events Found</p>
 	{% endif %}
-</div>
-{% endblock %}
+<!-- </div>
+ -->{% endblock %}
 
 {% block scripts %}
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
 <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
-<script type="text/javascript">
+<script type="text/javascription() {
+	var tmpl = document.getElementById('event-details');
+	document.body.appendChild(tmpl.content.cloneNode(true));
+});
+
 $(function() {
 	$('input[name="daterange"]').daterangepicker({
 		autoUpdateInput: false,
@@ -119,4 +141,6 @@ $(function() {
 	});
 });
 </script>
+
+
 {% endblock %}
