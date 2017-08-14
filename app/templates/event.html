@@ -1,92 +1,75 @@
 {% extends 'navbar.html' %}
 {% block stylesheets %}
 <link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/events.css') }}"> 
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static',filename='styles/Style.css') }}"> 
 {% endblock %}
+
 {% block content %}
-<div class="col-lg-12">
-    <div class="card hovercard">
-        <div class="card-background">
-            <img class="card-bkimg" alt="" src="http://wallpapercave.com/wp/6UaXRIr.jpg">
-            <!-- http://lorempixel.com/850/280/people/9/ -->
-        </div>
-        <div class="useravatar">
-            <img alt="" src="http://wallpapercave.com/wp/6UaXRIr.jpg">
-        </div>
-        <div class="card-info"> <span class="card-title" style="font-size: 22px">{{e.title}}</span>
-        </div>
-    </div>
-    <div class="btn-pref btn-group btn-group-justified btn-group-lg" role="group" aria-label="...">
-        <div class="btn-group" role="group">
-            <button type="button" id="stars" class="btn btn-primary" href="#tab1" data-toggle="tab"><span class="glyphicon glyphicon-star" aria-hidden="true"></span>
-                <div class="hidden-xs" style="font-size: 16px">Event Information</div>
-            </button>
-        </div>
-    </div>
-    <div class="well" style="height:300px; width:100%; overflow: scroll;">
-      <div class="tab-content">
-        <div class="tab-pane fade in active" id="tab1">
-            <div class="info" margin-top="105px">
-            	{% if session.username %}
-            	{% if editPermission %}
-				<li class="dropdown pull-right">
-          			<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-pencil"></span></a>
-          			<ul class="dropdown-menu">
-            			<li><a href="{{ url_for('eventcreate', eid=e.eid) }}"><span class="pull-right">Edit Event</span></a></li>
-            			<li><a href="{{ url_for('delete_event', eid=e.eid, next=request.referrer) }}"><span class="pull-right">Delete Event</span></a></li>
-          			</ul>
-        		</li>
-            	{% endif %}
-				{% if already_interested is not none %}
-                <br><a class="btn icon-btn btn-success" href="/browse/eventid/{{e.eid}}/uninterested"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"</span> Uninterested</a>
+{% for e in event %}
+<div class="container-fluid" style = "padding: 0; margin-top: -20px">
+    <div class="row">
+        <div class="col-xs-7 row" style = "background: white; height: 88vh; overflow: scroll">
+            <div style = "width: 90%; margin-left: 7%; margin-right: 7%; margin-bottom: 60px; text-align: center">
+                <h2 style = "margin-bottom: 30px"> <b> {{e.title}} </b> </h2>
+                <p> {{e.description}} </p>
+                {% if already_interested is not none %}
+                <br><button class="cu-button" onclick = "window.location = '/browse/eventid/{{e.eid}}/uninterested'" style = "margin-bottom: 30px"> Uninterested</button>
                 {% else %}
-                <br><a class="btn icon-btn btn-success" href="/browse/eventid/{{e.eid}}/interested"><span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span> Interested</a>
+                <br><button class="cu-button" onclick ="window.location= '/browse/eventid/{{e.eid}}/interested'" style = "margin-bottom: 30px"> Interested</button>
                 {% endif %}
-                <p></p>
-                {% endif %}
-                <p class = "desc" style="font-weight: bold; font-size: 16px">Date:</p>
-                {% if e.startDate.day == e.endDate.day %}
-                <span class="day">{{ e.startDate.day }}</span>
-                {% else %}
-                <span class="day">{{ e.startDate.day}} - {{e.endDate.day }}</span>
-                {% endif %}
-                <span class="month">{{ e.startDate.month|month }}</span>
-                <span class="year">{{ e.startDate.year }}<br></span>
-                <span class="dayrange" padding-top="5px">{{e.startTime}}-{{e.endTime}}<br></span>
-                <p class = "desc" style="font-weight: bold; font-size: 16px"><br>Location:</p>
-                <p class = "desc">{% if e.building %}{{ e.building }}<br>{% endif %}
-                {{e.addrAndStreet}},<br> {{e.city}}, IL, {{e.zipcode}}</p>
-                <p class = "desc" style="font-weight: bold; font-size: 16px">Event Overview:</p>
-                {% if e.description %}
-                <p class = "desc">{{e.description}}</p>
-                {% else %}
-                <p class = "desc">N/A</p>
-                {% endif %}
+               <!--  <p class = "desc" style="font-weight: bold; font-size: 16px">Date:</p> -->
+                <div class = "date" style = "font-size: 20px; margin-bottom: 30px">
+                    <span class="month">{{ e.startDate.month|month }}</span>
+                    {% if e.startDate.day == e.endDate.day or e.endDate is none%}
+                        <span class="day">{{ e.startDate.day }}</span>
+                    {% else %}
+                        <span class="day">{{ e.startDate.day}} - {{e.endDate.day }}</span>
+                    {% endif %}
+                    <span class="year">{{ e.startDate.year }}<br></span>
+                    <span class="dayrange" padding-top="5px">
+                    {% if e.endTime is not none %}
+                        {{e.startTime}}-{{e.endTime}}<br></span>
+                    {% else %}
+                        {{e.startTime}}<br></span>
+                    {% endif %}
+                </div>
+                <div class = "location" style = "font-size: 18px; margin-bottom: 25px">
+                    <p class = "desc">{% if e.building %}{{ e.building }}<br>{% endif %}
+                    {{e.addrAndStreet}},<br> {{e.city}}, IL, {{e.zipcode}}</p>
+                </div>
                 {% if e.lowPrice and e.highPrice %}
                     {% if e.lowPrice < e.highPrice %}
-                    <p class ="desc"><br>Price: ${{e.lowPrice}} - ${{e.highPrice}}</p>
+                    <div class = "price" style = "font-size: 16px; margin-bottom: 30px">
+                        <span class ="desc">Price: ${{e.lowPrice}} - ${{e.highPrice}}</span>
+                    </div>
                     {% else %}
-                    <p class ="desc"><br> ${{e.lowPrice|money}}</p>
+                    <div class = "price" style = "font-size: 16px; margin-bottom: 30px">
+                        <span class ="desc">${{e.lowPrice|money}}</span>
+                    </div>
                     {% endif %} 
                 {% else %}
-                <p class = "desc" style="font-weight: bold; font-size: 16px"><br>Price:</p>
-                <p class = "desc">Not Available</p>
+                <div class = "price" style = "font-size: 16px;margin-bottom: 30px">
+                    <span class = "desc" style="font-weight: bold;">Price: </span>
+                    <span class = "desc">Not Available</span>
+                </div>
                 {% endif %}
-                <p></p>
-                <p><span style="font-weight: bold; font-size: 16px">Categories: </span>{{ e.cats|list_to_str }}</p>
-                <p><span style="font-weight: bold; font-size: 16px">Event Types: </span>{{ e.types|list_to_str }}</p>
+                <p style = "margin-bottom: 5px; font-size: 16px"><span style="font-weight: bold; font-size: 16px;">Categories: </span>{{ cats }}</p>
+                <p style = "margin-bottom: 25px; font-size: 16px"><span style="font-weight: bold; font-size: 16px;">Event Types: </span>{{ types }}</p>
             </div>
         </div>
-      </div>
-    </div>
-    
-     <div class="container" style = "margin-bottom: 45px">
-        <div class="row-fluid">
-            <div class="span8">
-            	{% if googlelocfilter(e.building,e.addrAndStreet,e.city,e.zipcode) != "" %}
-                <iframe width="100%" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src='{{ googlelocfilter(e.building,e.addrAndStreet,e.city,e.zipcode) }}'></iframe>
-                {% endif %}
+        <div class="col-xs-5">
+            <div class="row">
+                <div class="col-xs-12 row" style = "background: white; height: 44vh; float: right; padding: 0; margin: 0">
+                    <img src="http://az616578.vo.msecnd.net/files/2016/12/06/636165832047568432-633312792_mrt%20interior.jpg" style = "width: 100%; height: 100%">
+                </div>
+                <div class="col-xs-12 row" style = "background: white; height: 44vh; float: right; padding: 0; margin: 0">
+                    {% if googlelocfilter(e.building,e.addrAndStreet,e.city,e.zipcode) != "" %}
+                    <iframe width="100%" height="350" frameborder="0" scrolling="no"    marginheight="0" marginwidth="0" src='{{ googlelocfilter(e.building,e.addrAndStreet,e.city,e.zipcode) }}'></iframe>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-    </div>
+</div>
+{% endfor %}
 {% endblock %}
